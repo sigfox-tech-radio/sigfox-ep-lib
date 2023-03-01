@@ -53,6 +53,7 @@ typedef enum {
 	SIGFOX_EP_FREQUENCY_SUCCESS = 0,
 	SIGFOX_EP_FREQUENCY_ERROR_NULL_PARAMETER,
 	SIGFOX_EP_FREQUENCY_ERROR_FRAME_RANK,
+	SIGFOX_EP_FREQUENCY_ERROR_NUMBER_OF_FRAMES,
 	SIGFOX_EP_FREQUENCY_ERROR_SPECTRUM_ACCESS_TYPE,
 	SIGFOX_EP_FREQUENCY_ERROR_RANDOM_GENERATION,
 	SIGFOX_EP_FREQUENCY_ERROR_FRAME_1_FREQUENCY,
@@ -68,6 +69,7 @@ typedef void SIGFOX_EP_FREQUENCY_status_t;
  *******************************************************************/
 typedef struct {
 	SIGFOX_ul_frame_rank_t ul_frame_rank;
+	sfx_u8 number_of_frames;
 #ifdef BIDIRECTIONAL
 	sfx_bool bidirectional_flag;
 #endif

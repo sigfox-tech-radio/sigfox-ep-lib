@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.21)
 project(sigfox_ep_lib)
 
 # Define macro to manage the options 
@@ -23,7 +23,7 @@ set(LIB_SOURCES
 )
 
 set(LIB_HEADERS 
-    inc/sigfox_ep_version.h
+    inc/sigfox_ep_lib_version.h
     inc/sigfox_ep_api.h
     inc/sigfox_ep_api_test.h
     inc/sigfox_error.h
@@ -49,7 +49,7 @@ set(LIB_PUBLIC_HEADERS
     inc/sigfox_error.h
     inc/sigfox_rc.h
     inc/sigfox_types.h
-    inc/sigfox_ep_version.h    
+    inc/sigfox_ep_lib_version.h    
 )
 
 set(MANUF_SOURCES
@@ -66,12 +66,49 @@ set(API_LOCATION ${CMAKE_BINARY_DIR}/lib/api CACHE STRING 	"")
 #Options Use sigfox_ep_flag.h
 opt(TYPE_BOOL USE_SIGFOX_EP_FLAGS_H ON "library compilation options. ON:in sigfox_ep_flag.h file OFF:in command line")
 #Option addon RFP contents
-opt(TYPE_BOOL ADDON_RFP OFF "Add RFP addon contents to build it with library")
+if(NOT sigfox_ep_addon_rfp_IS_TOP_LEVEL)
+    opt(TYPE_BOOL ADDON_RFP OFF "Add RFP addon contents to build it with library")
+endif()
+#Option RF API contents
+if(NOT manuf_rf_api_IS_TOP_LEVEL)
+    opt(TYPE_BOOL MANUF_RF_API OFF "Add RF API contents to build it with library")
+else()
+    list(REMOVE_ITEM MANUF_SOURCES "src/manuf/rf_api.c")
+endif()
 
 #When sigfox_ep_flag.h is don't used
 if(${USE_SIGFOX_EP_FLAGS_H} STREQUAL "ON")
 	list(APPEND DEF_FLAG_LIST "-DUSE_SIGFOX_EP_FLAGS_H")
     list(APPEND LIB_HEADERS 	"inc/sigfox_ep_flags.h")
+    unset(RC1 CACHE)
+    unset(RC2 CACHE)
+    unset(RC3C CACHE)
+    unset(RC3D CACHE)
+    unset(RC4 CACHE)
+    unset(RC5 CACHE)
+    unset(RC6 CACHE)
+    unset(RC7 CACHE)
+    unset(APPLICATION_MESSAGES CACHE)
+    unset(CONTROL_KEEP_ALIVE_MESSAGE CACHE)
+    unset(BIDIRECTIONAL CACHE)
+    unset(ASYNCHRONOUS CACHE)
+    unset(LOW_LEVEL_OPEN_CLOSE CACHE)
+    unset(REGULATORY CACHE)
+    unset(SINGLE_FRAME CACHE)
+    unset(PARAMETERS_CHECK CACHE)
+    unset(CERTIFICATION CACHE)
+    unset(PUBLIC_KEY_CAPABLE CACHE)
+    unset(VERBOSE CACHE)
+    unset(CRC_HW CACHE)
+    unset(ERROR_CODES CACHE)
+    unset(UL_BIT_RATE_BPS CACHE)
+    unset(T_IFU_MS CACHE)
+    unset(T_CONF_MS CACHE)
+    unset(UL_PAYLOAD_SIZE CACHE)
+    unset(TX_POWER_DBM_EIRP CACHE)
+    unset(UL_PAYLOAD_SIZE CACHE)
+    unset(MESSAGE_COUNTER_ROLLOVER CACHE)
+    unset(ERROR_STACK CACHE)
 else()
 	opt(TYPE_BOOL   RC1                         ON  "Support RC1 (Europe, Middle-East and Africa)")
 	opt(TYPE_BOOL   RC2                         ON  "Support RC2 (Brazil, Canada, Mexico, Puerto Rico and USA)")
@@ -138,10 +175,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 #Precompile module
 include(precompile)
 #Addon RFP module
-if(${ADDON_RFP} STREQUAL "ON")
-    unset(SFX_LIB_CORE_PROTOCOL_DIR CACHE)
+if(ADDON_RFP)
     include(addon_rfp)
 endif()
+#Addon RFP module
+if(MANUF_RF_API)
+    include(manuf_rf_api)
+endif()
+
+mark_as_advanced(CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX LIB_LOCATION API_LOCATION)
 
 add_library(${PROJECT_NAME} STATIC ${PRECOMPIL_LIB_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PRECOMPIL_DIR}/inc)

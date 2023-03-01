@@ -42,26 +42,6 @@
 #endif
 #include "sigfox_types.h"
 
-/*** SIGFOX EP BITSTREAM macros ***/
-
-#if (defined UL_PAYLOAD_SIZE)
-#if (UL_PAYLOAD_SIZE == 0)
-#define SIGFOX_EP_BITSTREAM_SIZE_BYTES	14
-#elif (UL_PAYLOAD_SIZE == 1)
-#define SIGFOX_EP_BITSTREAM_SIZE_BYTES	15
-#elif (UL_PAYLOAD_SIZE == 2) || (UL_PAYLOAD_SIZE == 3) || (UL_PAYLOAD_SIZE == 4)
-#define SIGFOX_EP_BITSTREAM_SIZE_BYTES	18
-#elif (UL_PAYLOAD_SIZE == 5) || (UL_PAYLOAD_SIZE == 6) || (UL_PAYLOAD_SIZE == 7) || (UL_PAYLOAD_SIZE == 8)
-#define SIGFOX_EP_BITSTREAM_SIZE_BYTES	22
-#elif (UL_PAYLOAD_SIZE == 9) || (UL_PAYLOAD_SIZE == 10) || (UL_PAYLOAD_SIZE == 11) || (UL_PAYLOAD_SIZE == 12)
-#define SIGFOX_EP_BITSTREAM_SIZE_BYTES	26
-#else
-#define SIGFOX_EP_BITSTREAM_SIZE_BYTES	26
-#endif
-#else
-#define SIGFOX_EP_BITSTREAM_SIZE_BYTES	26 // Maximum value used as default.
-#endif
-
 /*** SIGFOX EP BITSTREAM structures ***/
 
 #ifdef ERROR_CODES
@@ -151,6 +131,9 @@ typedef struct {
 	sfx_u16 message_counter; // Message counter of the corresponding uplink frame that requested bidirectional procedure.
 #ifdef PUBLIC_KEY_CAPABLE
 	SIGFOX_ep_key_t ep_key_type;
+#endif
+#ifdef CERTIFICATION
+	sfx_bool dl_decoding_enable; // Enable or disable downlink frame decoding (dewhitening, BCH, CRC and AUTH).
 #endif
 } SIGFOX_EP_BITSTREAM_dl_frame_t;
 #endif

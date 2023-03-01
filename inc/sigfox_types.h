@@ -59,6 +59,24 @@
 #define SIGFOX_T_LF_MS						8000
 #endif
 
+#if (defined UL_PAYLOAD_SIZE)
+#if (UL_PAYLOAD_SIZE == 0)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		14
+#elif (UL_PAYLOAD_SIZE == 1)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		15
+#elif (UL_PAYLOAD_SIZE == 2) || (UL_PAYLOAD_SIZE == 3) || (UL_PAYLOAD_SIZE == 4)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		18
+#elif (UL_PAYLOAD_SIZE == 5) || (UL_PAYLOAD_SIZE == 6) || (UL_PAYLOAD_SIZE == 7) || (UL_PAYLOAD_SIZE == 8)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		22
+#elif (UL_PAYLOAD_SIZE == 9) || (UL_PAYLOAD_SIZE == 10) || (UL_PAYLOAD_SIZE == 11) || (UL_PAYLOAD_SIZE == 12)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26
+#else
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26
+#endif
+#else
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26 // Maximum value used as default.
+#endif
+
 #ifdef BIDIRECTIONAL
 // Downlink bit rate.
 #define SIGFOX_DL_BIT_RATE_BPS				600
@@ -83,13 +101,14 @@
 #define SFX_NULL							(void*) 0
 
 /*** SIGFOX library types ***/
- 
+
+typedef char			sfx_char;
 typedef unsigned char	sfx_u8;
 typedef signed char		sfx_s8;
 typedef unsigned short	sfx_u16;
 typedef signed short	sfx_s16;
-typedef unsigned int	sfx_u32;
-typedef signed int		sfx_s32;
+typedef unsigned long	sfx_u32;
+typedef signed long		sfx_s32;
 
 /*!******************************************************************
  * \enum sfx_bool
@@ -230,6 +249,12 @@ static const sfx_u16 SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST[SIGFOX_MESSAGE_COUNTER
 #define SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ	1000
 #endif
 
+/*** Automatic timer required flag definition ***/
+
+#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
+#define TIMER_REQUIRED
+#endif
+
 /*!******************************************************************
  * \enum SIGFOX_spectrum_access_type_t
  * \brief Spectrum access types list.
@@ -282,7 +307,7 @@ typedef struct {
 #ifdef BIDIRECTIONAL
     sfx_u32 f_dl_hz;
 #endif
-    sfx_u16 macro_channel_guard_band_hz;
+    sfx_u16 epsilon_hz;
 #ifdef PARAMETERS_CHECK
     sfx_u8 uplink_bit_rate_capability;
     sfx_s8 tx_power_dbm_eirp_max;

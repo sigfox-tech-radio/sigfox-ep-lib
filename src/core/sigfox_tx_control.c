@@ -50,16 +50,17 @@
 
 /*** SIGFOX TX CONTROL local macros ***/
 
-#if (defined SPECTRUM_ACCESS_FH) || (defined SPECTRUM_ACCESS_LBT)
-#define SIGFOX_TX_CONTROL_TIMER_INSTANCE	MCU_API_TIMER_1
-#endif
 #ifdef SPECTRUM_ACCESS_FH
-#define SIGFOX_TX_CONTROL_FH_TIMER_MS		20000
+#define SIGFOX_TX_CONTROL_FH_TIMER_MS				20000
+#endif
+#ifdef SPECTRUM_ACCESS_LDC
+#define SIGFOX_TX_CONTROL_LDC_INTERFRAME_MIN_MS		50
+#define SIGFOX_TX_CONTROL_LDC_TX_DURATION_MAX_MS	4000
 #endif
 #ifdef UL_BIT_RATE_BPS
-#define SIGFOX_TX_CONTROL_FRAME_DURATION_MS	((sigfox_tx_control_ctx.params.bitstream_length_bytes * 8 * 1000) / (UL_BIT_RATE_BPS))
+#define SIGFOX_TX_CONTROL_FRAME_DURATION_MS	((sigfox_tx_control_ctx.params.bitstream_size_bytes * 8 * 1000) / (UL_BIT_RATE_BPS))
 #else
-#define SIGFOX_TX_CONTROL_FRAME_DURATION_MS	((sigfox_tx_control_ctx.params.bitstream_length_bytes * 8 * 1000) / (sigfox_tx_control_ctx.params.ul_bit_rate_bps))
+#define SIGFOX_TX_CONTROL_FRAME_DURATION_MS	((sigfox_tx_control_ctx.params.bitstream_size_bytes * 8 * 1000) / (sigfox_tx_control_ctx.params.ul_bit_rate_bps))
 #endif
 
 /*** SIGFOX TX CONTROL local structures ***/
@@ -69,7 +70,7 @@ typedef union {
 	struct {
 		unsigned pre_check_running : 1;
 		unsigned post_check_running : 1;
-		unsigned mcu_timer1_cplt : 1;
+		unsigned mcu_timer_cplt : 1;
 		unsigned rf_channel_free : 1;
 	};
 	sfx_u8 all;
@@ -115,9 +116,9 @@ static SIGFOX_TX_CONTROL_context_t sigfox_tx_control_ctx = {
 
 #if (defined ASYNCHRONOUS) && ((defined SPECTRUM_ACCESS_LBT) || (defined SPECTRUM_ACCESS_FH))
 /*******************************************************************/
-static void _MCU_API_timer1_cplt_cb(void) {
+static void _MCU_API_timer_cplt_cb(void) {
 	// Set local flag.
-	sigfox_tx_control_ctx.flags.mcu_timer1_cplt = 1;
+	sigfox_tx_control_ctx.flags.mcu_timer_cplt = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -144,7 +145,7 @@ SIGFOX_TX_CONTROL_status_t _store_parameters(SIGFOX_TX_CONTROL_parameters_t *par
 	}
 #endif /* PARAMETERS_CHECK */
 	sigfox_tx_control_ctx.params.type = (params -> type);
-	sigfox_tx_control_ctx.params.bitstream_length_bytes = (params -> bitstream_length_bytes);
+	sigfox_tx_control_ctx.params.bitstream_size_bytes = (params -> bitstream_size_bytes);
 	sigfox_tx_control_ctx.params.last_message_frame = (params -> last_message_frame);
 #ifndef SINGLE_FRAME
 	sigfox_tx_control_ctx.params.ul_frame_rank = (params -> ul_frame_rank);
@@ -154,11 +155,23 @@ SIGFOX_TX_CONTROL_status_t _store_parameters(SIGFOX_TX_CONTROL_parameters_t *par
 	sigfox_tx_control_ctx.params.ul_bit_rate_bps = (params -> ul_bit_rate_bps);
 #endif
 #ifdef BIDIRECTIONAL
-	sigfox_tx_control_ctx.params.ack_message = (params -> ack_message);
+	sigfox_tx_control_ctx.params.dl_conf_message = (params -> dl_conf_message);
 #endif
 #if !(defined SINGLE_FRAME) || (defined BIDIRECTIONAL)
 	sigfox_tx_control_ctx.params.interframe_ms = (params -> interframe_ms);
 #endif
+#ifdef CERTIFICATION
+#ifdef SPECTRUM_ACCESS_FH
+	sigfox_tx_control_ctx.params.fh_timer_enable = (params -> fh_timer_enable);
+#endif
+#ifdef SPECTRUM_ACCESS_LBT
+	sigfox_tx_control_ctx.params.lbt_enable = (params -> lbt_enable);
+	sigfox_tx_control_ctx.params.lbt_cs_max_duration_first_frame_ms = (params -> lbt_cs_max_duration_first_frame_ms);
+#endif
+#ifdef SPECTRUM_ACCESS_LDC
+	sigfox_tx_control_ctx.params.ldc_check_enable = (params -> ldc_check_enable);
+#endif
+#endif /* CERTIFICATION */
 #ifdef ASYNCHRONOUS
 	sigfox_tx_control_ctx.params.cplt_cb = (params -> cplt_cb);
 #endif
@@ -222,12 +235,15 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 	RF_API_radio_parameters_t radio_params;
 	RF_API_carrier_sense_parameters_t cs_params;
 	sfx_u32 cs_max_duration_ms = 0;
-#ifndef SINGLE_FRAME
-	sfx_u8 number_of_repeated_frames = (sigfox_tx_control_ctx.params.number_of_frames - 1);
-#endif
 #ifndef ASYNCHRONOUS
 	sfx_bool channel_free = SFX_FALSE;
 #endif
+#endif
+#if ((defined SPECTRUM_ACCESS_LBT) || (defined SPECTRUM_ACCESS_LDC)) && !(defined SINGLE_FRAME)
+	sfx_u8 number_of_repeated_frames = 0;
+#endif
+#if (defined SPECTRUM_ACCESS_LDC) && !(defined SINGLE_FRAME)
+	sfx_u32 transmission_time_ms = 0;
 #endif
 	// Store and check parameters.
 #ifdef ERROR_CODES
@@ -235,6 +251,9 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 	CHECK_STATUS(SIGFOX_TX_CONTROL_SUCCESS);
 #else
 	_store_parameters(params);
+#endif
+#if ((defined SPECTRUM_ACCESS_LBT) || (defined SPECTRUM_ACCESS_LDC)) && !(defined SINGLE_FRAME)
+	number_of_repeated_frames = (sigfox_tx_control_ctx.params.number_of_frames - 1);
 #endif
 	// Reset flags.
 	sigfox_tx_control_ctx.flags.all = 0;
@@ -244,12 +263,30 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 	switch (((sigfox_tx_control_ctx.rc) -> spectrum_access) -> type) {
 #ifdef SPECTRUM_ACCESS_DC
 	case SIGFOX_SPECTRUM_ACCESS_TYPE_DC:
-		// TODO: DC check.
 		break;
 #endif
 #ifdef SPECTRUM_ACCESS_LDC
 	case SIGFOX_SPECTRUM_ACCESS_TYPE_LDC:
-		// TODO: LDC check.
+#ifdef CERTIFICATION
+		// Bypass check if required.
+		if ((params -> ldc_check_enable) == SFX_FALSE) break;
+#endif
+#ifndef SINGLE_FRAME
+		// Execute LDC check in case of pre-check.
+		if ((sigfox_tx_control_ctx.params.type) == SIGFOX_TX_CONTROL_TYPE_PRE_CHECK) {
+			// Check interframe duration.
+			if (sigfox_tx_control_ctx.params.interframe_ms < SIGFOX_TX_CONTROL_LDC_INTERFRAME_MIN_MS) {
+				// Compute transmission time.
+				transmission_time_ms = ((sfx_u32) sigfox_tx_control_ctx.params.number_of_frames) * SIGFOX_TX_CONTROL_FRAME_DURATION_MS;
+				transmission_time_ms += ((sfx_u32) number_of_repeated_frames) * sigfox_tx_control_ctx.params.interframe_ms;
+				// Check transmission time.
+				if (transmission_time_ms > SIGFOX_TX_CONTROL_LDC_TX_DURATION_MAX_MS) {
+					// Regulation constraint not met.
+					sigfox_tx_control_ctx.result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
+				}
+			}
+		}
+#endif
 		break;
 #endif
 #ifdef SPECTRUM_ACCESS_FH
@@ -262,10 +299,11 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 		if ((sigfox_tx_control_ctx.params.type) == SIGFOX_TX_CONTROL_TYPE_POST_CHECK) {
 			// Only start timer on the last frame of the message sequence.
 			if (sigfox_tx_control_ctx.params.last_message_frame == SFX_TRUE) {
-				mcu_timer.instance = MCU_API_TIMER_1;
+				mcu_timer.instance = MCU_API_TIMER_INSTANCE_FH;
+				mcu_timer.reason = MCU_API_TIMER_REASON_FH;
 				mcu_timer.duration_ms = SIGFOX_TX_CONTROL_FH_TIMER_MS;
 #ifdef ASYNCHRONOUS
-				mcu_timer.cplt_cb = (MCU_API_timer_cplt_cb_t) &_MCU_API_timer1_cplt_cb;
+				mcu_timer.cplt_cb = (MCU_API_timer_cplt_cb_t) &_MCU_API_timer_cplt_cb;
 #endif
 #ifdef ERROR_CODES
 				mcu_status = MCU_API_timer_start(&mcu_timer);
@@ -278,17 +316,17 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 #else
 				// Wait FH timer completion.
 #ifdef ERROR_CODES
-				mcu_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_1);
+				mcu_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_FH);
 				MCU_API_check_status(SIGFOX_TX_CONTROL_ERROR_MCU);
 #else
-				MCU_API_timer_wait_cplt(MCU_API_TIMER_1);
+				MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_FH);
 #endif
 				// Stop timer.
 #ifdef ERROR_CODES
-				mcu_status = MCU_API_timer_stop(MCU_API_TIMER_1);
+				mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_FH);
 				MCU_API_check_status(SIGFOX_TX_CONTROL_ERROR_MCU);
 #else
-				MCU_API_timer_stop(MCU_API_TIMER_1);
+				MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_FH);
 #endif
 				sigfox_tx_control_ctx.result = SIGFOX_TX_CONTROL_RESULT_ALLOWED;
 #endif
@@ -313,6 +351,12 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 			if (sigfox_tx_control_ctx.params.ul_frame_rank == SIGFOX_UL_FRAME_RANK_1) {
 				// Use user-defined timeout for first frame.
 				cs_max_duration_ms = (sigfox_tx_control_ctx.rc -> spectrum_access) -> cs_max_duration_first_frame_ms;
+#ifdef CERTIFICATION
+				// Override with test value if not null.
+				if (sigfox_tx_control_ctx.params.lbt_cs_max_duration_first_frame_ms != 0) {
+					cs_max_duration_ms = sigfox_tx_control_ctx.params.lbt_cs_max_duration_first_frame_ms;
+				}
+#endif
 			}
 			else {
 				// Use T_LF.
@@ -324,7 +368,7 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 #endif
 #ifdef BIDIRECTIONAL
 			// Override in case of DL-ACK frame.
-			if (sigfox_tx_control_ctx.params.ack_message == SFX_TRUE) {
+			if (sigfox_tx_control_ctx.params.dl_conf_message == SFX_TRUE) {
 				// DL confirmation message.
 				cs_max_duration_ms = SIGFOX_T_CONF_MAX_MS - (sigfox_tx_control_ctx.params.interframe_ms); // Tconf.
 			}
@@ -354,10 +398,11 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 			RF_API_init(&radio_params);
 #endif
 			// Start timer to manage carrier sense timeout.
-			mcu_timer.instance = MCU_API_TIMER_1;
+			mcu_timer.instance = MCU_API_TIMER_INSTANCE_LBT;
+			mcu_timer.reason = MCU_API_TIMER_REASON_LBT;
 			mcu_timer.duration_ms = cs_max_duration_ms;
 #ifdef ASYNCHRONOUS
-			mcu_timer.cplt_cb = (MCU_API_timer_cplt_cb_t) &_MCU_API_timer1_cplt_cb;
+			mcu_timer.cplt_cb = (MCU_API_timer_cplt_cb_t) &_MCU_API_timer_cplt_cb;
 #endif
 #ifdef ERROR_CODES
 			mcu_status = MCU_API_timer_start(&mcu_timer);
@@ -377,19 +422,19 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 			// Result will be known later after carrier sense.
 			sigfox_tx_control_ctx.result = SIGFOX_TX_CONTROL_RESULT_PENDING;
 #else /* ASYNCHRONOUS */
-			// Stop timer.
-#ifdef ERROR_CODES
-			mcu_status = MCU_API_timer_stop(MCU_API_TIMER_1);
-			MCU_API_check_status(SIGFOX_TX_CONTROL_ERROR_MCU);
-#else
-			MCU_API_timer_stop(MCU_API_TIMER_1);
-#endif
 			// Stop radio.
 #ifdef ERROR_CODES
 			rf_status = RF_API_de_init();
 			RF_API_check_status(SIGFOX_TX_CONTROL_ERROR_RF);
 #else
 			RF_API_de_init();
+#endif
+			// Stop timer.
+#ifdef ERROR_CODES
+			mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_LBT);
+			MCU_API_check_status(SIGFOX_TX_CONTROL_ERROR_MCU);
+#else
+			MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_LBT);
 #endif
 			// Update result.
 			sigfox_tx_control_ctx.result = (channel_free == SFX_FALSE) ? SIGFOX_TX_CONTROL_RESULT_FORBIDDEN : SIGFOX_TX_CONTROL_RESULT_ALLOWED;
@@ -434,15 +479,15 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_process(void) {
 	case SIGFOX_SPECTRUM_ACCESS_TYPE_FH:
 		if ((sigfox_tx_control_ctx.params.type) == SIGFOX_TX_CONTROL_TYPE_POST_CHECK) {
 			// Check FH timer completion.
-			if (sigfox_tx_control_ctx.flags.mcu_timer1_cplt != 0) {
+			if (sigfox_tx_control_ctx.flags.mcu_timer_cplt != 0) {
 				// Clear flag.
-				sigfox_tx_control_ctx.flags.mcu_timer1_cplt = 0;
+				sigfox_tx_control_ctx.flags.mcu_timer_cplt = 0;
 				// Stop timer.
 #ifdef ERROR_CODES
-				mcu_status = MCU_API_timer_stop(MCU_API_TIMER_1);
+				mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_FH);
 				MCU_API_check_status(SIGFOX_TX_CONTROL_ERROR_MCU);
 #else
-				MCU_API_timer_stop(MCU_API_TIMER_1);
+				MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_FH);
 #endif
 				// Update result.
 				sigfox_tx_control_ctx.result = SIGFOX_TX_CONTROL_RESULT_ALLOWED;
@@ -456,11 +501,11 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_process(void) {
 	case SIGFOX_SPECTRUM_ACCESS_TYPE_LBT:
 		if ((sigfox_tx_control_ctx.params.type) == SIGFOX_TX_CONTROL_TYPE_PRE_CHECK) {
 			// Check flags.
-			if ((sigfox_tx_control_ctx.flags.rf_channel_free != 0) || (sigfox_tx_control_ctx.flags.mcu_timer1_cplt != 0)) {
+			if ((sigfox_tx_control_ctx.flags.rf_channel_free != 0) || (sigfox_tx_control_ctx.flags.mcu_timer_cplt != 0)) {
 				// Update result according to flags.
-				if (sigfox_tx_control_ctx.flags.mcu_timer1_cplt != 0) {
+				if (sigfox_tx_control_ctx.flags.mcu_timer_cplt != 0) {
 					// Clear flag and update result.
-					sigfox_tx_control_ctx.flags.mcu_timer1_cplt = 0;
+					sigfox_tx_control_ctx.flags.mcu_timer_cplt = 0;
 					sigfox_tx_control_ctx.result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
 				}
 				if (sigfox_tx_control_ctx.flags.rf_channel_free != 0) {
@@ -468,19 +513,19 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_process(void) {
 					sigfox_tx_control_ctx.flags.rf_channel_free = 0;
 					sigfox_tx_control_ctx.result = SIGFOX_TX_CONTROL_RESULT_ALLOWED;
 				}
-				// Stop timer.
-#ifdef ERROR_CODES
-				mcu_status = MCU_API_timer_stop(MCU_API_TIMER_1);
-				MCU_API_check_status(SIGFOX_TX_CONTROL_ERROR_MCU);
-#else
-				MCU_API_timer_stop(MCU_API_TIMER_1);
-#endif
 				// Stop radio.
 #ifdef ERROR_CODES
 				rf_status = RF_API_de_init();
 				RF_API_check_status(SIGFOX_TX_CONTROL_ERROR_RF);
 #else
 				RF_API_de_init();
+#endif
+				// Stop timer.
+#ifdef ERROR_CODES
+				mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_LBT);
+				MCU_API_check_status(SIGFOX_TX_CONTROL_ERROR_MCU);
+#else
+				MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_LBT);
 #endif
 				// Call completion callback.
 				_CHECK_CPLT_CALLBACK();

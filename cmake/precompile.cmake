@@ -7,6 +7,7 @@ find_program(SPLINT splint REQUIRED)
 if(NOT SPLINT)
     message(FATAL_ERROR "splint not found!")
 endif()
+mark_as_advanced(SPLINT UNIFDEF PRECOMPIL_DIR)
 # specify the precompil files location
 set(PRECOMPIL_DIR ${CMAKE_BINARY_DIR}/precompil CACHE STRING 	"")
 

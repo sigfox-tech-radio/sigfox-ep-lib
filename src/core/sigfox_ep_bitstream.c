@@ -187,8 +187,9 @@ static const sfx_u8 SIGFOX_EP_BITSTREAM_UL_CONVOLUTION_LUT_IN_OUT[3][4] = {{0, 0
 
 #define SIGFOX_EP_BITSTREAM_DL_DEWHITENING_MASK	0x01FF
 
-static const sfx_u8 SIGFOX_EP_BITSTREAM_DL_POW_ALPHA_LUT[15] =  {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
-static const sfx_u8 SIGFOX_EP_BITSTREAM_DL_LOG_ALPHA_LUT[16] = {15, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
+#define SIGFOX_EP_BITSTREAM_DL_BCH_LENGTH		15
+static const sfx_u8 SIGFOX_EP_BITSTREAM_DL_POW_ALPHA_LUT[SIGFOX_EP_BITSTREAM_DL_BCH_LENGTH] =  {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
+static const sfx_u8 SIGFOX_EP_BITSTREAM_DL_LOG_ALPHA_LUT[SIGFOX_EP_BITSTREAM_DL_BCH_LENGTH + 1] = {15, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
 #endif
 
 /*** SIGFOX EP BITSTREAM local structures ***/
@@ -348,7 +349,7 @@ errors:;
 /*******************************************************************/
 static void _convolve(SIGFOX_ul_frame_rank_t ul_frame_rank) {
 	// Local variables.
-	sfx_u8 initial_bitstream[SIGFOX_EP_BITSTREAM_SIZE_BYTES];
+	sfx_u8 initial_bitstream[SIGFOX_UL_BITSTREAM_SIZE_BYTES];
     sfx_u8 idx = 0;
     sfx_u8 mask = 0;
     sfx_u8 state = 0;
@@ -424,6 +425,7 @@ static void _dewhitening(SIGFOX_EP_BITSTREAM_dl_frame_t *input, sfx_u8 *local_bi
     }
     pn = _dewhitening_pn((sfx_u16) pn);
     local_bitstream[14] ^= pn >> (idx + 1);
+    local_bitstream[SIGFOX_DL_PHY_CONTENT_SIZE_BYTES] = 0;
 }
 #endif
 
@@ -438,14 +440,14 @@ static void _decode_bch(sfx_u8* local_bitstream) {
     for(i=0 ; i<8; i++) {
         // Compute code syndrome.
         syndrome = 0;
-        for(j=0 ; j<15 ; j++) {
+        for(j=0 ; j<SIGFOX_EP_BITSTREAM_DL_BCH_LENGTH ; j++) {
             syndrome ^= SIGFOX_EP_BITSTREAM_DL_POW_ALPHA_LUT[j] * ((local_bitstream[j] >> i) & 1);
         }
         // The BCH(15,11) code can only correct a single error.
         // If the syndrome is not zero, it indicates the bit in error.
         // If the syndrome is zero, there is no error. To simplify the code, word 16 is changed.
         // Word 16 is actually a dummy word.
-        local_bitstream[SIGFOX_EP_BITSTREAM_DL_LOG_ALPHA_LUT[syndrome]] ^= 1 << i;
+        local_bitstream[SIGFOX_EP_BITSTREAM_DL_LOG_ALPHA_LUT[syndrome]] ^= (1 << i);
     }
 }
 #endif
@@ -859,7 +861,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
 	MCU_API_encryption_data_t encryption_data;
 	sfx_u8 idx = 0;
 	sfx_u8 byte_idx = 0;
-	sfx_u8 local_bitstream[SIGFOX_DL_PHY_CONTENT_SIZE_BYTES];
+	sfx_u8 local_bitstream[SIGFOX_DL_PHY_CONTENT_SIZE_BYTES + 1];
 	sfx_u8 dl_crc;
 	sfx_u8 aes_data[SIGFOX_EP_KEY_SIZE_BYTES];
 	// Reset result.
@@ -873,6 +875,10 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
 	for (idx=0 ; idx<SIGFOX_DL_PHY_CONTENT_SIZE_BYTES ; idx++) {
 		local_bitstream[idx] = input -> dl_phy_content[idx];
 	}
+	local_bitstream[SIGFOX_DL_PHY_CONTENT_SIZE_BYTES] = 0;
+#ifdef CERTIFICATION
+	if ((input -> dl_decoding_enable) == SFX_TRUE) {
+#endif
 	// Step 1: de-whitening.
 	_dewhitening(input, local_bitstream);
 	// Step 2: ECC.
@@ -927,6 +933,9 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
 	if ((local_bitstream[SIGFOX_EP_BITSTREAM_DL_AUTH_INDEX] != aes_data[0]) || (local_bitstream[SIGFOX_EP_BITSTREAM_DL_AUTH_INDEX + 1] != aes_data[1])) {
 		goto errors;
 	}
+#ifdef CERTIFICATION
+	}
+#endif
 	// Valid frame received: extract DL payload.
 	for (idx=0 ; idx<SIGFOX_DL_PAYLOAD_SIZE_BYTES ; idx++) {
 		dl_payload[idx] = local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX + idx];

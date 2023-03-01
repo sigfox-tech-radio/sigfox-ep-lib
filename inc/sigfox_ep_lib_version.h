@@ -1,5 +1,5 @@
 /*!*****************************************************************
- * \file    sigfox_ep_version.h
+ * \file    sigfox_ep_lib_version.h
  * \brief   Sigfox End-Point library version.
  *******************************************************************
  * \copyright
@@ -34,8 +34,8 @@
  *
  *******************************************************************/
 
-#ifndef __SIGFOX_EP_VERSION_H__
-#define __SIGFOX_EP_VERSION_H__
+#ifndef __SIGFOX_EP_LIB_VERSION_H__
+#define __SIGFOX_EP_LIB_VERSION_H__
 
 #ifdef USE_SIGFOX_EP_FLAGS_H
 #include "sigfox_ep_flags.h"
@@ -43,7 +43,7 @@
 
 /*** Main version ***/
 
-#define SIGFOX_EP_VERSION				"3.0"
+#define SIGFOX_EP_LIB_VERSION			"3.1"
 
 /*** Compilation flags ***/
 
@@ -247,4 +247,4 @@
 	ERROR_CODES_OPT \
 	ERROR_STACK_OPT \
 
-#endif /* __SIGFOX_EP_VERSION_H__ */
+#endif /* __SIGFOX_EP_LIB_VERSION_H__ */

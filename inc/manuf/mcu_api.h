@@ -42,6 +42,27 @@
 #endif
 #include "sigfox_types.h"
 
+/*** MCU API macros ***/
+
+#ifdef TIMER_REQUIRED
+// Timer instances mapping.
+#if !(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0) || (defined BIDIRECTIONAL))
+#define MCU_API_TIMER_INSTANCE_T_IFX		MCU_API_TIMER_1
+#endif
+#ifdef BIDIRECTIONAL
+#define MCU_API_TIMER_INSTANCE_T_CONF		MCU_API_TIMER_1
+#define MCU_API_TIMER_INSTANCE_T_W			MCU_API_TIMER_2
+#define MCU_API_TIMER_INSTANCE_T_RX			MCU_API_TIMER_1
+#endif
+#ifdef REGULATORY
+#define MCU_API_TIMER_INSTANCE_FH			MCU_API_TIMER_1
+#define MCU_API_TIMER_INSTANCE_LBT			MCU_API_TIMER_1
+#endif
+#ifdef CERTIFICATION
+#define MCU_API_TIMER_INSTANCE_ADDON_RFP	MCU_API_TIMER_3
+#endif
+#endif /* TIMER_REQUIRED */
+
 /*** MCU API structures ***/
 
 #ifdef ERROR_CODES
@@ -64,7 +85,7 @@ typedef void MCU_API_status_t;
  * \brief MCU driver callback functions.
  * \fn MCU_API_process_cb_t		To be called when the MCU driver needs to be processed.
  * \fn MCU_API_error_cb_t		To be called when an error occurs during MCU operation.
- * \fn MCU_API_timer_cplt_cb_t	To be called when a timer ellapses.
+ * \fn MCU_API_timer_cplt_cb_t	To be called when a timer elapses.
  *******************************/
 typedef void (*MCU_API_process_cb_t)(void);
 #ifdef ERROR_CODES
@@ -77,13 +98,15 @@ typedef void (*MCU_API_timer_cplt_cb_t)(void);
 #endif
 #endif
 
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
+#ifdef TIMER_REQUIRED
 /*!******************************************************************
  * \enum MCU_API_timer_instance_t
  * \brief MCU timer instances.
  *******************************************************************/
 typedef enum {
+#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY)
 	MCU_API_TIMER_1,
+#endif
 #ifdef BIDIRECTIONAL
 	MCU_API_TIMER_2,
 #endif
@@ -94,13 +117,38 @@ typedef enum {
 } MCU_API_timer_instance_t;
 #endif
 
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
+#ifdef TIMER_REQUIRED
+/*!******************************************************************
+ * \enum MCU_API_timer_mapping_t
+ * \brief MCU timer instances mapping.
+ *******************************************************************/
+typedef enum {
+#if !(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0) || (defined BIDIRECTIONAL))
+	MCU_API_TIMER_REASON_T_IFX,
+#endif
+#ifdef BIDIRECTIONAL
+	MCU_API_TIMER_REASON_T_CONF,
+	MCU_API_TIMER_REASON_T_W,
+	MCU_API_TIMER_REASON_T_RX,
+#endif
+#ifdef REGULATORY
+	MCU_API_TIMER_REASON_FH,
+	MCU_API_TIMER_REASON_LBT,
+#endif
+#ifdef CERTIFICATION
+	MCU_API_TIMER_REASON_ADDON_RFP,
+#endif
+} MCU_API_timer_reason_t;
+#endif
+
+#ifdef TIMER_REQUIRED
 /*!******************************************************************
  * \struct MCU_API_timer_t
  * \brief MCU API timer structure.
  *******************************************************************/
 typedef struct {
 	MCU_API_timer_instance_t instance;
+	MCU_API_timer_reason_t reason;
 	sfx_u32 duration_ms;
 #ifdef ASYNCHRONOUS
 	MCU_API_timer_cplt_cb_t cplt_cb;
@@ -167,7 +215,7 @@ MCU_API_status_t MCU_API_close(void);
 MCU_API_status_t MCU_API_process(void);
 #endif
 
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
+#ifdef TIMER_REQUIRED
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_timer_start(MCU_API_timer_t *timer)
  * \brief Start a timer. Timer completion should be notified by calling the given cplt_cb() function.
@@ -178,7 +226,7 @@ MCU_API_status_t MCU_API_process(void);
 MCU_API_status_t MCU_API_timer_start(MCU_API_timer_t *timer);
 #endif
 
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
+#ifdef TIMER_REQUIRED
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance)
  * \brief Stop a timer.
@@ -189,8 +237,19 @@ MCU_API_status_t MCU_API_timer_start(MCU_API_timer_t *timer);
 MCU_API_status_t MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance);
 #endif
 
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
-#ifndef ASYNCHRONOUS
+#if (defined TIMER_REQUIRED) && !(defined ASYNCHRONOUS)
+/*!******************************************************************
+ * \fn MCU_API_status_t MCU_API_timer_status(MCU_API_timer_instance_t timer_instance, sfx_bool *timer_has_elapsed)
+ * \brief Get timer status.
+ * \brief This functions is never called by the core library: it is provided to manage the timeout in the RF_API_receive() function in blocking mode.
+ * \param[in]	timer_instance: Timer to read.
+ * \param[out] 	timer_has_elapsed: Pointer to boolean variable that will contain the timer status.
+ * \retval		Function execution status.
+ *******************************************************************/
+MCU_API_status_t MCU_API_timer_status(MCU_API_timer_instance_t timer_instance, sfx_bool *timer_has_elapsed);
+#endif
+
+#if (defined TIMER_REQUIRED) && !(defined ASYNCHRONOUS)
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_timer_wait_cplt(MCU_API_timer_instance_t timer_instance)
  * \brief Blocking function waiting for timer completion.
@@ -199,7 +258,6 @@ MCU_API_status_t MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance);
  * \retval		Function execution status.
  *******************************************************************/
 MCU_API_status_t MCU_API_timer_wait_cplt(MCU_API_timer_instance_t timer_instance);
-#endif
 #endif
 
 /*!******************************************************************
@@ -274,6 +332,19 @@ MCU_API_status_t MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes);
  * \retval		Function execution status.
  *******************************************************************/
 MCU_API_status_t MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u16 *voltage_tx_mv, sfx_s16 *temperature_tenth_degrees);
+#endif
+
+#ifdef CERTIFICATION
+/*!******************************************************************
+ * \fn MCU_API_status_t MCU_API_print_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 rssi_dbm)
+ * \brief Print a downlink frame (only used by the RFP addon during downlink test modes).
+ * \param[in]  	dl_payload: Downlink payload to print.
+ * \param[in] 	dl_payload_size: Number of bytes to print.
+ * \param[in]	rssi_dbm: RSSI of the received downlink frame (16-bits signed value).
+ * \param[out] 	none
+ * \retval		Function execution status.
+ *******************************************************************/
+MCU_API_status_t MCU_API_print_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 rssi_dbm);
 #endif
 
 #ifdef VERBOSE

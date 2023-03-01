@@ -95,7 +95,7 @@ typedef enum {
  *******************************************************************/
 typedef struct {
 	SIGFOX_TX_CONTROL_check_type type;
-	sfx_u8 bitstream_length_bytes;
+	sfx_u8 bitstream_size_bytes;
 	sfx_bool last_message_frame;
 #ifndef SINGLE_FRAME
 	SIGFOX_ul_frame_rank_t ul_frame_rank;
@@ -105,7 +105,7 @@ typedef struct {
 	sfx_u16 ul_bit_rate_bps;
 #endif
 #ifdef BIDIRECTIONAL
-	sfx_bool ack_message;
+	sfx_bool dl_conf_message;
 #endif
 #if !(defined SINGLE_FRAME) || (defined BIDIRECTIONAL)
 	sfx_u32 interframe_ms; // Tifu, Tifb or Tconf.
@@ -116,8 +116,12 @@ typedef struct {
 #endif
 #ifdef SPECTRUM_ACCESS_LBT
 	sfx_bool lbt_enable;
+	sfx_u32 lbt_cs_max_duration_first_frame_ms;
 #endif
+#ifdef SPECTRUM_ACCESS_LDC
+	sfx_bool ldc_check_enable;
 #endif
+#endif /* CERTIFICATION */
 #ifdef ASYNCHRONOUS
 	SIGFOX_TX_CONTROL_check_cplt_cb_t cplt_cb;
 #endif

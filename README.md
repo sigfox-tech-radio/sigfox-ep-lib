@@ -64,9 +64,9 @@ $ git clone https://github.com/sigfox-tech-radio/sigfox-ep-lib.git
 ### Usage
 
 This library can be used in 3 different ways:
- * The [original source code](#original-source-code) to used the raw sources files
+ * The [original source code](#original-source-code) to use the raw sources files
  * The [precompiled source code](#precompiled-source-code) to remove all unused source code and have more readability.
- * The [static-library](#static-library) to used a compiled library.
+ * The [static-library](#static-library) to generate a compiled library.
 
 ### Original source code
 

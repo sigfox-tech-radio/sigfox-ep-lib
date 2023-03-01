@@ -40,6 +40,7 @@
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
+#include "sigfox_error.h"
 
 /*** MCU API functions ***/
 
@@ -48,8 +49,9 @@
 MCU_API_status_t MCU_API_open(MCU_API_config_t *mcu_api_config) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -58,8 +60,9 @@ MCU_API_status_t MCU_API_open(MCU_API_config_t *mcu_api_config) {
 MCU_API_status_t MCU_API_close(void) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -68,49 +71,63 @@ MCU_API_status_t MCU_API_close(void) {
 MCU_API_status_t MCU_API_process(void) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
+#ifdef TIMER_REQUIRED
 /*******************************************************************/
 MCU_API_status_t MCU_API_timer_start(MCU_API_timer_t *timer) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
+#ifdef TIMER_REQUIRED
 /*******************************************************************/
 MCU_API_status_t MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
-#ifndef ASYNCHRONOUS
+#if (defined TIMER_REQUIRED) && !(defined ASYNCHRONOUS)
+/*******************************************************************/
+MCU_API_status_t MCU_API_timer_status(MCU_API_timer_instance_t timer_instance, sfx_bool *timer_has_elapsed) {
+	/* To be implemented by the device manufacturer */
+#ifdef ERROR_CODES
+	MCU_API_status_t status = MCU_API_SUCCESS;
+#endif
+	RETURN();
+}
+#endif
+
+#if (defined TIMER_REQUIRED) && !(defined ASYNCHRONOUS)
 /*******************************************************************/
 MCU_API_status_t MCU_API_timer_wait_cplt(MCU_API_timer_instance_t timer_instance) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
-#endif
 #endif
 
 /*******************************************************************/
 MCU_API_status_t MCU_API_aes_128_cbc_encrypt(MCU_API_encryption_data_t *aes_data) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 #ifdef CRC_HW
@@ -118,8 +135,9 @@ MCU_API_status_t MCU_API_aes_128_cbc_encrypt(MCU_API_encryption_data_t *aes_data
 MCU_API_status_t MCU_API_compute_crc16(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u16 *crc) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -128,8 +146,9 @@ MCU_API_status_t MCU_API_compute_crc16(sfx_u8 *data, sfx_u8 data_size, sfx_u16 p
 MCU_API_status_t MCU_API_compute_crc8(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u8 *crc) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -137,24 +156,27 @@ MCU_API_status_t MCU_API_compute_crc8(sfx_u8 *data, sfx_u8 data_size, sfx_u16 po
 MCU_API_status_t MCU_API_get_ep_id(sfx_u8 *ep_id, sfx_u8 ep_id_size_bytes) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 /*******************************************************************/
 MCU_API_status_t MCU_API_get_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 /*******************************************************************/
 MCU_API_status_t MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL)
@@ -162,8 +184,20 @@ MCU_API_status_t MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
 MCU_API_status_t MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u16 *voltage_tx_mv, sfx_s16 *temperature_tenth_degrees) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
+}
+#endif
+
+#ifdef CERTIFICATION
+/*******************************************************************/
+MCU_API_status_t MCU_API_print(sfx_char *log_message) {
+	/* To be implemented by the device manufacturer */
+#ifdef ERROR_CODES
+	MCU_API_status_t status = MCU_API_SUCCESS;
+#endif
+	RETURN();
 }
 #endif
 
@@ -172,8 +206,9 @@ MCU_API_status_t MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u
 MCU_API_status_t MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac_size_bytes) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -182,8 +217,9 @@ MCU_API_status_t MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac
 MCU_API_status_t MCU_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return MCU_API_SUCCESS;
+	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 

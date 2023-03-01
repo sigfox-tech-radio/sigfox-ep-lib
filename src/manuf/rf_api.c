@@ -40,6 +40,7 @@
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
+#include "sigfox_error.h"
 
 /*** RF API functions ***/
 
@@ -48,8 +49,9 @@
 RF_API_status_t RF_API_open(RF_API_config_t *rf_api_config) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -58,8 +60,9 @@ RF_API_status_t RF_API_open(RF_API_config_t *rf_api_config) {
 RF_API_status_t RF_API_close(void) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -68,49 +71,54 @@ RF_API_status_t RF_API_close(void) {
 RF_API_status_t RF_API_process(void) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
 /*******************************************************************/
 RF_API_status_t RF_API_wake_up(void) {
-	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 /*******************************************************************/
 RF_API_status_t RF_API_sleep(void) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 /*******************************************************************/
 RF_API_status_t RF_API_init(RF_API_radio_parameters_t *radio_parameters) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 /*******************************************************************/
 RF_API_status_t RF_API_de_init(void) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 /*******************************************************************/
 RF_API_status_t RF_API_send(RF_API_tx_data_t *tx_data) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 
 #ifdef BIDIRECTIONAL
@@ -118,8 +126,9 @@ RF_API_status_t RF_API_send(RF_API_tx_data_t *tx_data) {
 RF_API_status_t RF_API_receive(RF_API_rx_data_t *rx_data) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -128,8 +137,9 @@ RF_API_status_t RF_API_receive(RF_API_rx_data_t *rx_data) {
 RF_API_status_t RF_API_get_dl_phy_content_and_rssi(sfx_u8 *dl_phy_content, sfx_u8 dl_phy_content_size, sfx_s16 *dl_rssi_dbm) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 
@@ -138,8 +148,20 @@ RF_API_status_t RF_API_get_dl_phy_content_and_rssi(sfx_u8 *dl_phy_content, sfx_u
 RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_sense_params) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
+}
+#endif
+
+#ifdef TIMER_REQUIRED
+/*******************************************************************/
+RF_API_status_t RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *latency_ms) {
+	/* To be implemented by the device manufacturer */
+#ifdef ERROR_CODES
+	RF_API_status_t status = RF_API_SUCCESS;
+#endif
+	RETURN();
 }
 #endif
 
@@ -148,8 +170,9 @@ RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_
 RF_API_status_t RF_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
-	return RF_API_SUCCESS;
+	RF_API_status_t status = RF_API_SUCCESS;
 #endif
+	RETURN();
 }
 #endif
 

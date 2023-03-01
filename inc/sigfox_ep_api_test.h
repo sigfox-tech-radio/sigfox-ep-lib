@@ -47,17 +47,41 @@
 
 /*** SIGFOX EP API TEST structures ***/
 
+typedef union {
+	struct {
+		unsigned ul_enable : 1; // Enable or disable uplink part of a message sequence.
+#ifdef BIDIRECTIONAL
+		unsigned dl_enable : 1; // Enable or disable the downlink part of a message sequence.
+		unsigned dl_decoding_enable : 1; // Enable or disable the downlink frame deocding (dewhitening, BCH, CRC and AUTH).
+		unsigned dl_conf_enable : 1; // Enable or disable the downlink confirmation frame of a message sequence.
+#endif
+#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_FH)
+		unsigned fh_timer_enable : 1;
+#endif
+#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LBT)
+		unsigned lbt_enable : 1;
+#endif
+#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LDC)
+		unsigned ldc_check_enable : 1;
+#endif
+	};
+	sfx_u8 all;
+} SIGFOX_EP_API_TEST_flags_t;
+
 /*!******************************************************************
  * \struct SIGFOX_EP_API_TEST_parameters_t
  * \brief Specific parameters for test (RFP ADDON).
  *******************************************************************/
 typedef struct {
-	sfx_u32 tx_frequency_hz; // If non-zero, bypass the frequency driver of the core library.
-#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_FH)
-	sfx_bool fh_timer_enable; // Enable or disable FH timer.
+	SIGFOX_EP_API_TEST_flags_t flags;
+	sfx_u32 tx_frequency_hz; // If non-zero, bypass the uplink random frequency generator of the core library.
+#ifdef BIDIRECTIONAL
+	sfx_u32 rx_frequency_hz; // If non-zero, bypass the downlink frequency generator of the core library.
+	sfx_u32 dl_t_w_ms; // If non-zero, bypass the downlink timer value (T_W) from the RC structure.
+	sfx_u32 dl_t_rx_ms; // If non-zero, bypass the downlink timeout value (T_RX) from the RC structure.
 #endif
 #if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LBT)
-	sfx_bool lbt_enable;
+	sfx_u32 lbt_cs_max_duration_first_frame_ms; // If non-zero, bypass the first CS timeout value of the selected RC.
 #endif
 } SIGFOX_EP_API_TEST_parameters_t;
 

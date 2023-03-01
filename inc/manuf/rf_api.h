@@ -100,11 +100,33 @@ typedef enum {
  * \brief RF modulations list.
  *******************************************************************/
 typedef enum {
-    RF_API_MODULATION_NONE,
+    RF_API_MODULATION_NONE = 0,
 	RF_API_MODULATION_DBPSK,
 	RF_API_MODULATION_GFSK,
 	RF_API_MODULATION_LAST
 } RF_API_modulation_t;
+
+#ifdef TIMER_REQUIRED
+/*!******************************************************************
+ * \enum RF_API_latency_t
+ * \brief RF latency delay type.
+ *******************************************************************/
+typedef enum {
+	RF_API_LATENCY_WAKE_UP = 0,
+	RF_API_LATENCY_INIT_TX,
+	RF_API_LATENCY_SEND_START,
+	RF_API_LATENCY_SEND_STOP,
+	RF_API_LATENCY_DE_INIT_TX,
+	RF_API_LATENCY_SLEEP,
+#ifdef BIDIRECTIONAL
+	RF_API_LATENCY_INIT_RX,
+	RF_API_LATENCY_RECEIVE_START,
+	RF_API_LATENCY_RECEIVE_STOP,
+	RF_API_LATENCY_DE_INIT_RX,
+#endif
+	RF_API_LATENCY_LAST
+} RF_API_latency_t;
+#endif
 
 /*!******************************************************************
  * \struct RF_API_radio_parameters_t
@@ -133,18 +155,19 @@ typedef struct {
 #endif
 } RF_API_tx_data_t;
 
+#ifdef BIDIRECTIONAL
 /*!******************************************************************
  * \struct RF_API_rx_data_t
  * \brief RF RX data structure.
  *******************************************************************/
 typedef struct {
-	sfx_u8 dl_phy_content_size;
-#if (defined ASYNCHRONOUS) && (defined BIDIRECTIONAL)
+#ifdef ASYNCHRONOUS
 	RF_API_rx_data_received_cb_t data_received_cb;
 #else
 	sfx_bool data_received;
 #endif
 } RF_API_rx_data_t;
+#endif
 
 #if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LBT)
 /*!******************************************************************
@@ -261,7 +284,7 @@ RF_API_status_t RF_API_send(RF_API_tx_data_t *tx_data);
 /*!******************************************************************
  * \fn RF_API_status_t RF_API_receive(RF_API_rx_data_t *rx_data)
  * \brief Start downlink reception. Could be called multiple times if several downlink frames are received during the RX window.
- * \brief In blocking mode, this function blocks until a valid downlink data is received or the MCU_API_TIMER_2 has elapsed.
+ * \brief In blocking mode, this function blocks until a valid downlink data is received or the MCU_API_TIMER_INSTANCE_T_W has elapsed.
  * \brief In asynchronous mode, this function only starts the reception. Data reception should be notified through the rx_data_received() callback.
  * \param[in]	rx_data: Pointer to the RX parameters.
  * \retval		Function execution status.
@@ -286,13 +309,25 @@ RF_API_status_t RF_API_get_dl_phy_content_and_rssi(sfx_u8 *dl_phy_content, sfx_u
 #if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LBT)
 /*!******************************************************************
  * \fn RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_sense_params)
- * \brief In blocking mode, the function until the LBT condition is met or the MCU_API_TIMER_1 has elapsed.
+ * \brief In blocking mode, the function until the LBT condition is met or the MCU_API_TIMER_INSTANCE_LBT has elapsed.
  * \brief In asynchronous mode, this function only starts the carrier sense operation. Channel free event should be notified through the channel_free_cb() callback.
  * \param[in]	carrier_sense_params: Pointer to the carrier sense parameters.
  * \param[out] 	none
  * \retval		Function execution status.
  *******************************************************************/
 RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_sense_params);
+#endif
+
+#ifdef TIMER_REQUIRED
+/*!******************************************************************
+ * \fn RF_API_status_t RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *latency_ms)
+ * \brief Read radio latency in milliseconds.
+ * \brief This functions is never called by the core library: it is provided to compensate the durations in the MCU_API_timer_start() function.
+ * \param[in]	latency_type: Type of latency to get.
+ * \param[out] 	latency_ms: Pointer to integer that will contain the radio latency in milliseconds.
+ * \retval		Function execution status.
+ *******************************************************************/
+RF_API_status_t RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *latency_ms);
 #endif
 
 #ifdef VERBOSE

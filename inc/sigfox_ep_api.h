@@ -56,6 +56,7 @@ typedef enum {
 	SIGFOX_EP_API_ERROR_NULL_PARAMETER,
 	SIGFOX_EP_API_ERROR_RC,
 	SIGFOX_EP_API_ERROR_MESSAGE_TYPE,
+	SIGFOX_EP_API_ERROR_SEND_FUNCTION_POINTER,
 	SIGFOX_EP_API_ERROR_UL_PAYLOAD_SIZE,
 	SIGFOX_EP_API_ERROR_DL_PAYLOAD_SIZE,
 	SIGFOX_EP_API_ERROR_DL_PAYLOAD_UNAVAILABLE,
@@ -63,16 +64,17 @@ typedef enum {
 	SIGFOX_EP_API_ERROR_EP_PAC,
 	SIGFOX_EP_API_ERROR_EP_KEY,
 	SIGFOX_EP_API_ERROR_STATE,
-	SIGFOX_EP_API_ERROR_RF_MODE,
-	SIGFOX_EP_API_ERROR_MODULATION,
 	SIGFOX_EP_API_ERROR_BIT_RATE,
 	SIGFOX_EP_API_ERROR_TX_POWER,
 	SIGFOX_EP_API_ERROR_NUMBER_OF_FRAMES,
 	SIGFOX_EP_API_ERROR_T_IFU,
 	SIGFOX_EP_API_ERROR_T_CONF,
 	SIGFOX_EP_API_ERROR_MESSAGE_COUNTER_ROLLOVER,
-	SIGFOX_EP_API_ERROR_TX_FORBIDDEN,
+	SIGFOX_EP_API_ERROR_TIMER_INSTANCE,
 	SIGFOX_EP_API_ERROR_VERSION,
+	// Network errors.
+	SIGFOX_EP_API_ERROR_TX_FORBIDDEN,
+	SIGFOX_EP_API_ERROR_DOWNLINK_TIMEOUT,
 	// Low level errors.
 	// Activate the ERROR_STACK flag and use the SIGFOX_EP_API_unstack_error() function to get more details.
 	SIGFOX_EP_API_ERROR_MCU,
@@ -220,12 +222,13 @@ typedef struct {
  *******************************************************************/
 typedef union {
 	struct {
-		unsigned app_frame_1 : 1;
-		unsigned app_frame_2 : 1;
-		unsigned app_frame_3 : 1;
-		unsigned downlink_frame : 1;
-		unsigned ack_frame : 1;
-		unsigned error : 1;
+		unsigned ul_frame_1 : 1;
+		unsigned ul_frame_2 : 1;
+		unsigned ul_frame_3 : 1;
+		unsigned dl_frame : 1;
+		unsigned dl_conf_frame : 1;
+		unsigned network_error : 1; // For LBT and downlink timeout.
+		unsigned execution_error : 1; // For internal execution errors.
 	};
 	sfx_u8 all;
 } SIGFOX_EP_API_message_status_t;
@@ -289,7 +292,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_send_control_message(SIGFOX_EP_API_control_
  * \brief Get the current message status.
  * \param[in]  	dl_payload: Byte array that will contain the downlink payload.
  * \param[in] 	dl_payload_size: Number of bytes to read.
- * \param[in]	dl_rssi_dbm: Pointer to 16-bits signed value that will contain the RSSI of the received downlink frame.
+ * \param[in]	rssi_dbm: Pointer to 16-bits signed value that will contain the RSSI of the received downlink frame.
+ * \param[out] 	none
  * \retval		Function execution status.
  *******************************************************************/
 SIGFOX_EP_API_status_t SIGFOX_EP_API_get_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 *rssi_dbm);
