@@ -101,7 +101,7 @@ static SIGFOX_EP_FREQUENCY_context_t sigfox_ep_frequency_ctx;
 
 /*******************************************************************/
 static sfx_u32 _get_baseband_frequency_range_hz(void) {
-	return (SIGFOX_MACRO_CHANNEL_WIDTH_HZ - (2 * ((sigfox_ep_frequency_ctx.rc) -> epsilon_hz)));
+	return (sfx_u32) (SIGFOX_MACRO_CHANNEL_WIDTH_HZ - (2 * ((sigfox_ep_frequency_ctx.rc) -> epsilon_hz)));
 }
 
 /*******************************************************************/
@@ -124,7 +124,7 @@ static sfx_u32 _get_baseband_frequency_min_allowed_hz(void) {
 /*******************************************************************/
 static sfx_u32 _get_baseband_frequency_max_allowed_hz(void) {
 	// Local variables.
-	sfx_u32 baseband_frequency_max_hz = SIGFOX_MACRO_CHANNEL_WIDTH_HZ - ((sigfox_ep_frequency_ctx.rc) -> epsilon_hz);
+	sfx_u32 baseband_frequency_max_hz = SIGFOX_MACRO_CHANNEL_WIDTH_HZ - ((sfx_u32) ((sigfox_ep_frequency_ctx.rc) -> epsilon_hz));
 #if (defined BIDIRECTIONAL) && !(defined SINGLE_FRAME)
 	// Add downlink guard band depending on bidirectional flag and number of frames.
 	if (((sigfox_ep_frequency_ctx.input) -> bidirectional_flag) == SFX_TRUE) {
@@ -158,7 +158,7 @@ static sfx_u8 _get_micro_channel_index(sfx_u32 baseband_frequency_hz) {
 	// Local variables.
 	sfx_u8 micro_channel_index = 0;
 	// Compute index.
-	micro_channel_index = ((baseband_frequency_hz + (SIGFOX_FH_MACRO_CHANNEL_DELTA / 2)) / SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ);
+	micro_channel_index = (sfx_u8) ((baseband_frequency_hz + (SIGFOX_FH_MACRO_CHANNEL_DELTA / 2)) / SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ);
 	micro_channel_index %= SIGFOX_FH_MICRO_CHANNEL_NUMBER;
 	// Check micro-channels mask.
 	if (((SIGFOX_FH_MICRO_CHANNEL_MASK >> micro_channel_index) & 0x01) == 0) {
@@ -166,12 +166,12 @@ static sfx_u8 _get_micro_channel_index(sfx_u32 baseband_frequency_hz) {
 		goto errors;
 	}
 	// Check low side micro-channel guard band.
-	if ((baseband_frequency_hz - (SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ + (SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ * (micro_channel_index - 1)))) < SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ) {
+	if ((baseband_frequency_hz - (SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ + (SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ * ((sfx_u32) (micro_channel_index - 1))))) < SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ) {
 		micro_channel_index = SIGFOX_EP_FREQUENCY_FH_MICRO_CHANNEL_ERROR;
 		goto errors;
 	}
 	// Check high side micro-channel guard band.
-	if (((SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ + (SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ * micro_channel_index)) - baseband_frequency_hz) < SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ) {
+	if (((SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ + (SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ * ((sfx_u32) micro_channel_index))) - baseband_frequency_hz) < SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ) {
 		micro_channel_index = SIGFOX_EP_FREQUENCY_FH_MICRO_CHANNEL_ERROR;
 		goto errors;
 	}
@@ -283,7 +283,7 @@ SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_init(const SIGFOX_rc_t *rc, sfx
 	sigfox_ep_frequency_ctx.rc = rc;
 	sigfox_ep_frequency_ctx.random_value = last_random_value;
 	// Compute random offset with EP-ID.
-	ep_id_16bits = ((((sfx_u16) ep_id[2]) << 8) & 0xFF00) | (((sfx_u16) ep_id[3]) & 0x00FF);
+	ep_id_16bits = (sfx_u16) (((((sfx_u16) ep_id[2]) << 8) & 0xFF00) | (((sfx_u16) ep_id[3]) & 0x00FF));
 	// Note: the term (ep_id_16bits + 1) could overflow to 0 if ep_id_16bits = 0xFFFF.
 	// In this case, the resulting random offset is 0 but will be set to 1 by the next operation (odd check)
 	sigfox_ep_frequency_ctx.random_offset = (SIGFOX_EP_FREQUENCY_RANDOM_MULTIPLIER * (ep_id_16bits + 1)) & SIGFOX_EP_FREQUENCY_RANDOM_VALUE_MASK;

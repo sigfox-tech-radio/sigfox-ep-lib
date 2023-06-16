@@ -155,13 +155,6 @@ static const sfx_u16 SIGFOX_EP_BITSTREAM_UL_FT_CONTROL_TABLE[3] = {0xAF67, 0xAFC
 
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
 static const sfx_u8 SIGFOX_EP_BITSTREAM_UL_ENCRYPTION_LOOP_LUT[SIGFOX_UL_PAYLOAD_MAX_SIZE_BYTES + 1] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2};
-#define SIGFOX_EP_BITSTREAM_AES_DATA_LENGTH		(2 * SIGFOX_EP_KEY_SIZE_BYTES)
-#else
-#if (UL_PAYLOAD_SIZE < 11)
-#define SIGFOX_EP_BITSTREAM_AES_DATA_LENGTH		(1 * SIGFOX_EP_KEY_SIZE_BYTES)
-#else
-#define SIGFOX_EP_BITSTREAM_AES_DATA_LENGTH		(2 * SIGFOX_EP_KEY_SIZE_BYTES)
-#endif
 #endif
 
 #define SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES	2
@@ -219,69 +212,53 @@ static SIGFOX_EP_BITSTREAM_status_t _aes_encrypt(void) {
 	// Local variables.
 #ifdef ERROR_CODES
 	SIGFOX_EP_BITSTREAM_status_t status = SIGFOX_EP_BITSTREAM_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 	MCU_API_encryption_data_t encryption_data;
 	sfx_u8 idx = 0;
-	sfx_u8 aes_data[SIGFOX_EP_BITSTREAM_AES_DATA_LENGTH];
-#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
+	sfx_u8 aes_data[SIGFOX_EP_KEY_SIZE_BYTES];
+#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE) || (UL_PAYLOAD_SIZE >= 11)
     sfx_u8 encryption_idx = 0;
-#else
-#if (UL_PAYLOAD_SIZE < 11)
-#else
-    sfx_u8 encryption_idx = 0;	
-#endif
 #endif
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
-	sfx_u8 ul_auth_input_size_bytes = SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + (sigfox_ep_bitstream_ctx.ul_payload_size_bytes);
+	sfx_u8 ul_auth_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + (sigfox_ep_bitstream_ctx.ul_payload_size_bytes));
 #else
-	sfx_u8 ul_auth_input_size_bytes = SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + UL_PAYLOAD_SIZE;
+	sfx_u8 ul_auth_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + UL_PAYLOAD_SIZE);
 #endif
-	// Concatenate bitstream multiple times to create input data.
-	for (idx=0 ; idx<SIGFOX_EP_BITSTREAM_AES_DATA_LENGTH ; idx++) {
-		aes_data[idx] = (sigfox_ep_bitstream_ctx.bitstream)[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + (idx % ul_auth_input_size_bytes)];
+	sfx_u8 ul_auth_input_index = 0;
+	// First initialization vector is null.
+	for (idx=0 ; idx<SIGFOX_EP_KEY_SIZE_BYTES ; idx++) {
+		aes_data[idx] = 0x00;
 	}
-#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
+#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE) || (UL_PAYLOAD_SIZE >= 11)
 	// Encryption loop.
-	for (encryption_idx=0 ; encryption_idx<SIGFOX_EP_BITSTREAM_UL_ENCRYPTION_LOOP_LUT[sigfox_ep_bitstream_ctx.ul_payload_size_bytes] ; encryption_idx++) {
-		// Use previous result as initialization vector for next encryption (null on the first loop).
-		if (encryption_idx > 0) {
-			for (idx=0 ; idx<SIGFOX_EP_KEY_SIZE_BYTES ; idx++) {
-				aes_data[idx] ^= aes_data[(encryption_idx * SIGFOX_EP_KEY_SIZE_BYTES) + idx];
-			}
-		}
-#else /* UL_PÂYLOAD_SIZE */
-#if (UL_PAYLOAD_SIZE < 11)
-#else
-	for (encryption_idx=0 ; encryption_idx < 2 ; encryption_idx++) {
-		// Use previous result as initialization vector for next encryption (null on the first loop).
-		if (encryption_idx > 0) {
-			for (idx=0 ; idx<SIGFOX_EP_KEY_SIZE_BYTES ; idx++) {
-				aes_data[idx] ^= aes_data[(encryption_idx * SIGFOX_EP_KEY_SIZE_BYTES) + idx];
-			}
-		}
-#endif
-#endif
-		// Build input structure.
-		encryption_data.data = (sfx_u8*) aes_data;
-		encryption_data.data_size_bytes = SIGFOX_EP_KEY_SIZE_BYTES;
-#ifdef PUBLIC_KEY_CAPABLE
-		encryption_data.key = sigfox_ep_bitstream_ctx.key;
-#endif
-		// Perform encryption.
-#ifdef ERROR_CODES
-		mcu_status = MCU_API_aes_128_cbc_encrypt(&encryption_data);
-		MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_MCU);
-#else
-		MCU_API_aes_128_cbc_encrypt(&encryption_data);
-#endif
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
-    }
+	for (encryption_idx=0 ; encryption_idx<SIGFOX_EP_BITSTREAM_UL_ENCRYPTION_LOOP_LUT[sigfox_ep_bitstream_ctx.ul_payload_size_bytes] ; encryption_idx++) {
 #else
-#if (UL_PAYLOAD_SIZE < 11)
-#else
-    }	
+	for (encryption_idx=0 ; encryption_idx<2 ; encryption_idx++) {
 #endif
+#endif /* Multiple loops required */
+	// Build input data.
+	for (idx=0 ; idx<SIGFOX_EP_KEY_SIZE_BYTES ; idx++) {
+		// XOR operation with initialization vector.
+		aes_data[idx] ^= (sigfox_ep_bitstream_ctx.bitstream)[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + ul_auth_input_index];
+		ul_auth_input_index = (sfx_u8) ((ul_auth_input_index + 1) % ul_auth_input_size_bytes);
+	}
+	// Build input structure.
+	encryption_data.data = (sfx_u8*) aes_data;
+	encryption_data.data_size_bytes = SIGFOX_EP_KEY_SIZE_BYTES;
+#ifdef PUBLIC_KEY_CAPABLE
+	encryption_data.key = sigfox_ep_bitstream_ctx.key;
+#endif
+	// Perform encryption.
+#ifdef ERROR_CODES
+	mcu_api_status = MCU_API_aes_128_cbc_encrypt(&encryption_data);
+	MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_DRIVER_MCU_API);
+#else
+	MCU_API_aes_128_cbc_encrypt(&encryption_data);
+#endif
+#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE) || (UL_PAYLOAD_SIZE >= 11)
+    }
 #endif
 	// Add UL-AUTH field to bitstream.
 	for (idx=0 ; idx<(sigfox_ep_bitstream_ctx.ul_auth_size_bytes) ; idx++) {
@@ -302,30 +279,30 @@ static SIGFOX_EP_BITSTREAM_status_t _add_crc16(void) {
 	// Local variables.
 	sfx_u16 ul_crc = 0;
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
-	sfx_u8 crc_input_size_bytes = (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes);
+	sfx_u8 crc_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes);
 #else
-	sfx_u8 crc_input_size_bytes = (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes);
+	sfx_u8 crc_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes);
 #endif
 #ifdef ERROR_CODES
 	SIGFOX_EP_BITSTREAM_status_t status = SIGFOX_EP_BITSTREAM_SUCCESS;
 #ifdef CRC_HW
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #else
-	SIGFOX_CRC_status_t crc_status = SIGFOX_CRC_SUCCESS;
+	SIGFOX_CRC_status_t sigfox_crc_status = SIGFOX_CRC_SUCCESS;
 #endif
 #endif
     // Compute CRC.
 #ifdef CRC_HW
 #ifdef ERROR_CODES
-    mcu_status = MCU_API_compute_crc16(&(sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX]), crc_input_size_bytes, SIGFOX_EP_BITSTREAM_UL_CRC_POLYNOM, &ul_crc);
-    MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_MCU);
+    mcu_api_status = MCU_API_compute_crc16(&(sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX]), crc_input_size_bytes, SIGFOX_EP_BITSTREAM_UL_CRC_POLYNOM, &ul_crc);
+    MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_MCU_API);
 #else
     MCU_API_compute_crc16(&(sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX]), crc_input_size_bytes, SIGFOX_EP_BITSTREAM_UL_CRC_POLYNOM, &ul_crc);
 #endif
 #else
 #ifdef ERROR_CODES
-    crc_status = SIGFOX_CRC_compute_crc16(&(sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX]), crc_input_size_bytes, SIGFOX_EP_BITSTREAM_UL_CRC_POLYNOM, &ul_crc);
-    SIGFOX_CRC_check_status(SIGFOX_EP_BITSTREAM_ERROR_CRC);
+    sigfox_crc_status = SIGFOX_CRC_compute_crc16(&(sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX]), crc_input_size_bytes, SIGFOX_EP_BITSTREAM_UL_CRC_POLYNOM, &ul_crc);
+    SIGFOX_CRC_check_status(SIGFOX_EP_BITSTREAM_ERROR_DRIVER_SIGFOX_CRC);
 #else
     SIGFOX_CRC_compute_crc16(&(sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX]), crc_input_size_bytes, SIGFOX_EP_BITSTREAM_UL_CRC_POLYNOM, &ul_crc);
 #endif
@@ -333,8 +310,8 @@ static SIGFOX_EP_BITSTREAM_status_t _add_crc16(void) {
     ul_crc ^= 0xFFFF;
     // Add CRC16 field to bitstream.
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
-    sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 0] = (ul_crc >> 8) & 0xFF;
-    sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 1] = (ul_crc >> 0) & 0xFF;
+    sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 0] = (sfx_u8) ((ul_crc >> 8) & 0xFF);
+    sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 1] = (sfx_u8) ((ul_crc >> 0) & 0xFF);
 #else
     sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 0] = (ul_crc >> 8) & 0xFF;
     sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 1] = (ul_crc >> 0) & 0xFF;
@@ -354,9 +331,9 @@ static void _convolve(SIGFOX_ul_frame_rank_t ul_frame_rank) {
     sfx_u8 mask = 0;
     sfx_u8 state = 0;
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
-    sfx_u8 convolution_input_size_bytes = (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES);
+    sfx_u8 convolution_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES);
 #else
-    sfx_u8 convolution_input_size_bytes = (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES);
+    sfx_u8 convolution_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES);
 #endif
     // Init buffers.
     for (idx=0; idx<convolution_input_size_bytes; idx++) {
@@ -366,11 +343,11 @@ static void _convolve(SIGFOX_ul_frame_rank_t ul_frame_rank) {
     for (idx=0; idx<convolution_input_size_bytes; idx++) {
         for (mask=0x80 ;  mask!=0 ; mask>>=1) {
             if (initial_bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + idx] & mask) {
-            	sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + idx] |= mask * ((SIGFOX_EP_BITSTREAM_UL_CONVOLUTION_LUT_IN_OUT[ul_frame_rank][state] == 0) ? 1 : 0);
-                state = SIGFOX_EP_BITSTREAM_UL_CONVOLUTION_LUT_IN[state] + 2;
+            	sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + idx] |= (sfx_u8) (mask * ((SIGFOX_EP_BITSTREAM_UL_CONVOLUTION_LUT_IN_OUT[ul_frame_rank][state] == 0) ? 1 : 0));
+                state = (sfx_u8) (SIGFOX_EP_BITSTREAM_UL_CONVOLUTION_LUT_IN[state] + 2);
             }
             else {
-            	sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + idx] |= mask * SIGFOX_EP_BITSTREAM_UL_CONVOLUTION_LUT_IN_OUT[ul_frame_rank][state];
+            	sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + idx] |= (sfx_u8) (mask * SIGFOX_EP_BITSTREAM_UL_CONVOLUTION_LUT_IN_OUT[ul_frame_rank][state]);
                 state = SIGFOX_EP_BITSTREAM_UL_CONVOLUTION_LUT_IN[state];
             }
         }
@@ -388,7 +365,7 @@ static sfx_u16 _dewhitening_pn(sfx_u16 pn_value) {
     for (roll=8 ; roll>0 ; roll--) {
         msb = (sfx_u8) (pn_value & 0x0021);
         pn_value >>= 1;
-        pn_value |= (msb == 0x20 || msb == 0x01) ? 0x100 : 0x000;
+        pn_value = (sfx_u16) (pn_value | ((msb == 0x20 || msb == 0x01) ? 0x0100 : 0x0000));
     }
     return pn_value;
 }
@@ -403,7 +380,7 @@ static void _dewhitening(SIGFOX_EP_BITSTREAM_dl_frame_t *input, sfx_u8 *local_bi
     sfx_u32 pn = 0;
     // Convert EP ID array to 32-bits value.
     for (idx=0 ; idx<SIGFOX_EP_ID_SIZE_BYTES ; idx++) {
-    	ep_id_32bits |= (input-> ep_id[SIGFOX_EP_ID_SIZE_BYTES - 1 - idx]) << (8 * idx);
+    	ep_id_32bits |= (sfx_u32) ((input-> ep_id[SIGFOX_EP_ID_SIZE_BYTES - 1 - idx]) << (8 * idx));
     }
     // Set initial value as device ID * message counter.
     pn = ep_id_32bits * ((sfx_u32) (input-> message_counter));
@@ -415,16 +392,16 @@ static void _dewhitening(SIGFOX_EP_BITSTREAM_dl_frame_t *input, sfx_u8 *local_bi
     // Perform dewhitening algorithm.
     for (idx=0 ; idx<8; idx++) {
     	pn = _dewhitening_pn((sfx_u16) pn);
-        local_bitstream[idx + 0] ^= pn >> (idx + 1);
-        local_bitstream[idx + 1] ^= (pn & ((1 << (idx + 1)) - 1)) << (7 - idx);
+        local_bitstream[idx + 0] ^= (sfx_u8) (pn >> (idx + 1));
+        local_bitstream[idx + 1] ^= (sfx_u8) ((((sfx_s32) pn) & ((1 << (idx + 1)) - 1)) << (7 - idx));
     }
     for (idx=0; idx<5; idx++) {
     	pn = _dewhitening_pn((sfx_u16) pn);
-        local_bitstream[idx + 9] ^= pn >> (idx + 1);
-        local_bitstream[idx + 10] ^= (pn & ((1 << (idx + 1)) - 1)) << (7 - idx);
+        local_bitstream[idx + 9] ^= (sfx_u8) (pn >> (idx + 1));
+        local_bitstream[idx + 10] ^= (sfx_u8) ((((sfx_s32) pn) & ((1 << (idx + 1)) - 1)) << (7 - idx));
     }
     pn = _dewhitening_pn((sfx_u16) pn);
-    local_bitstream[14] ^= pn >> (idx + 1);
+    local_bitstream[14] ^= (sfx_u8) (pn >> (idx + 1));
     local_bitstream[SIGFOX_DL_PHY_CONTENT_SIZE_BYTES] = 0;
 }
 #endif
@@ -441,13 +418,13 @@ static void _decode_bch(sfx_u8* local_bitstream) {
         // Compute code syndrome.
         syndrome = 0;
         for(j=0 ; j<SIGFOX_EP_BITSTREAM_DL_BCH_LENGTH ; j++) {
-            syndrome ^= SIGFOX_EP_BITSTREAM_DL_POW_ALPHA_LUT[j] * ((local_bitstream[j] >> i) & 1);
+            syndrome ^= (sfx_u8) (SIGFOX_EP_BITSTREAM_DL_POW_ALPHA_LUT[j] * ((local_bitstream[j] >> i) & 1));
         }
         // The BCH(15,11) code can only correct a single error.
         // If the syndrome is not zero, it indicates the bit in error.
         // If the syndrome is zero, there is no error. To simplify the code, word 16 is changed.
         // Word 16 is actually a dummy word.
-        local_bitstream[SIGFOX_EP_BITSTREAM_DL_LOG_ALPHA_LUT[syndrome]] ^= (1 << i);
+        local_bitstream[SIGFOX_EP_BITSTREAM_DL_LOG_ALPHA_LUT[syndrome]] ^= (sfx_u8) (1 << i);
     }
 }
 #endif
@@ -608,8 +585,8 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
 	}
 #endif /* UL_PAYLOAD_SIZE = 0 */
 #if (UL_PAYLOAD_SIZE >= 2)
-	sigfox_ep_bitstream_ctx.ul_li = 3 - ((UL_PAYLOAD_SIZE - 1) % 4);
-	sigfox_ep_bitstream_ctx.ul_auth_size_bytes = (sigfox_ep_bitstream_ctx.ul_li + 2);
+	sigfox_ep_bitstream_ctx.ul_li = (sfx_u8) (3 - ((UL_PAYLOAD_SIZE - 1) % 4));
+	sigfox_ep_bitstream_ctx.ul_auth_size_bytes = (sfx_u8) (sigfox_ep_bitstream_ctx.ul_li + 2);
 #endif
 #else /* UL_PAYLOAD_SIZE */
     switch (input -> message_type) {
@@ -655,8 +632,8 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
 #else
 			sigfox_ep_bitstream_ctx.ul_ft = SIGFOX_EP_BITSTREAM_UL_FT_APPLICATION_TABLE[((input -> common_parameters).ul_frame_rank)][((sigfox_ep_bitstream_ctx.ul_payload_size_bytes - 1) / 4) + 2];
 #endif
-			sigfox_ep_bitstream_ctx.ul_li = 3 - ((sigfox_ep_bitstream_ctx.ul_payload_size_bytes - 1) % 4);
-			sigfox_ep_bitstream_ctx.ul_auth_size_bytes = (sigfox_ep_bitstream_ctx.ul_li + 2);
+			sigfox_ep_bitstream_ctx.ul_li = (sfx_u8) (3 - ((sigfox_ep_bitstream_ctx.ul_payload_size_bytes - 1) % 4));
+			sigfox_ep_bitstream_ctx.ul_auth_size_bytes = (sfx_u8) (sigfox_ep_bitstream_ctx.ul_li + 2);
 		}
 		break;
 	default:
@@ -671,10 +648,9 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
     bitstream[SIGFOX_EP_BITSTREAM_UL_FT_INDEX + 0] = (sfx_u8) ((sigfox_ep_bitstream_ctx.ul_ft & 0xFF00) >> 8);
     bitstream[SIGFOX_EP_BITSTREAM_UL_FT_INDEX + 1] = (sfx_u8) ((sigfox_ep_bitstream_ctx.ul_ft & 0x00FF) >> 0);
     // LI and BF.
-    bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] = 0x00;
-    bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] |= (sigfox_ep_bitstream_ctx.ul_li << SIGFOX_EP_BITSTREAM_LI_BIT_INDEX);
+    bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] = (sfx_u8) (sigfox_ep_bitstream_ctx.ul_li << SIGFOX_EP_BITSTREAM_LI_BIT_INDEX);
 #ifdef BIDIRECTIONAL
-    bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] |= (((input -> bidirectional_flag) & 0x01) << SIGFOX_EP_BITSTREAM_BF_BIT_INDEX);
+    bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] = (sfx_u8) (bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] | (((input -> bidirectional_flag) & 0x01) << SIGFOX_EP_BITSTREAM_BF_BIT_INDEX));
 #endif
     // Message counter.
     bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + 0] |= (sfx_u8) ((((input -> common_parameters).message_counter) & 0x0F00) >> 8);
@@ -690,7 +666,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
     for (idx=0 ; idx<UL_PAYLOAD_SIZE ; idx++) {
 		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + idx] = (input -> ul_payload)[idx];
 	}
-    (*bitstream_size_bytes) += UL_PAYLOAD_SIZE;
+    (*bitstream_size_bytes) = (sfx_u8) ((*bitstream_size_bytes) + UL_PAYLOAD_SIZE);
 #endif
 #else /* UL_PAYLOAD_SIZE */
     // UL-PAYLOAD (MSByte first).
@@ -702,7 +678,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
     else {
     	sigfox_ep_bitstream_ctx.ul_payload_size_bytes = 0; // No payload field for EMPTY and BIT message types.
     }
-    (*bitstream_size_bytes) += sigfox_ep_bitstream_ctx.ul_payload_size_bytes;
+    (*bitstream_size_bytes) = (sfx_u8) ((*bitstream_size_bytes) + sigfox_ep_bitstream_ctx.ul_payload_size_bytes);
 #endif /* UL_PAYLOAD_SIZE */
     // UL_AUTH.
 #ifdef ERROR_CODES
@@ -711,7 +687,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
 #else
     _aes_encrypt();
 #endif
-    (*bitstream_size_bytes) += sigfox_ep_bitstream_ctx.ul_auth_size_bytes;
+    (*bitstream_size_bytes) = (sfx_u8) ((*bitstream_size_bytes) + sigfox_ep_bitstream_ctx.ul_auth_size_bytes);
     // CRC.
 #ifdef ERROR_CODES
     status = _add_crc16();
@@ -719,7 +695,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
 #else
     _add_crc16();
 #endif
-    (*bitstream_size_bytes) += SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES;
+    (*bitstream_size_bytes) = (sfx_u8) ((*bitstream_size_bytes) + SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES);
 #ifndef SINGLE_FRAME
     // Convolution.
     _convolve((input -> common_parameters).ul_frame_rank);
@@ -781,10 +757,9 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_B
 		EXIT_ERROR(SIGFOX_EP_BITSTREAM_ERROR_MESSAGE_TYPE);
 		break;
     }
-    sigfox_ep_bitstream_ctx.ul_li = 3 - ((sigfox_ep_bitstream_ctx.ul_payload_size_bytes - 1) % 4);
-    sigfox_ep_bitstream_ctx.ul_auth_size_bytes = (sigfox_ep_bitstream_ctx.ul_li + 2);
-    bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] = 0x00;
-    bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] |= (sigfox_ep_bitstream_ctx.ul_li << SIGFOX_EP_BITSTREAM_LI_BIT_INDEX);
+    sigfox_ep_bitstream_ctx.ul_li = (sfx_u8) (3 - ((sigfox_ep_bitstream_ctx.ul_payload_size_bytes - 1) % 4));
+    sigfox_ep_bitstream_ctx.ul_auth_size_bytes = (sfx_u8) (sigfox_ep_bitstream_ctx.ul_li + 2);
+    bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX] = (sfx_u8) (sigfox_ep_bitstream_ctx.ul_li << SIGFOX_EP_BITSTREAM_LI_BIT_INDEX);
     // Message counter.
     bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + 0] |= (sfx_u8) ((((input -> common_parameters).message_counter) & 0x0F00) >> 8);
     bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX + 1] = (sfx_u8) ((((input -> common_parameters).message_counter) & 0x00FF) >> 0);
@@ -821,7 +796,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_B
 	default:
 		break;
     }
-    (*bitstream_size_bytes) += sigfox_ep_bitstream_ctx.ul_payload_size_bytes;
+    (*bitstream_size_bytes) = (sfx_u8) ((*bitstream_size_bytes) + sigfox_ep_bitstream_ctx.ul_payload_size_bytes);
     // UL_AUTH.
 #ifdef ERROR_CODES
     status = _aes_encrypt();
@@ -829,7 +804,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_B
 #else
     _aes_encrypt();
 #endif
-    (*bitstream_size_bytes) += sigfox_ep_bitstream_ctx.ul_auth_size_bytes;
+    (*bitstream_size_bytes) = (sfx_u8) ((*bitstream_size_bytes) + sigfox_ep_bitstream_ctx.ul_auth_size_bytes);
     // CRC.
 #ifdef ERROR_CODES
 	status = _add_crc16();
@@ -837,7 +812,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_B
 #else
 	_add_crc16();
 #endif
-	(*bitstream_size_bytes) += SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES;
+	(*bitstream_size_bytes) = (sfx_u8) ((*bitstream_size_bytes) + SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES);
 #ifndef SINGLE_FRAME
     // Convolution.
 	_convolve((input -> common_parameters).ul_frame_rank);
@@ -853,9 +828,9 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
 	// Local variables.
 #ifdef ERROR_CODES
 	SIGFOX_EP_BITSTREAM_status_t status = SIGFOX_EP_BITSTREAM_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #ifndef CRC_HW
-	SIGFOX_CRC_status_t crc_status = SIGFOX_CRC_SUCCESS;
+	SIGFOX_CRC_status_t sigfox_crc_status = SIGFOX_CRC_SUCCESS;
 #endif
 #endif
 	MCU_API_encryption_data_t encryption_data;
@@ -886,15 +861,15 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
 	// Step 3: CRC check.
 #ifdef CRC_HW
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_compute_crc8(&(local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX]), (SIGFOX_DL_PAYLOAD_SIZE_BYTES + SIGFOX_EP_BITSTREAM_DL_AUTH_SIZE_BYTES), SIGFOX_EP_BITSTREAM_DL_CRC_POLYNOM, &dl_crc);
-	MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_MCU);
+	mcu_api_status = MCU_API_compute_crc8(&(local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX]), (SIGFOX_DL_PAYLOAD_SIZE_BYTES + SIGFOX_EP_BITSTREAM_DL_AUTH_SIZE_BYTES), SIGFOX_EP_BITSTREAM_DL_CRC_POLYNOM, &dl_crc);
+	MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_MCU_API);
 #else
 	MCU_API_compute_crc8(&(local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX]), (SIGFOX_DL_PAYLOAD_SIZE_BYTES + SIGFOX_EP_BITSTREAM_DL_AUTH_SIZE_BYTES), SIGFOX_EP_BITSTREAM_DL_CRC_POLYNOM, &dl_crc);
 #endif
 #else
 #ifdef ERROR_CODES
-	crc_status = SIGFOX_CRC_compute_crc8(&(local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX]), (SIGFOX_DL_PAYLOAD_SIZE_BYTES + SIGFOX_EP_BITSTREAM_DL_AUTH_SIZE_BYTES), SIGFOX_EP_BITSTREAM_DL_CRC_POLYNOM, &dl_crc);
-	SIGFOX_CRC_check_status(SIGFOX_EP_BITSTREAM_ERROR_CRC);
+	sigfox_crc_status = SIGFOX_CRC_compute_crc8(&(local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX]), (SIGFOX_DL_PAYLOAD_SIZE_BYTES + SIGFOX_EP_BITSTREAM_DL_AUTH_SIZE_BYTES), SIGFOX_EP_BITSTREAM_DL_CRC_POLYNOM, &dl_crc);
+	SIGFOX_CRC_check_status(SIGFOX_EP_BITSTREAM_ERROR_DRIVER_SIGFOX_CRC);
 #else
 	SIGFOX_CRC_compute_crc8(&(local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX]), (SIGFOX_DL_PAYLOAD_SIZE_BYTES + SIGFOX_EP_BITSTREAM_DL_AUTH_SIZE_BYTES), SIGFOX_EP_BITSTREAM_DL_CRC_POLYNOM, &dl_crc);
 #endif
@@ -924,8 +899,8 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
 #endif
 	// Perform encryption.
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_aes_128_cbc_encrypt(&encryption_data);
-	MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_MCU);
+	mcu_api_status = MCU_API_aes_128_cbc_encrypt(&encryption_data);
+	MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_aes_128_cbc_encrypt(&encryption_data);
 #endif

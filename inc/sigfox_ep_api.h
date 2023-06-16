@@ -71,18 +71,20 @@ typedef enum {
 	SIGFOX_EP_API_ERROR_T_CONF,
 	SIGFOX_EP_API_ERROR_MESSAGE_COUNTER_ROLLOVER,
 	SIGFOX_EP_API_ERROR_TIMER_INSTANCE,
+	SIGFOX_EP_API_ERROR_TIMER_REASON,
 	SIGFOX_EP_API_ERROR_VERSION,
 	// Network errors.
 	SIGFOX_EP_API_ERROR_TX_FORBIDDEN,
 	SIGFOX_EP_API_ERROR_DOWNLINK_TIMEOUT,
-	// Low level errors.
+	// Low level drivers errors.
 	// Activate the ERROR_STACK flag and use the SIGFOX_EP_API_unstack_error() function to get more details.
-	SIGFOX_EP_API_ERROR_MCU,
-	SIGFOX_EP_API_ERROR_RF,
-	SIGFOX_EP_API_ERROR_BITSTREAM,
-	SIGFOX_EP_API_ERROR_FREQUENCY,
-	SIGFOX_EP_API_ERROR_NVM,
-	SIGFOX_EP_API_ERROR_TX_CONTROL
+	SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_BITSTREAM,
+	SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_FREQUENCY,
+	SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL,
+	SIGFOX_EP_API_ERROR_DRIVER_MCU_API,
+	SIGFOX_EP_API_ERROR_DRIVER_RF_API,
+	// Last index.
+	SIGFOX_EP_API_ERROR_LAST
 } SIGFOX_EP_API_status_t;
 #else
 typedef void SIGFOX_EP_API_status_t;
@@ -222,14 +224,14 @@ typedef struct {
  *******************************************************************/
 typedef union {
 	struct {
-		unsigned ul_frame_1 : 1;
-		unsigned ul_frame_2 : 1;
-		unsigned ul_frame_3 : 1;
-		unsigned dl_frame : 1;
-		unsigned dl_conf_frame : 1;
-		unsigned network_error : 1; // For LBT and downlink timeout.
-		unsigned execution_error : 1; // For internal execution errors.
-	};
+		sfx_u8 ul_frame_1 : 1;
+		sfx_u8 ul_frame_2 : 1;
+		sfx_u8 ul_frame_3 : 1;
+		sfx_u8 dl_frame : 1;
+		sfx_u8 dl_conf_frame : 1;
+		sfx_u8 network_error : 1; // For LBT and downlink timeout.
+		sfx_u8 execution_error : 1; // For internal execution errors.
+	} field;
 	sfx_u8 all;
 } SIGFOX_EP_API_message_status_t;
 
@@ -292,11 +294,11 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_send_control_message(SIGFOX_EP_API_control_
  * \brief Get the current message status.
  * \param[in]  	dl_payload: Byte array that will contain the downlink payload.
  * \param[in] 	dl_payload_size: Number of bytes to read.
- * \param[in]	rssi_dbm: Pointer to 16-bits signed value that will contain the RSSI of the received downlink frame.
+ * \param[in]	dl_rssi_dbm: Pointer to 16-bits signed value that will contain the RSSI of the received downlink frame.
  * \param[out] 	none
  * \retval		Function execution status.
  *******************************************************************/
-SIGFOX_EP_API_status_t SIGFOX_EP_API_get_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 *rssi_dbm);
+SIGFOX_EP_API_status_t SIGFOX_EP_API_get_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 *dl_rssi_dbm);
 #endif
 
 /*!******************************************************************
@@ -386,7 +388,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_unstack_error(SIGFOX_ERROR_t *error_ptr);
  * \retval		none
  *******************************************************************/
 #ifdef ERROR_STACK
-#define SIGFOX_EP_API_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_EP_LIBRARY, ep_api_status)
+#define SIGFOX_EP_API_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_API, sigfox_ep_api_status)
 #else
 #define SIGFOX_EP_API_stack_error(void)
 #endif
@@ -400,7 +402,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_unstack_error(SIGFOX_ERROR_t *error_ptr);
  * \param[out]	none
  * \retval		none
  *******************************************************************/
-#define SIGFOX_EP_API_check_status(error) { if (ep_api_status != SIGFOX_EP_API_SUCCESS) { SIGFOX_EP_API_stack_error(); EXIT_ERROR(error) } }
+#define SIGFOX_EP_API_check_status(error) { if (sigfox_ep_api_status != SIGFOX_EP_API_SUCCESS) { SIGFOX_EP_API_stack_error(); EXIT_ERROR(error) } }
 #endif
 
 #endif /* __SIGFOX_EP_API_H__ */

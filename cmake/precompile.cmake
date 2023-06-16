@@ -3,18 +3,13 @@ find_program(UNIFDEF unifdef REQUIRED)
 if(NOT UNIFDEF)
     message(FATAL_ERROR "unifdef not found!")
 endif()
-find_program(SPLINT splint REQUIRED)
-if(NOT SPLINT)
-    message(FATAL_ERROR "splint not found!")
-endif()
-mark_as_advanced(SPLINT UNIFDEF PRECOMPIL_DIR)
+mark_as_advanced(UNIFDEF PRECOMPIL_DIR)
 # specify the precompil files location
 set(PRECOMPIL_DIR ${CMAKE_BINARY_DIR}/precompil CACHE STRING 	"")
 
 #List of precompileInc and precompileSrc files
 foreach(X IN LISTS LIB_SOURCES)
 	LIST(APPEND PRECOMPIL_LIB_SOURCES "${PRECOMPIL_DIR}/${X}")
-    LIST(APPEND SPLINT_PRECOMPIL_LIB_SOURCES "${PRECOMPIL_DIR}/splint/${X}")
 endforeach()
 foreach(X IN LISTS MANUF_SOURCES)
 	LIST(APPEND PRECOMPIL_MANUF_SOURCES "${PRECOMPIL_DIR}/${X}")
@@ -40,29 +35,12 @@ add_custom_command(
 )
 endforeach()
 
-#Custom command Loop for all Sources : SPLINT analysis
-foreach(X IN LISTS LIB_SOURCES MANUF_SOURCES)
-add_custom_command(
-	OUTPUT "${PRECOMPIL_DIR}/splint/${X}"
-	DEPENDS ${CMAKE_BINARY_DIR}/undefs_file
-	DEPENDS ${CMAKE_BINARY_DIR}/defs_file
-	DEPENDS ${LIB_HEADERS}
-    DEPENDS ${X}
-	COMMAND	${CMAKE_COMMAND} -E make_directory ${PRECOMPIL_DIR}/splint ${PRECOMPIL_DIR}/splint/src/core ${PRECOMPIL_DIR}/splint/src/manuf
-    COMMAND splint  +linelength 150 +weak +show-summary +stats -slashslashcomment -preproc -I${PRECOMPIL_DIR}/inc/core/ -I${PRECOMPIL_DIR}/inc/manuf/ -I${PRECOMPIL_DIR}/inc/  ${PRECOMPIL_DIR}/${X} > ${PRECOMPIL_DIR}/splint/${X}.log
-    # Keep a log trace even if the splint failed
-    COMMAND cat ${PRECOMPIL_DIR}/splint/${X}.log > ${PRECOMPIL_DIR}/splint/${X}
-#	VERBATIM
-)
-endforeach()
-
-
 #Custom command Loop for all Headers
 foreach(X IN LISTS LIB_HEADERS MANUF_HEADERS)
 if(${X} STREQUAL "inc/sigfox_types.h" AND ${USE_SIGFOX_EP_FLAGS_H} STREQUAL "OFF" AND NOT "${DEF_FLAG_WITH_VALUE_LIST}" STREQUAL "")
 #Add Specific Macro in sigfox_types.h file
 	foreach(X IN LISTS DEF_FLAG_WITH_VALUE_LIST)
-		string(CONCAT DEF_FLAG_STRING ${DEF_FLAG_STRING} "\r\\n" "#define ${X} ${${X}}")
+		string(CONCAT DEF_FLAG_STRING ${DEF_FLAG_STRING} "#define ${X} ${${X}}\\n")
 	endforeach()
 	add_custom_command(
 		OUTPUT ${PRECOMPIL_DIR}/${X}
@@ -109,11 +87,4 @@ add_custom_target(precompil
 	DEPENDS ${PRECOMPIL_MANUF_SOURCES}
 	VERBATIM
 )
-
-add_custom_target(splintanalysis
-	DEPENDS precompil
-    DEPENDS ${SPLINT_PRECOMPIL_LIB_SOURCES}
-	VERBATIM
-)
-
 

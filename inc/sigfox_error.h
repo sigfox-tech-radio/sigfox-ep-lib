@@ -43,6 +43,7 @@
 #include "sigfox_types.h"
 
 #ifdef ERROR_STACK
+
 /*** SIGFOX ERROR structures ***/
 
 /*!******************************************************************
@@ -51,13 +52,19 @@
  *******************************************************************/
 typedef enum {
 	SIGFOX_ERROR_SOURCE_NONE = 0,
-	SIGFOX_ERROR_SOURCE_EP_LIBRARY,
-	SIGFOX_ERROR_SOURCE_MCU,
-	SIGFOX_ERROR_SOURCE_RF,
-	SIGFOX_ERROR_SOURCE_BITSTREAM,
-	SIGFOX_ERROR_SOURCE_CRC,
-	SIGFOX_ERROR_SOURCE_FREQUENCY,
-	SIGFOX_ERROR_SOURCE_TX_CONTROL,
+	// Library.
+	SIGFOX_ERROR_SOURCE_SIGFOX_EP_API,
+	// Internal library drivers.
+	SIGFOX_ERROR_SOURCE_SIGFOX_EP_BITSTREAM,
+	SIGFOX_ERROR_SOURCE_SIGFOX_CRC,
+	SIGFOX_ERROR_SOURCE_SIGFOX_EP_FREQUENCY,
+	SIGFOX_ERROR_SOURCE_SIGFOX_TX_CONTROL,
+	// Manufacturer functions.
+	SIGFOX_ERROR_SOURCE_MCU_API,
+	SIGFOX_ERROR_SOURCE_RF_API,
+	// HW functions.
+	SIGFOX_ERROR_SOURCE_HW_API,
+	// Last index.
 	SIGFOX_ERROR_SOURCE_LAST
 } SIGFOX_ERROR_source_t;
 #endif
@@ -146,4 +153,5 @@ void SIGFOX_ERROR_unstack(SIGFOX_ERROR_t *error_ptr);
 #else
 #define RETURN()	{ return; }
 #endif
+
 #endif /* __SIGFOX_ERROR_H__ */

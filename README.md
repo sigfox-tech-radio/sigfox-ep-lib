@@ -38,6 +38,7 @@ Below is the list of available flags.
 | `ASYNCHRONOUS`               | `undefined` / `defined`                                        | Asynchronous mode if defined, blocking mode otherwise.                                                                                                                                                                                           |
 | `LOW_LEVEL_OPEN_CLOSE`       | `undefined` / `defined`                                        | Enable MCU and RF open/close functions if defined.                                                                                                                                                                                               |
 | `REGULATORY`                 | `undefined` / `defined`                                        | Enable radio regulatory control (DC, FH or LBT check) if defined.                                                                                                                                                                                |
+| `LATENCY_COMPENSATION`       | `undefined` / `defined`                                        | Enable radio latency compensation to improve MCU timers accuracy.                                                                                                                                                                                |
 | `SINGLE_FRAME`               | `undefined` / `defined`                                        | Send 1 frame per message (N=1) if defined. Otherwise number of frames per message is dynamically given when sending a message (N=1, N=2 or N=3).                                                                                                 |
 | `UL_BIT_RATE_BPS`            | `undefined` / `100` / `600`                                    | If defined, give the only uplink bit rate supported (100 or 600 depending on the RC). Otherwise, value is dynamically given when sending a message.                                                                                              |
 | `TX_POWER_DBM_EIRP`          | `undefined` / `<tx_power_dbm_eirp>`                            | If defined, give the only TX power supported by the radio. Otherwise the value is dynamically given when sending a message.                                                                                                                      |
@@ -114,6 +115,7 @@ $ cmake -DUSE_SIGFOX_EP_FLAGS_H=OFF \
         -DASYNCHRONOUS=ON \
         -DLOW_LEVEL_OPEN_CLOSE=ON \
         -DREGULATORY=ON \
+        -DLATENCY_COMPENSATION=ON \
         -DSINGLE_FRAME=ON \
         -DPARAMETERS_CHECK=ON \
         -DCERTIFICATION=ON \
@@ -153,4 +155,17 @@ The addon can be directly generated from the Sigfox End-Point library **cmake** 
 
 ```bash
 $ cmake <all previous flags> -DADDON_RFP=ON ..
+$ make sigfox_ep_addon_rfp
+```
+
+## RF API implementation examples
+
+
+### ST S2LP
+
+The [S2LP RF API example code](https://github.com/sigfox-tech-radio/sigfox-ep-rf-api-st-s2lp) can be directly generated from the Sigfox End-Point library **cmake** by using the `S2LP_RF_API` option:
+
+```bash
+$ cmake <all previous flags> -DS2LP_RF_API=ON ..
+$ make s2lp_rf_api
 ```

@@ -54,6 +54,8 @@
 typedef enum {
 	SIGFOX_CRC_SUCCESS = 0,
 	SIGFOX_CRC_ERROR_NULL_PARAMETER,
+	// Last index.
+	SIGFOX_CRC_ERROR_LAST
 } SIGFOX_CRC_status_t;
 #else
 typedef void SIGFOX_CRC_status_t;
@@ -94,7 +96,7 @@ SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc8(sfx_u8 *crc_data, sfx_u8 data_size, 
  * \retval		none
  *******************************************************************/
 #ifdef ERROR_STACK
-#define SIGFOX_CRC_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_CRC, crc_status)
+#define SIGFOX_CRC_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_CRC, sigfox_crc_status)
 #else
 #define SIGFOX_CRC_stack_error(void)
 #endif
@@ -108,7 +110,7 @@ SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc8(sfx_u8 *crc_data, sfx_u8 data_size, 
  * \param[out]	none
  * \retval		none
  *******************************************************************/
-#define SIGFOX_CRC_check_status(error) { if (crc_status != SIGFOX_CRC_SUCCESS) { SIGFOX_CRC_stack_error(); EXIT_ERROR(error) } }
+#define SIGFOX_CRC_check_status(error) { if (sigfox_crc_status != SIGFOX_CRC_SUCCESS) { SIGFOX_CRC_stack_error(); EXIT_ERROR(error) } }
 #endif
 
 #endif /* CRC_HW */

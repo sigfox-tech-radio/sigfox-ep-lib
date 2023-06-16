@@ -55,9 +55,12 @@ typedef enum {
 	SIGFOX_TX_CONTROL_SUCCESS = 0,
 	SIGFOX_TX_CONTROL_ERROR_NULL_PARAMETER,
 	SIGFOX_TX_CONTROL_ERROR_SPECTRUM_ACCESS,
-	// Low level errors.
-	SIGFOX_TX_CONTROL_ERROR_MCU,
-	SIGFOX_TX_CONTROL_ERROR_RF
+	// Low level drivers errors.
+	// Activate the ERROR_STACK flag and use the SIGFOX_EP_API_unstack_error() function to get more details.
+	SIGFOX_TX_CONTROL_ERROR_DRIVER_MCU_API,
+	SIGFOX_TX_CONTROL_ERROR_DRIVER_RF_API,
+	// Last index.
+	SIGFOX_TX_CONTROL_ERROR_LAST
 } SIGFOX_TX_CONTROL_status_t;
 #else
 typedef void SIGFOX_TX_CONTROL_status_t;
@@ -66,7 +69,8 @@ typedef void SIGFOX_TX_CONTROL_status_t;
 typedef enum {
 	SIGFOX_TX_CONTROL_RESULT_ALLOWED,
 	SIGFOX_TX_CONTROL_RESULT_FORBIDDEN,
-	SIGFOX_TX_CONTROL_RESULT_PENDING
+	SIGFOX_TX_CONTROL_RESULT_PENDING,
+	SIGFOX_TX_CONTROL_RESULT_LAST
 } SIGFOX_TX_CONTROL_result_t;
 
 #ifdef ASYNCHRONOUS
@@ -112,10 +116,10 @@ typedef struct {
 #endif
 #ifdef CERTIFICATION
 #ifdef SPECTRUM_ACCESS_FH
-	sfx_bool fh_timer_enable;
+	sfx_bool fh_check_enable;
 #endif
 #ifdef SPECTRUM_ACCESS_LBT
-	sfx_bool lbt_enable;
+	sfx_bool lbt_check_enable;
 	sfx_u32 lbt_cs_max_duration_first_frame_ms;
 #endif
 #ifdef SPECTRUM_ACCESS_LDC
@@ -197,7 +201,7 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_get_result(SIGFOX_TX_CONTROL_result
  * \retval		none
  *******************************************************************/
 #ifdef ERROR_STACK
-#define SIGFOX_TX_CONTROL_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_TX_CONTROL, tx_control_status)
+#define SIGFOX_TX_CONTROL_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_TX_CONTROL, sigfox_tx_control_status)
 #else
 #define SIGFOX_TX_CONTROL_stack_error(void)
 #endif
@@ -211,7 +215,7 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_get_result(SIGFOX_TX_CONTROL_result
  * \param[out]	none
  * \retval		none
  *******************************************************************/
-#define SIGFOX_TX_CONTROL_check_status(error) { if (tx_control_status != SIGFOX_TX_CONTROL_SUCCESS) { SIGFOX_TX_CONTROL_stack_error(); EXIT_ERROR(error) } }
+#define SIGFOX_TX_CONTROL_check_status(error) { if (sigfox_tx_control_status != SIGFOX_TX_CONTROL_SUCCESS) { SIGFOX_TX_CONTROL_stack_error(); EXIT_ERROR(error) } }
 #endif
 
 #endif /* REGULATORY */

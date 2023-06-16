@@ -59,7 +59,9 @@
 #define SIGFOX_T_LF_MS						8000
 #endif
 
-#if (defined UL_PAYLOAD_SIZE)
+#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26 // Maximum value used as default.
+#else
 #if (UL_PAYLOAD_SIZE == 0)
 #define SIGFOX_UL_BITSTREAM_SIZE_BYTES		14
 #elif (UL_PAYLOAD_SIZE == 1)
@@ -73,8 +75,6 @@
 #else
 #define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26
 #endif
-#else
-#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26 // Maximum value used as default.
 #endif
 
 #ifdef BIDIRECTIONAL

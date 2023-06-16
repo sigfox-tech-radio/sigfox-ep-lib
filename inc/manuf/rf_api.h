@@ -51,9 +51,11 @@
  *******************************************************************/
 typedef enum {
     RF_API_SUCCESS = 0,
-    RF_API_ERROR
+    RF_API_ERROR,
 	// Additional custom error codes can be added here (up to sfx_u32).
 	// They will be logged in the library error stack if the ERROR_STACK flag is defined.
+	// Last index.
+	RF_API_ERROR_LAST
 } RF_API_status_t;
 #else
 typedef void RF_API_status_t;
@@ -106,7 +108,7 @@ typedef enum {
 	RF_API_MODULATION_LAST
 } RF_API_modulation_t;
 
-#ifdef TIMER_REQUIRED
+#if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION)
 /*!******************************************************************
  * \enum RF_API_latency_t
  * \brief RF latency delay type.
@@ -318,11 +320,11 @@ RF_API_status_t RF_API_get_dl_phy_content_and_rssi(sfx_u8 *dl_phy_content, sfx_u
 RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_sense_params);
 #endif
 
-#ifdef TIMER_REQUIRED
+#if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION)
 /*!******************************************************************
  * \fn RF_API_status_t RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *latency_ms)
  * \brief Read radio latency in milliseconds.
- * \brief This functions is never called by the core library: it is provided to compensate the durations in the MCU_API_timer_start() function.
+ * \brief This functions is called by the core library to compensate the durations in the MCU_API_timer_start() function.
  * \param[in]	latency_type: Type of latency to get.
  * \param[out] 	latency_ms: Pointer to integer that will contain the radio latency in milliseconds.
  * \retval		Function execution status.
@@ -362,7 +364,7 @@ void RF_API_error(void);
  * \retval		none
  *******************************************************************/
 #ifdef ERROR_STACK
-#define RF_API_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_RF, rf_status)
+#define RF_API_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_RF_API, rf_api_status)
 #else
 #define RF_API_stack_error(void)
 #endif
@@ -376,7 +378,7 @@ void RF_API_error(void);
  * \param[out]	none
  * \retval		none
  *******************************************************************/
-#define RF_API_check_status(error) { if (rf_status != RF_API_SUCCESS) { RF_API_stack_error(); EXIT_ERROR(error) } }
+#define RF_API_check_status(error) { if (rf_api_status != RF_API_SUCCESS) { RF_API_stack_error(); EXIT_ERROR(error) } }
 #endif
 
 #endif /* __RF_API_H__ */

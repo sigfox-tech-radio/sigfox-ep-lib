@@ -57,9 +57,12 @@ typedef enum {
 	SIGFOX_EP_BITSTREAM_ERROR_KEY_TYPE,
 	SIGFOX_EP_BITSTREAM_ERROR_FRAME_RANK,
 	SIGFOX_EP_BITSTREAM_ERROR_MESSAGE_COUNTER,
-	// Low level errors.
-	SIGFOX_EP_BITSTREAM_ERROR_CRC,
-	SIGFOX_EP_BITSTREAM_ERROR_MCU
+	// Low level drivers errors.
+	// Activate the ERROR_STACK flag and use the SIGFOX_EP_API_unstack_error() function to get more details.
+	SIGFOX_EP_BITSTREAM_ERROR_DRIVER_SIGFOX_CRC,
+	SIGFOX_EP_BITSTREAM_ERROR_DRIVER_MCU_API,
+	// Last index.
+	SIGFOX_EP_BITSTREAM_ERROR_LAST
 } SIGFOX_EP_BITSTREAM_status_t;
 #else
 typedef void SIGFOX_EP_BITSTREAM_status_t;
@@ -185,7 +188,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
  * \retval		none
  *******************************************************************/
 #ifdef ERROR_STACK
-#define SIGFOX_EP_BITSTREAM_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_BITSTREAM, bitstream_status)
+#define SIGFOX_EP_BITSTREAM_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_BITSTREAM, sigfox_ep_bitstream_status)
 #else
 #define SIGFOX_EP_BITSTREAM_stack_error(void)
 #endif
@@ -199,7 +202,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
  * \param[out]	none
  * \retval		none
  *******************************************************************/
-#define SIGFOX_EP_BITSTREAM_check_status(error) { if (bitstream_status != SIGFOX_EP_BITSTREAM_SUCCESS) { SIGFOX_EP_BITSTREAM_stack_error(); EXIT_ERROR(error) } }
+#define SIGFOX_EP_BITSTREAM_check_status(error) { if (sigfox_ep_bitstream_status != SIGFOX_EP_BITSTREAM_SUCCESS) { SIGFOX_EP_BITSTREAM_stack_error(); EXIT_ERROR(error) } }
 #endif
 
 #endif /* __SIGFOX_EP_BITSTREAM_H__ */

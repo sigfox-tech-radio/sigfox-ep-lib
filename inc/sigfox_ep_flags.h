@@ -60,13 +60,15 @@
 
 #define REGULATORY							/*!< \brief Enable radio regulatory control (DC, FH or LBT check) if defined. > */
 
+#define LATENCY_COMPENSATION				/*!< \brief If defined, enable radio latency compensation to improve MCU timers accuracy. > */
+
 //#define SINGLE_FRAME						/*!< \brief Send 1 frame per message (N=1) if defined. > */
 											/*!< \brief Otherwise number of frames per message is dynamically given when sending a message (N=1, N=2 or N=3). > */
 
 //#define UL_BIT_RATE_BPS			100		/*!< \brief If defined, give the only uplink bit rate supported (100 or 600 depending on the RC). > */
 											/*!< \brief Otherwise, value is dynamically given when sending a message. > */
 
-//#define TX_POWER_DBM_EIRP			16		/*!< \brief If defined, give the only TX power supported by the radio. > */
+//#define TX_POWER_DBM_EIRP			14		/*!< \brief If defined, give the only TX power supported by the radio. > */
 											/*!< \brief Otherwise the value is dynamically given when sending a message. > */
 
 //#define T_IFU_MS					500		/*!< \brief If defined, give the fixed inter-frame delay used between uplink frames of a same message (0 to 2000ms). > */

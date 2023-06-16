@@ -72,9 +72,11 @@
  *******************************************************************/
 typedef enum {
     MCU_API_SUCCESS = 0,
-	MCU_API_ERROR
+	MCU_API_ERROR,
 	// Additional custom error codes can be added here (up to sfx_u32).
 	// They will be logged in the library error stack if the ERROR_STACK flag is defined.
+	// Last index.
+	MCU_API_ERROR_LAST
 } MCU_API_status_t;
 #else
 typedef void MCU_API_status_t;
@@ -138,6 +140,7 @@ typedef enum {
 #ifdef CERTIFICATION
 	MCU_API_TIMER_REASON_ADDON_RFP,
 #endif
+	MCU_API_TIMER_REASON_LAST
 } MCU_API_timer_reason_t;
 #endif
 
@@ -390,7 +393,7 @@ void MCU_API_error(void);
  * \retval		none
  *******************************************************************/
 #ifdef ERROR_STACK
-#define MCU_API_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_MCU, mcu_status)
+#define MCU_API_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_MCU_API, mcu_api_status)
 #else
 #define MCU_API_stack_error(void)
 #endif
@@ -404,7 +407,7 @@ void MCU_API_error(void);
  * \param[out]	none
  * \retval		none
  *******************************************************************/
-#define MCU_API_check_status(error) { if (mcu_status != MCU_API_SUCCESS) { MCU_API_stack_error(); EXIT_ERROR(error) } }
+#define MCU_API_check_status(error) { if (mcu_api_status != MCU_API_SUCCESS) { MCU_API_stack_error(); EXIT_ERROR(error) } }
 #endif
 
 #endif /* __MCU_API_H__ */

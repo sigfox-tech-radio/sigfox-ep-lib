@@ -62,13 +62,13 @@ SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc16(sfx_u8 *crc_data, sfx_u8 data_size,
 	// Compute CRC.
     (*crc) = 0;
 	for (j=0 ; j<data_size ; j++) {
-		(*crc) ^= ((sfx_u16) crc_data[j] << 8);
+		(*crc) ^= (sfx_u16) ((sfx_u16) crc_data[j] << 8);
 		for (i=0 ; i<8 ; i++) {
 			if (((*crc) & 0x8000) != 0) {
-				(*crc) = ((*crc) << 1) ^ polynom;
+				(*crc) = (sfx_u16) (((*crc) << 1) ^ polynom);
 			}
 			else {
-				(*crc) = (*crc) << 1;
+				(*crc) = (sfx_u16) ((*crc) << 1);
 			}
 		}
 	}
@@ -98,10 +98,10 @@ SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc8(sfx_u8 *crc_data, sfx_u8 data_size, 
 		(*crc) = crc_data[j] ^ (*crc);
 		for (i=0 ; i<8; i++) {
 			if (((*crc) & 0x80) != 0) {
-				(*crc) = ((*crc) << 1) ^ polynom;
+				(*crc) = (sfx_u8) (((*crc) << 1) ^ polynom);
 			}
 			else {
-				(*crc) = (*crc) << 1;
+				(*crc) = (sfx_u8) ((*crc) << 1);
 			}
 		}
 	}

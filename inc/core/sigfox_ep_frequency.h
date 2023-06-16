@@ -57,6 +57,8 @@ typedef enum {
 	SIGFOX_EP_FREQUENCY_ERROR_SPECTRUM_ACCESS_TYPE,
 	SIGFOX_EP_FREQUENCY_ERROR_RANDOM_GENERATION,
 	SIGFOX_EP_FREQUENCY_ERROR_FRAME_1_FREQUENCY,
+	// Last index.
+	SIGFOX_EP_FREQUENCY_ERROR_LAST
 } SIGFOX_EP_FREQUENCY_status_t;
 #else
 typedef void SIGFOX_EP_FREQUENCY_status_t;
@@ -70,9 +72,7 @@ typedef void SIGFOX_EP_FREQUENCY_status_t;
 typedef struct {
 	SIGFOX_ul_frame_rank_t ul_frame_rank;
 	sfx_u8 number_of_frames;
-#ifdef BIDIRECTIONAL
 	sfx_bool bidirectional_flag;
-#endif
 } SIGFOX_EP_FREQUENCY_uplink_signal_t;
 #endif
 
@@ -139,7 +139,7 @@ SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_get_random_value(sfx_u16 *rando
  * \retval		none
  *******************************************************************/
 #ifdef ERROR_STACK
-#define SIGFOX_EP_FREQUENCY_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_FREQUENCY, frequency_status)
+#define SIGFOX_EP_FREQUENCY_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_FREQUENCY, sigfox_ep_frequency_status)
 #else
 #define SIGFOX_EP_FREQUENCY_stack_error(void)
 #endif
@@ -153,7 +153,7 @@ SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_get_random_value(sfx_u16 *rando
  * \param[out]	none
  * \retval		none
  *******************************************************************/
-#define SIGFOX_EP_FREQUENCY_check_status(error) { if (frequency_status != SIGFOX_EP_FREQUENCY_SUCCESS) { SIGFOX_EP_FREQUENCY_stack_error(); EXIT_ERROR(error) } }
+#define SIGFOX_EP_FREQUENCY_check_status(error) { if (sigfox_ep_frequency_status != SIGFOX_EP_FREQUENCY_SUCCESS) { SIGFOX_EP_FREQUENCY_stack_error(); EXIT_ERROR(error) } }
 #endif
 
 #endif /* __SIGFOX_EP_FREQUENCY_H__ */

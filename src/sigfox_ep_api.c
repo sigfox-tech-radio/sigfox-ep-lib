@@ -93,35 +93,36 @@ typedef enum {
 /*******************************************************************/
 typedef union {
 	struct {
-		unsigned error_stack_initialized : 1;
-		unsigned synchronous : 1;
-		unsigned send_message_request : 1;
-		unsigned radio_woken_up : 1;
-		unsigned dl_conf_message : 1;
-		unsigned control_message : 1;
-		unsigned tx_control_pre_check_running : 1;
-		unsigned tx_control_post_check_running : 1;
-		unsigned frame_success : 1;
-		unsigned nvm_write_pending : 1;
-		unsigned process_running : 1;
-	};
+		sfx_u8 error_stack_initialized : 1;
+		sfx_u8 synchronous : 1;
+		sfx_u8 send_message_request : 1;
+		sfx_u8 radio_woken_up : 1;
+		sfx_u8 dl_conf_message : 1;
+		sfx_u8 control_message : 1;
+		sfx_u8 tx_control_pre_check_running : 1;
+		sfx_u8 tx_control_post_check_running : 1;
+		sfx_u8 frame_success : 1;
+		sfx_u8 nvm_write_pending : 1;
+		sfx_u8 process_running : 1;
+	} field;
 	sfx_u16 all;
+
 } SIGFOX_EP_API_internal_flags_t;
 
 /*******************************************************************/
 typedef union {
 	struct {
-		unsigned mcu_process : 1;
-		unsigned mcu_timer1_cplt : 1;
-		unsigned mcu_timer2_cplt : 1;
-		unsigned rf_process : 1;
-		unsigned rf_tx_cplt : 1;
-		unsigned rf_rx_data_received : 1;
-		unsigned tx_control_process : 1;
-		unsigned tx_control_pre_check_cplt : 1;
-		unsigned tx_control_post_check_cplt : 1;
-		unsigned low_level_error : 1;
-	};
+		sfx_u8 mcu_process : 1;
+		sfx_u8 mcu_timer1_cplt : 1;
+		sfx_u8 mcu_timer2_cplt : 1;
+		sfx_u8 rf_process : 1;
+		sfx_u8 rf_tx_cplt : 1;
+		sfx_u8 rf_rx_data_received : 1;
+		sfx_u8 tx_control_process : 1;
+		sfx_u8 tx_control_pre_check_cplt : 1;
+		sfx_u8 tx_control_post_check_cplt : 1;
+		sfx_u8 low_level_error : 1;
+	} field;
 	sfx_u16 all;
 } SIGFOX_EP_API_irq_flags_t;
 
@@ -165,6 +166,7 @@ typedef struct {
 #endif /* APPLICATION_MESSAGES */
 #ifdef BIDIRECTIONAL
 	// Downlink variables.
+	RF_API_rx_data_t rx_data;
 	sfx_bool dl_status;
 	sfx_u8 dl_payload[SIGFOX_DL_PAYLOAD_SIZE_BYTES];
 	sfx_s16 dl_rssi_dbm;
@@ -187,7 +189,7 @@ typedef struct {
 	sfx_u8 frame_success_count;
 #endif
 #if !(defined SINGLE_FRAME) || (defined BIDIRECTIONAL)
-	sfx_u32 interframe_ms; // Tifu, Tifb or Tconf.
+	sfx_u16 interframe_ms; // Tifu, Tifb or Tconf.
 #endif
 #ifdef CERTIFICATION
 	SIGFOX_EP_API_TEST_parameters_t test_parameters;
@@ -250,7 +252,7 @@ static const sfx_u8 SIGFOX_EP_API_FLAGS[] = SIGFOX_EP_FLAGS;
 #ifdef ASYNCHRONOUS
 /*******************************************************************/
 #define _PROCESS_CALLBACK(void) { \
-	if ((sigfox_ep_api_ctx.process_cb != SFX_NULL) && (sigfox_ep_api_ctx.internal_flags.process_running == 0)) { \
+	if ((sigfox_ep_api_ctx.process_cb != SFX_NULL) && (sigfox_ep_api_ctx.internal_flags.field.process_running == 0)) { \
 		sigfox_ep_api_ctx.process_cb(); \
 	} \
 }
@@ -287,29 +289,29 @@ static const sfx_u8 SIGFOX_EP_API_FLAGS[] = SIGFOX_EP_FLAGS;
 /*******************************************************************/
 static void _MCU_API_process_cb(void) {
     // Set local flag.
-    sigfox_ep_api_ctx.irq_flags.mcu_process = 1;
+    sigfox_ep_api_ctx.irq_flags.field.mcu_process = 1;
     _PROCESS_CALLBACK();
 }
 
 #ifdef ASYNCHRONOUS
 #ifdef ERROR_CODES
 /*******************************************************************/
-static void _MCU_API_error_cb(MCU_API_status_t mcu_status) {
+static void _MCU_API_error_cb(MCU_API_status_t mcu_api_status) {
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 	// Set local error code.
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 	// Do not call the process if the given status is not an error.
 	return;
 errors:
 	sigfox_ep_api_ctx.status_from_callback = status;
-	sigfox_ep_api_ctx.irq_flags.low_level_error = 1;
+	sigfox_ep_api_ctx.irq_flags.field.low_level_error = 1;
 	_PROCESS_CALLBACK();
 }
 #else
 /*******************************************************************/
 static void _MCU_API_error_cb(void) {
-	sigfox_ep_api_ctx.irq_flags.low_level_error = 1;
+	sigfox_ep_api_ctx.irq_flags.field.low_level_error = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -319,7 +321,7 @@ static void _MCU_API_error_cb(void) {
 /*******************************************************************/
 static void _MCU_API_timer1_cplt_cb(void) {
 	// Set local flag.
-	sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt = 1;
+	sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -328,7 +330,7 @@ static void _MCU_API_timer1_cplt_cb(void) {
 /*******************************************************************/
 static void _MCU_API_timer2_cplt_cb(void) {
 	// Set local flag.
-	sigfox_ep_api_ctx.irq_flags.mcu_timer2_cplt = 1;
+	sigfox_ep_api_ctx.irq_flags.field.mcu_timer2_cplt = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -336,29 +338,29 @@ static void _MCU_API_timer2_cplt_cb(void) {
 /*******************************************************************/
 static void _RF_API_process_cb(void) {
     // Set local flag.
-    sigfox_ep_api_ctx.irq_flags.rf_process = 1;
+    sigfox_ep_api_ctx.irq_flags.field.rf_process = 1;
     _PROCESS_CALLBACK();
 }
 
 #ifdef ASYNCHRONOUS
 #ifdef ERROR_CODES
 /*******************************************************************/
-static void _RF_API_error_cb(RF_API_status_t rf_status) {
+static void _RF_API_error_cb(RF_API_status_t rf_api_status) {
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 	// Set local error code.
-	RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+	RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 	// Do not call the process if the given status is not an error.
 	return;
 errors:
 	sigfox_ep_api_ctx.status_from_callback = status;
-	sigfox_ep_api_ctx.irq_flags.low_level_error = 1;
+	sigfox_ep_api_ctx.irq_flags.field.low_level_error = 1;
 	_PROCESS_CALLBACK();
 }
 #else
 /*******************************************************************/
 static void _RF_API_error_cb(void) {
-	sigfox_ep_api_ctx.irq_flags.low_level_error = 1;
+	sigfox_ep_api_ctx.irq_flags.field.low_level_error = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -367,7 +369,7 @@ static void _RF_API_error_cb(void) {
 /*******************************************************************/
 static void _RF_API_tx_cplt_cb(void) {
 	// Set local flag.
-	sigfox_ep_api_ctx.irq_flags.rf_tx_cplt = 1;
+	sigfox_ep_api_ctx.irq_flags.field.rf_tx_cplt = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -376,7 +378,7 @@ static void _RF_API_tx_cplt_cb(void) {
 /*******************************************************************/
 static void _RF_API_rx_data_received_cb(void) {
 	// Set local flag.
-	sigfox_ep_api_ctx.irq_flags.rf_rx_data_received = 1;
+	sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -385,7 +387,7 @@ static void _RF_API_rx_data_received_cb(void) {
 /*******************************************************************/
 static void _SIGFOX_TX_CONTROL_process_cb(void) {
 	// Set local flag and result.
-	sigfox_ep_api_ctx.irq_flags.tx_control_process = 1;
+	sigfox_ep_api_ctx.irq_flags.field.tx_control_process = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -394,7 +396,7 @@ static void _SIGFOX_TX_CONTROL_process_cb(void) {
 /*******************************************************************/
 static void _SIGFOX_TX_CONTROL_pre_check_cplt_cb(void) {
 	// Set local flag and result.
-	sigfox_ep_api_ctx.irq_flags.tx_control_pre_check_cplt = 1;
+	sigfox_ep_api_ctx.irq_flags.field.tx_control_pre_check_cplt = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -403,7 +405,7 @@ static void _SIGFOX_TX_CONTROL_pre_check_cplt_cb(void) {
 /*******************************************************************/
 static void _SIGFOX_TX_CONTROL_post_check_cplt_cb(void) {
 	// Set local flag and result.
-	sigfox_ep_api_ctx.irq_flags.tx_control_post_check_cplt = 1;
+	sigfox_ep_api_ctx.irq_flags.field.tx_control_post_check_cplt = 1;
 	_PROCESS_CALLBACK();
 }
 #endif
@@ -630,7 +632,7 @@ static SIGFOX_EP_API_status_t _store_application_message(SIGFOX_EP_API_applicati
 #if (defined PARAMETERS_CHECK) && (defined ERROR_CODES)
 errors:
 	if (status != SIGFOX_EP_API_SUCCESS) {
-		sigfox_ep_api_ctx.message_status.execution_error = 1;
+		sigfox_ep_api_ctx.message_status.field.execution_error = 1;
 	}
 #endif
 	RETURN();
@@ -695,7 +697,7 @@ static SIGFOX_EP_API_status_t _store_control_message(SIGFOX_EP_API_control_messa
 #if (defined PARAMETERS_CHECK) && (defined ERROR_CODES)
 errors:
 	if (status != SIGFOX_EP_API_SUCCESS) {
-		sigfox_ep_api_ctx.message_status.execution_error = 1;
+		sigfox_ep_api_ctx.message_status.field.execution_error = 1;
 	}
 #endif
 	RETURN();
@@ -705,11 +707,9 @@ errors:
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _compute_next_ul_frequency(void) {
 	// Local variables.
-	sfx_u32 ul_frequency_hz = 0;
-	sfx_u16 random_value = 0;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	SIGFOX_EP_FREQUENCY_status_t frequency_status = SIGFOX_EP_FREQUENCY_SUCCESS;
+	SIGFOX_EP_FREQUENCY_status_t sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_SUCCESS;
 #endif
 #ifndef SINGLE_FRAME
 	SIGFOX_EP_FREQUENCY_uplink_signal_t frequency_parameters;
@@ -724,7 +724,7 @@ static SIGFOX_EP_API_status_t _compute_next_ul_frequency(void) {
 		frequency_parameters.bidirectional_flag = 0;
 	}
 	else {
-		frequency_parameters.bidirectional_flag = (sigfox_ep_api_ctx.internal_flags.control_message != 0) ? 0 : ((sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag);
+		frequency_parameters.bidirectional_flag = (sigfox_ep_api_ctx.internal_flags.field.control_message != 0) ? 0 : ((sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag);
 	}
 #else
 	frequency_parameters.bidirectional_flag = 0;
@@ -735,25 +735,25 @@ static SIGFOX_EP_API_status_t _compute_next_ul_frequency(void) {
 #ifdef CERTIFICATION
 	// Bypass frequency if needed.
 	if ((sigfox_ep_api_ctx.test_parameters.tx_frequency_hz) != 0) {
-		ul_frequency_hz = sigfox_ep_api_ctx.test_parameters.tx_frequency_hz;
+		sigfox_ep_api_ctx.ul_frequency_hz = sigfox_ep_api_ctx.test_parameters.tx_frequency_hz;
 	}
 	else {
 #endif /* CERTIFICATION */
 #ifndef SINGLE_FRAME
 #ifdef ERROR_CODES
 	// Compute frequency.
-	frequency_status = SIGFOX_EP_FREQUENCY_compute_uplink(&frequency_parameters, &ul_frequency_hz);
-	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_FREQUENCY);
+	sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_compute_uplink(&frequency_parameters, &sigfox_ep_api_ctx.ul_frequency_hz);
+	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_FREQUENCY);
 #else
-	SIGFOX_EP_FREQUENCY_compute_uplink(&frequency_parameters, &ul_frequency_hz);
+	SIGFOX_EP_FREQUENCY_compute_uplink(&frequency_parameters, &sigfox_ep_api_ctx.ul_frequency_hz);
 #endif
 #else /* MULTIPLE_FRAMES */
 #ifdef ERROR_CODES
 	// Compute frequency.
-	frequency_status = SIGFOX_EP_FREQUENCY_compute_uplink(&ul_frequency_hz);
-	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_FREQUENCY);
+	sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_compute_uplink(&sigfox_ep_api_ctx.ul_frequency_hz);
+	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_FREQUENCY);
 #else
-	SIGFOX_EP_FREQUENCY_compute_uplink(&ul_frequency_hz);
+	SIGFOX_EP_FREQUENCY_compute_uplink(&sigfox_ep_api_ctx.ul_frequency_hz);
 #endif
 #endif /* MULTIPLE_FRAMES */
 #ifdef CERTIFICATION
@@ -761,14 +761,11 @@ static SIGFOX_EP_API_status_t _compute_next_ul_frequency(void) {
 #endif
 	// Update random value.
 #ifdef ERROR_CODES
-	frequency_status = SIGFOX_EP_FREQUENCY_get_random_value(&random_value);
-	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_FREQUENCY);
+	sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_get_random_value(&sigfox_ep_api_ctx.random_value);
+	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_FREQUENCY);
 #else
-	SIGFOX_EP_FREQUENCY_get_random_value(&random_value);
+	SIGFOX_EP_FREQUENCY_get_random_value(&sigfox_ep_api_ctx.random_value);
 #endif
-	sigfox_ep_api_ctx.random_value = random_value;
-	// Update global variables.
-	sigfox_ep_api_ctx.ul_frequency_hz = ul_frequency_hz;
 #ifdef ERROR_CODES
 errors:
 #endif
@@ -784,12 +781,12 @@ static sfx_bool _is_downlink_required(void) {
 	// Check message pointer.
 	if (sigfox_ep_api_ctx.application_message_ptr == SFX_NULL) goto errors;
 	// Check bidirectional flag.
-	if (((sigfox_ep_api_ctx.application_message_ptr -> bidirectional_flag) != 0) && (sigfox_ep_api_ctx.internal_flags.control_message == 0)) {
+	if (((sigfox_ep_api_ctx.application_message_ptr -> bidirectional_flag) != 0) && (sigfox_ep_api_ctx.internal_flags.field.control_message == 0)) {
 		downlink_required = SFX_TRUE;
 	}
 #ifdef CERTIFICATION
 	// Check downlink bypass flag.
-	if (sigfox_ep_api_ctx.test_parameters.flags.dl_enable == 0) {
+	if (sigfox_ep_api_ctx.test_parameters.flags.field.dl_enable == 0) {
 		downlink_required = SFX_FALSE;
 	}
 #endif
@@ -806,7 +803,7 @@ static sfx_bool _is_last_frame_of_uplink_sequence(void) {
 #ifdef SINGLE_FRAME
 	last_uplink_frame = SFX_TRUE;
 #else
-	if (sigfox_ep_api_ctx.ul_frame_rank >= (((sigfox_ep_api_ctx.common_parameters_ptr) -> number_of_frames) - 1)) {
+	if (sigfox_ep_api_ctx.ul_frame_rank >= ((sfx_u8) (((sigfox_ep_api_ctx.common_parameters_ptr) -> number_of_frames) - 1))) {
 		last_uplink_frame = SFX_TRUE;
 	}
 #endif
@@ -823,13 +820,13 @@ static sfx_bool _is_last_frame_of_message_sequence(void) {
 #ifdef APPLICATION_MESSAGES
 	if ((sigfox_ep_api_ctx.application_message_ptr) == SFX_NULL) {
 		// Do not check bidirectional flag.
-		if ((sigfox_ep_api_ctx.internal_flags.dl_conf_message != 0) || (_is_last_frame_of_uplink_sequence() == SFX_TRUE)) {
+		if ((sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0) || (_is_last_frame_of_uplink_sequence() == SFX_TRUE)) {
 			last_message_frame = SFX_TRUE;
 		}
 	}
 	else {
 		// Check bidirectional flag.
-		if ((sigfox_ep_api_ctx.internal_flags.dl_conf_message != 0) || ((_is_last_frame_of_uplink_sequence() == SFX_TRUE) && (_is_downlink_required() == SFX_FALSE))) {
+		if ((sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0) || ((_is_last_frame_of_uplink_sequence() == SFX_TRUE) && (_is_downlink_required() == SFX_FALSE))) {
 			last_message_frame = SFX_TRUE;
 		}
 	}
@@ -876,21 +873,21 @@ static void _set_tx_control_parameters(SIGFOX_TX_CONTROL_check_type check_type, 
 	tx_control_params -> number_of_frames = (sigfox_ep_api_ctx.common_parameters_ptr) -> number_of_frames;
 #endif
 #ifdef BIDIRECTIONAL
-	tx_control_params -> dl_conf_message = sigfox_ep_api_ctx.internal_flags.dl_conf_message;
+	tx_control_params -> dl_conf_message = sigfox_ep_api_ctx.internal_flags.field.dl_conf_message;
 #endif
 #if !(defined SINGLE_FRAME) || (defined BIDIRECTIONAL)
 	tx_control_params -> interframe_ms = sigfox_ep_api_ctx.interframe_ms; // Tifu, Tifb or Tconf.
 #endif
 #ifdef CERTIFICATION
 #ifdef SPECTRUM_ACCESS_FH
-	tx_control_params -> fh_timer_enable = sigfox_ep_api_ctx.test_parameters.flags.fh_timer_enable;
+	tx_control_params -> fh_check_enable = sigfox_ep_api_ctx.test_parameters.flags.field.tx_control_fh_enable;
 #endif
 #ifdef SPECTRUM_ACCESS_LBT
-	tx_control_params -> lbt_enable = sigfox_ep_api_ctx.test_parameters.flags.lbt_enable;
+	tx_control_params -> lbt_check_enable = sigfox_ep_api_ctx.test_parameters.flags.field.tx_control_lbt_enable;
 	tx_control_params -> lbt_cs_max_duration_first_frame_ms = sigfox_ep_api_ctx.test_parameters.lbt_cs_max_duration_first_frame_ms;
 #endif
 #ifdef SPECTRUM_ACCESS_LDC
-	tx_control_params -> ldc_check_enable = sigfox_ep_api_ctx.test_parameters.flags.ldc_check_enable;
+	tx_control_params -> ldc_check_enable = sigfox_ep_api_ctx.test_parameters.flags.field.tx_control_ldc_enable;
 #endif
 #endif /* CERTIFICATION */
 #ifdef ASYNCHRONOUS
@@ -908,13 +905,13 @@ static SIGFOX_EP_API_status_t _read_mcu_voltage_temperature(void) {
 	sfx_u16 voltage_idle_mv = 0;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 #ifdef SINGLE_FRAME
 	// Read MCU data.
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_get_voltage_temperature(&voltage_idle_mv, &voltage_tx_mv, &temperature_tenth_degrees);
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	mcu_api_status = MCU_API_get_voltage_temperature(&voltage_idle_mv, &voltage_tx_mv, &temperature_tenth_degrees);
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_get_voltage_temperature(&voltage_idle_mv, &voltage_tx_mv, &temperature_tenth_degrees);
 #endif
@@ -926,8 +923,8 @@ static SIGFOX_EP_API_status_t _read_mcu_voltage_temperature(void) {
 	if (sigfox_ep_api_ctx.ul_frame_rank == SIGFOX_UL_FRAME_RANK_1) {
 		// Read MCU data.
 #ifdef ERROR_CODES
-		mcu_status = MCU_API_get_voltage_temperature(&voltage_idle_mv, &voltage_tx_mv, &temperature_tenth_degrees);
-		MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+		mcu_api_status = MCU_API_get_voltage_temperature(&voltage_idle_mv, &voltage_tx_mv, &temperature_tenth_degrees);
+		MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 		MCU_API_get_voltage_temperature(&voltage_idle_mv, &voltage_tx_mv, &temperature_tenth_degrees);
 #endif
@@ -951,7 +948,7 @@ static SIGFOX_EP_API_status_t _build_application_frame(void) {
 	SIGFOX_EP_BITSTREAM_application_frame_t bitstream_parameters;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	SIGFOX_EP_BITSTREAM_status_t bitstream_status = SIGFOX_EP_BITSTREAM_SUCCESS;
+	SIGFOX_EP_BITSTREAM_status_t sigfox_ep_bitstream_status = SIGFOX_EP_BITSTREAM_SUCCESS;
 #endif
 	// Prepare common bitstream parameters.
 	_set_common_bitstream_parameters(&(bitstream_parameters.common_parameters));
@@ -968,8 +965,8 @@ static SIGFOX_EP_API_status_t _build_application_frame(void) {
 #endif
 	// Build frame.
 #ifdef ERROR_CODES
-	bitstream_status = SIGFOX_EP_BITSTREAM_build_application_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
-	SIGFOX_EP_BITSTREAM_check_status(SIGFOX_EP_API_ERROR_BITSTREAM);
+	sigfox_ep_bitstream_status = SIGFOX_EP_BITSTREAM_build_application_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
+	SIGFOX_EP_BITSTREAM_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_BITSTREAM);
 #else
 	SIGFOX_EP_BITSTREAM_build_application_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
 #endif
@@ -987,7 +984,7 @@ static SIGFOX_EP_API_status_t _build_control_keep_alive_frame(void) {
 	SIGFOX_EP_BITSTREAM_control_frame_t bitstream_parameters;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	SIGFOX_EP_BITSTREAM_status_t bitstream_status = SIGFOX_EP_BITSTREAM_SUCCESS;
+	SIGFOX_EP_BITSTREAM_status_t sigfox_ep_bitstream_status = SIGFOX_EP_BITSTREAM_SUCCESS;
 #endif
 	// Read MCU data.
 #ifdef ERROR_CODES
@@ -1008,8 +1005,8 @@ static SIGFOX_EP_API_status_t _build_control_keep_alive_frame(void) {
 #endif
 	// Build frame.
 #ifdef ERROR_CODES
-	bitstream_status = SIGFOX_EP_BITSTREAM_build_control_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
-	SIGFOX_EP_BITSTREAM_check_status(SIGFOX_EP_API_ERROR_BITSTREAM);
+	sigfox_ep_bitstream_status = SIGFOX_EP_BITSTREAM_build_control_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
+	SIGFOX_EP_BITSTREAM_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_BITSTREAM);
 #else
 	SIGFOX_EP_BITSTREAM_build_control_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
 #endif
@@ -1026,7 +1023,7 @@ static SIGFOX_EP_API_status_t _build_dl_confirmation_frame(void) {
 	SIGFOX_EP_BITSTREAM_control_frame_t bitstream_parameters;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	SIGFOX_EP_BITSTREAM_status_t bitstream_status = SIGFOX_EP_BITSTREAM_SUCCESS;
+	SIGFOX_EP_BITSTREAM_status_t sigfox_ep_bitstream_status = SIGFOX_EP_BITSTREAM_SUCCESS;
 #endif
 	// Read MCU data.
 #ifdef ERROR_CODES
@@ -1045,8 +1042,8 @@ static SIGFOX_EP_API_status_t _build_dl_confirmation_frame(void) {
 	bitstream_parameters.rssi_dbm = sigfox_ep_api_ctx.dl_rssi_dbm;
 	// Build frame.
 #ifdef ERROR_CODES
-	bitstream_status = SIGFOX_EP_BITSTREAM_build_control_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
-	SIGFOX_EP_BITSTREAM_check_status(SIGFOX_EP_API_ERROR_BITSTREAM);
+	sigfox_ep_bitstream_status = SIGFOX_EP_BITSTREAM_build_control_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
+	SIGFOX_EP_BITSTREAM_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_BITSTREAM);
 #else
 	SIGFOX_EP_BITSTREAM_build_control_frame(&bitstream_parameters, (sfx_u8*) sigfox_ep_api_ctx.bitstream, &(sigfox_ep_api_ctx.bitstream_size));
 #endif
@@ -1064,7 +1061,7 @@ static SIGFOX_EP_API_status_t _build_bitstream(void) {
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_ERROR_SEND_FUNCTION_POINTER;
 #endif
 #ifdef APPLICATION_MESSAGES
-	if ((sigfox_ep_api_ctx.internal_flags.control_message == 0) && (sigfox_ep_api_ctx.internal_flags.dl_conf_message == 0)) {
+	if ((sigfox_ep_api_ctx.internal_flags.field.control_message == 0) && (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message == 0)) {
 #ifdef ERROR_CODES
 		status = _build_application_frame();
 #else
@@ -1074,7 +1071,7 @@ static SIGFOX_EP_API_status_t _build_bitstream(void) {
 	}
 #endif
 #ifdef CONTROL_KEEP_ALIVE_MESSAGE
-	if ((sigfox_ep_api_ctx.internal_flags.control_message != 0) && (sigfox_ep_api_ctx.internal_flags.dl_conf_message == 0)) {
+	if ((sigfox_ep_api_ctx.internal_flags.field.control_message != 0) && (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message == 0)) {
 #ifdef ERROR_CODES
 		status = _build_control_keep_alive_frame();
 #else
@@ -1084,7 +1081,7 @@ static SIGFOX_EP_API_status_t _build_bitstream(void) {
 	}
 #endif
 #ifdef BIDIRECTIONAL
-	if ((sigfox_ep_api_ctx.internal_flags.control_message != 0) && (sigfox_ep_api_ctx.internal_flags.dl_conf_message != 0)) {
+	if ((sigfox_ep_api_ctx.internal_flags.field.control_message != 0) && (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0)) {
 #ifdef ERROR_CODES
 		status = _build_dl_confirmation_frame();
 #else
@@ -1110,7 +1107,7 @@ static void _compute_interframe(void) {
 #endif /* SINGLE_FRAME */
 #ifdef BIDIRECTIONAL
 	// Check DL-CONF flag.
-	if (sigfox_ep_api_ctx.internal_flags.dl_conf_message != 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0) {
 		// Use Tconf.
 #ifdef T_CONF_MS
 		sigfox_ep_api_ctx.interframe_ms = T_CONF_MS;
@@ -1137,18 +1134,18 @@ static SIGFOX_EP_API_status_t _radio_wake_up(void) {
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	RF_API_status_t rf_status = RF_API_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 	// Wake-up radio if in sleep.
-	if (sigfox_ep_api_ctx.internal_flags.radio_woken_up == 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.radio_woken_up == 0) {
 #ifdef ERROR_CODES
-		rf_status = RF_API_wake_up();
-		RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+		rf_api_status = RF_API_wake_up();
+		RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 		RF_API_wake_up();
 #endif
 		// Update flag.
-		sigfox_ep_api_ctx.internal_flags.radio_woken_up = 1;
+		sigfox_ep_api_ctx.internal_flags.field.radio_woken_up = 1;
 	}
 #ifdef ERROR_CODES
 errors:
@@ -1161,18 +1158,18 @@ static SIGFOX_EP_API_status_t _radio_sleep(void) {
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	RF_API_status_t rf_status = RF_API_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 	// Turn radio off if active.
-	if (sigfox_ep_api_ctx.internal_flags.radio_woken_up != 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.radio_woken_up != 0) {
 #ifdef ERROR_CODES
-		rf_status = RF_API_sleep();
-		RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+		rf_api_status = RF_API_sleep();
+		RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 		RF_API_sleep();
 #endif
 		// Update flag.
-		sigfox_ep_api_ctx.internal_flags.radio_woken_up = 0;
+		sigfox_ep_api_ctx.internal_flags.field.radio_woken_up = 0;
 	}
 #ifdef ERROR_CODES
 errors:
@@ -1185,7 +1182,7 @@ static SIGFOX_EP_API_status_t _send_frame(void) {
 	// Local variables.
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	RF_API_status_t rf_status = RF_API_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 	RF_API_radio_parameters_t radio_params;
 	RF_API_tx_data_t tx_data;
@@ -1215,8 +1212,8 @@ static SIGFOX_EP_API_status_t _send_frame(void) {
 #endif
 	// Start radio.
 #ifdef ERROR_CODES
-	rf_status = RF_API_init(&radio_params);
-	RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+	rf_api_status = RF_API_init(&radio_params);
+	RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 	RF_API_init(&radio_params);
 #endif
@@ -1227,15 +1224,15 @@ static SIGFOX_EP_API_status_t _send_frame(void) {
 	tx_data.cplt_cb = (RF_API_tx_cplt_cb_t) &_RF_API_tx_cplt_cb;
 #endif
 #ifdef ERROR_CODES
-	rf_status = RF_API_send(&tx_data);
-	RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+	rf_api_status = RF_API_send(&tx_data);
+	RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 	RF_API_send(&tx_data);
 #endif
 #ifndef ASYNCHRONOUS
 	// Note: thanks to the RF_API_check_status the next lines are not executed in case of RF API error.
 	// Increment success count.
-	sigfox_ep_api_ctx.internal_flags.frame_success = 1;
+	sigfox_ep_api_ctx.internal_flags.field.frame_success = 1;
 #ifndef SINGLE_FRAME
 	sigfox_ep_api_ctx.frame_success_count++;
 #endif
@@ -1244,7 +1241,7 @@ static SIGFOX_EP_API_status_t _send_frame(void) {
 errors:
 #endif
 #ifndef ASYNCHRONOUS
-	sigfox_ep_api_ctx.irq_flags.rf_tx_cplt = 1; // Set flag manually in blocking mode.
+	sigfox_ep_api_ctx.irq_flags.field.rf_tx_cplt = 1; // Set flag manually in blocking mode.
 #endif
 	RETURN();
 }
@@ -1253,24 +1250,23 @@ errors:
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _check_dl_frame(void) {
 	// Local variables.
-	sfx_u8 idx = 0;
 	sfx_u8 dl_phy_content[SIGFOX_DL_PHY_CONTENT_SIZE_BYTES];
-	sfx_u8 dl_payload[SIGFOX_DL_PAYLOAD_SIZE_BYTES];
 	sfx_s16 dl_rssi_dbm = 0;
 	SIGFOX_EP_BITSTREAM_dl_frame_t bitstream_parameters;
-	sfx_bool dl_status = SFX_FALSE;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	RF_API_status_t rf_status = RF_API_SUCCESS;
-	SIGFOX_EP_BITSTREAM_status_t bitstream_status = SIGFOX_EP_BITSTREAM_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
+	SIGFOX_EP_BITSTREAM_status_t sigfox_ep_bitstream_status = SIGFOX_EP_BITSTREAM_SUCCESS;
 #endif
 	// Read DL-PHY content received by the radio.
 #ifdef ERROR_CODES
-	rf_status = RF_API_get_dl_phy_content_and_rssi(dl_phy_content, SIGFOX_DL_PHY_CONTENT_SIZE_BYTES, &dl_rssi_dbm);
-	RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+	rf_api_status = RF_API_get_dl_phy_content_and_rssi(dl_phy_content, SIGFOX_DL_PHY_CONTENT_SIZE_BYTES, &dl_rssi_dbm);
+	RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 	RF_API_get_dl_phy_content_and_rssi(dl_phy_content, SIGFOX_DL_PHY_CONTENT_SIZE_BYTES, &dl_rssi_dbm);
 #endif
+	// Update RSSI in global context.
+	sigfox_ep_api_ctx.dl_rssi_dbm = dl_rssi_dbm;
 	// Prepare bitstream parameters.
 	bitstream_parameters.dl_phy_content = (sfx_u8*) dl_phy_content;
 	bitstream_parameters.ep_id = (sfx_u8*) sigfox_ep_api_ctx.ep_id;
@@ -1279,21 +1275,15 @@ static SIGFOX_EP_API_status_t _check_dl_frame(void) {
 	bitstream_parameters.ep_key_type = (sigfox_ep_api_ctx.common_parameters_ptr) -> ep_key_type;
 #endif
 #ifdef CERTIFICATION
-	bitstream_parameters.dl_decoding_enable = (sigfox_ep_api_ctx.test_parameters.flags.dl_decoding_enable == 0) ? SFX_FALSE : SFX_TRUE;
+	bitstream_parameters.dl_decoding_enable = (sigfox_ep_api_ctx.test_parameters.flags.field.dl_decoding_enable == 0) ? SFX_FALSE : SFX_TRUE;
 #endif
 	// Check DL frame.
 #ifdef ERROR_CODES
-	bitstream_status = SIGFOX_EP_BITSTREAM_decode_downlink_frame(&bitstream_parameters, &dl_status, (sfx_u8*) dl_payload);
-	SIGFOX_EP_BITSTREAM_check_status(SIGFOX_EP_API_ERROR_BITSTREAM);
+	sigfox_ep_bitstream_status = SIGFOX_EP_BITSTREAM_decode_downlink_frame(&bitstream_parameters, &sigfox_ep_api_ctx.dl_status, (sfx_u8*) sigfox_ep_api_ctx.dl_payload);
+	SIGFOX_EP_BITSTREAM_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_BITSTREAM);
 #else
-	SIGFOX_EP_BITSTREAM_decode_downlink_frame(&bitstream_parameters, &dl_status, (sfx_u8*) dl_payload);
+	SIGFOX_EP_BITSTREAM_decode_downlink_frame(&bitstream_parameters, &sigfox_ep_api_ctx.dl_status, (sfx_u8*) sigfox_ep_api_ctx.dl_payload);
 #endif
-	// Update data in global context.
-	if (dl_status == SFX_TRUE) {
-		for (idx=0 ; idx<SIGFOX_DL_PAYLOAD_SIZE_BYTES ; idx++) sigfox_ep_api_ctx.dl_payload[idx] = dl_payload[idx];
-		sigfox_ep_api_ctx.dl_rssi_dbm = dl_rssi_dbm;
-	}
-	sigfox_ep_api_ctx.dl_status = dl_status;
 #ifdef ERROR_CODES
 errors:
 #endif
@@ -1307,14 +1297,92 @@ static SIGFOX_EP_API_status_t _start_timer(sfx_u16 duration_ms, MCU_API_timer_in
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 	MCU_API_timer_t mcu_timer;
-	// Start timer.
+#ifdef LATENCY_COMPENSATION
+#ifdef ERROR_CODES
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
+#endif
+	sfx_u32 rf_latency[RF_API_LATENCY_LAST];
+	sfx_s32 offset = 0;
+	sfx_u8 idx = 0;
+#endif
+#ifdef PARAMETERS_CHECK
+	// Check reason.
+	if (timer_reason >= MCU_API_TIMER_REASON_LAST) {
+		EXIT_ERROR(SIGFOX_EP_API_ERROR_TIMER_REASON);
+	}
+#endif
+	// Build timer structure.
 	mcu_timer.instance = timer_instance;
 	mcu_timer.reason = timer_reason;
 	mcu_timer.duration_ms = duration_ms;
+#ifdef LATENCY_COMPENSATION
+	// Read RF latencies.
+	for (idx=0 ; idx<RF_API_LATENCY_LAST ; idx++) {
+#ifdef ERROR_CODES
+		rf_api_status = RF_API_get_latency(idx, &(rf_latency[idx]));
+		RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
+#else
+		RF_API_get_latency(idx, &(rf_latency[idx]));
+#endif
+	}
+	// Compute offset.
+	switch (timer_reason) {
+#if !(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0) || (defined BIDIRECTIONAL))
+	case MCU_API_TIMER_REASON_T_IFX:
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_DE_INIT_TX];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_SEND_STOP];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_SEND_START];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_INIT_TX];
+		break;
+#endif
+#ifdef BIDIRECTIONAL
+	case MCU_API_TIMER_REASON_T_W :
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_SEND_STOP];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_DE_INIT_TX];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_WAKE_UP];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_INIT_RX];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_RECEIVE_START];
+		break;
+	case MCU_API_TIMER_REASON_T_CONF :
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_RECEIVE_STOP];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_DE_INIT_RX];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_SLEEP];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_WAKE_UP];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_DE_INIT_TX];
+		offset -= (sfx_s32) rf_latency[RF_API_LATENCY_SEND_START];
+		break;
+	case MCU_API_TIMER_REASON_T_RX :
+		offset += (sfx_s32) rf_latency[RF_API_LATENCY_WAKE_UP];
+		offset += (sfx_s32) rf_latency[RF_API_LATENCY_DE_INIT_RX];
+		offset += (sfx_s32) rf_latency[RF_API_LATENCY_RECEIVE_START];
+		offset += (sfx_s32) rf_latency[RF_API_LATENCY_RECEIVE_STOP];
+		break;
+#endif
+#ifdef REGULATORY
+	case MCU_API_TIMER_REASON_FH:
+		offset = 0;
+		break;
+	case MCU_API_TIMER_REASON_LBT:
+		offset = 0;
+		break;
+#endif
+#ifdef CERTIFICATION
+	case MCU_API_TIMER_REASON_ADDON_RFP:
+		offset = 0;
+		break;
+#endif
+	default:
+		EXIT_ERROR(SIGFOX_EP_API_ERROR_TIMER_REASON);
+		break;
+	}
+	// Apply offset.
+	mcu_timer.duration_ms = (((((sfx_s32) duration_ms) + offset) > 0) ? ((sfx_u32) (((sfx_s32) duration_ms) + offset)) : 0);
+#endif /* LATENCY_COMPENSATION */
 #ifdef ASYNCHRONOUS
+	// Start timer.
 	switch (timer_instance) {
 	case MCU_API_TIMER_1:
 		mcu_timer.cplt_cb = (MCU_API_timer_cplt_cb_t) &_MCU_API_timer1_cplt_cb;
@@ -1330,12 +1398,12 @@ static SIGFOX_EP_API_status_t _start_timer(sfx_u16 duration_ms, MCU_API_timer_in
 	}
 #endif
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_timer_start(&mcu_timer);
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	mcu_api_status = MCU_API_timer_start(&mcu_timer);
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_timer_start(&mcu_timer);
 #endif
-#if (defined ERROR_CODES) || (defined ASYNCHRONOUS)
+#if (defined ERROR_CODES) || (defined ASYNCHRONOUS) || (defined LATENCY_COMPENSATION)
 errors:
 #endif
 	RETURN();
@@ -1351,7 +1419,7 @@ static SIGFOX_EP_API_status_t _start_transmission(void) {
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #ifdef REGULATORY
-	SIGFOX_TX_CONTROL_status_t tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
+	SIGFOX_TX_CONTROL_status_t sigfox_tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
 #endif
 #endif
 #ifdef REGULATORY
@@ -1359,7 +1427,7 @@ static SIGFOX_EP_API_status_t _start_transmission(void) {
 	SIGFOX_TX_CONTROL_result_t tx_control_pre_check_result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
 #endif
 	// Reset TX success flag.
-	sigfox_ep_api_ctx.internal_flags.frame_success = 0;
+	sigfox_ep_api_ctx.internal_flags.field.frame_success = 0;
 	// Compute bitstream.
 	// This must be done here since TX control could need bitstream size.
 #ifdef ERROR_CODES
@@ -1389,19 +1457,19 @@ static SIGFOX_EP_API_status_t _start_transmission(void) {
 	_set_tx_control_parameters(SIGFOX_TX_CONTROL_TYPE_PRE_CHECK, &tx_control_params);
 	// Start TX control.
 #ifdef ERROR_CODES
-	tx_control_status = SIGFOX_TX_CONTROL_check(&tx_control_params);
-	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_TX_CONTROL);
+	sigfox_tx_control_status = SIGFOX_TX_CONTROL_check(&tx_control_params);
+	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 #else
 	SIGFOX_TX_CONTROL_check(&tx_control_params);
 #endif
-	sigfox_ep_api_ctx.internal_flags.tx_control_pre_check_running = 1;
+	sigfox_ep_api_ctx.internal_flags.field.tx_control_pre_check_running = 1;
 #ifndef ASYNCHRONOUS
-	sigfox_ep_api_ctx.irq_flags.tx_control_pre_check_cplt = 1; // Set flag manually in blocking mode.
+	sigfox_ep_api_ctx.irq_flags.field.tx_control_pre_check_cplt = 1; // Set flag manually in blocking mode.
 #endif
 	// Read result.
 #ifdef ERROR_CODES
-	tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_pre_check_result);
-	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_TX_CONTROL);
+	sigfox_tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_pre_check_result);
+	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 #else
 	SIGFOX_TX_CONTROL_get_result(&tx_control_pre_check_result);
 #endif
@@ -1420,10 +1488,10 @@ static SIGFOX_EP_API_status_t _start_transmission(void) {
 		break;
 	case SIGFOX_TX_CONTROL_RESULT_FORBIDDEN:
 		// Set network error flag.
-		sigfox_ep_api_ctx.message_status.network_error = 1;
+		sigfox_ep_api_ctx.message_status.field.network_error = 1;
 #ifdef ERROR_STACK
 		// Add error to stack.
-		SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_EP_LIBRARY, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
+		SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_API, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
 #endif
 		// Try next frame.
 #ifdef ERROR_CODES
@@ -1438,7 +1506,7 @@ static SIGFOX_EP_API_status_t _start_transmission(void) {
 		sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_REGULATORY;
 		break;
 	default:
-		EXIT_ERROR(SIGFOX_EP_API_ERROR_TX_CONTROL);
+		EXIT_ERROR(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 		break;
 	}
 #else /* REGULATORY */
@@ -1463,32 +1531,32 @@ static void _update_message_status(void) {
 #ifdef SINGLE_FRAME
 #ifdef BIDIRECTIONAL
 	// Update message status.
-	if (sigfox_ep_api_ctx.internal_flags.dl_conf_message != 0) {
-		sigfox_ep_api_ctx.message_status.dl_conf_frame = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+	if (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0) {
+		sigfox_ep_api_ctx.message_status.field.dl_conf_frame = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 	}
 	else {
-		sigfox_ep_api_ctx.message_status.ul_frame_1 = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+		sigfox_ep_api_ctx.message_status.field.ul_frame_1 = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 	}
 #else /* BIDIRECTIONAL */
 	// Update message status.
-	sigfox_ep_api_ctx.message_status.ul_frame_1 = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+	sigfox_ep_api_ctx.message_status.field.ul_frame_1 = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 #endif /* BIDIRECTIONAL */
 #else /* SINGLE_FRAME */
 #ifdef BIDIRECTIONAL
 	// Update message status.
-	if (sigfox_ep_api_ctx.internal_flags.dl_conf_message != 0) {
-		sigfox_ep_api_ctx.message_status.dl_conf_frame = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+	if (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0) {
+		sigfox_ep_api_ctx.message_status.field.dl_conf_frame = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 	}
 	else {
 		switch (sigfox_ep_api_ctx.ul_frame_rank) {
 		case SIGFOX_UL_FRAME_RANK_1:
-			sigfox_ep_api_ctx.message_status.ul_frame_1 = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+			sigfox_ep_api_ctx.message_status.field.ul_frame_1 = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 			break;
 		case SIGFOX_UL_FRAME_RANK_2:
-			sigfox_ep_api_ctx.message_status.ul_frame_2 = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+			sigfox_ep_api_ctx.message_status.field.ul_frame_2 = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 			break;
 		case SIGFOX_UL_FRAME_RANK_3:
-			sigfox_ep_api_ctx.message_status.ul_frame_3 = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+			sigfox_ep_api_ctx.message_status.field.ul_frame_3 = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 			break;
 		default:
 			break;
@@ -1497,13 +1565,13 @@ static void _update_message_status(void) {
 #else /* BIDIRECTIONAL */
 	switch (sigfox_ep_api_ctx.ul_frame_rank) {
 	case SIGFOX_UL_FRAME_RANK_1:
-		sigfox_ep_api_ctx.message_status.ul_frame_1 = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+		sigfox_ep_api_ctx.message_status.field.ul_frame_1 = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 		break;
 	case SIGFOX_UL_FRAME_RANK_2:
-		sigfox_ep_api_ctx.message_status.ul_frame_2 = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+		sigfox_ep_api_ctx.message_status.field.ul_frame_2 = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 		break;
 	case SIGFOX_UL_FRAME_RANK_3:
-		sigfox_ep_api_ctx.message_status.ul_frame_3 = (sigfox_ep_api_ctx.internal_flags.frame_success != 0) ? 1 : 0;
+		sigfox_ep_api_ctx.message_status.field.ul_frame_3 = (sfx_u8) ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) ? 1 : 0);
 		break;
 	default:
 		break;
@@ -1518,11 +1586,11 @@ static SIGFOX_EP_API_status_t _write_nvm(void) {
 	sfx_u8 nvm_data[SIGFOX_NVM_DATA_SIZE_BYTES];
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 	// Write message counter and random value in NVM when at least one frame has been successfully transmitted.
 #ifdef SINGLE_FRAME
-	if (sigfox_ep_api_ctx.internal_flags.frame_success != 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) {
 #else
 	if (sigfox_ep_api_ctx.frame_success_count > 0) {
 #endif
@@ -1533,13 +1601,13 @@ static SIGFOX_EP_API_status_t _write_nvm(void) {
 		nvm_data[SIGFOX_NVM_DATA_INDEX_RANDOM_VALUE_LSB] = (sfx_u8) ((sigfox_ep_api_ctx.random_value >> 0) & 0x00FF);
 		// Write NVM.
 #ifdef ERROR_CODES
-		mcu_status = MCU_API_set_nvm(nvm_data, SIGFOX_NVM_DATA_SIZE_BYTES);
-		MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+		mcu_api_status = MCU_API_set_nvm(nvm_data, SIGFOX_NVM_DATA_SIZE_BYTES);
+		MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 		MCU_API_set_nvm(nvm_data, SIGFOX_NVM_DATA_SIZE_BYTES);
 #endif
 		// Update flags.
-		sigfox_ep_api_ctx.internal_flags.nvm_write_pending = 0;
+		sigfox_ep_api_ctx.internal_flags.field.nvm_write_pending = 0;
 	}
 #ifdef ERROR_CODES
 errors:
@@ -1554,7 +1622,7 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #if (defined BIDIRECTIONAL) && !(defined SINGLE_FRAME)
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 #endif /* ERROR_CODES */
 #ifdef SINGLE_FRAME
@@ -1562,7 +1630,7 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 	// Compute next state.
 	if (_is_downlink_required() == SFX_TRUE) {
 		// Abort downlink sequence if the frame has not been sent due to error or TX control.
-		if (sigfox_ep_api_ctx.internal_flags.frame_success == 0) {
+		if (sigfox_ep_api_ctx.internal_flags.field.frame_success == 0) {
 			// Force bidirectional to 0 in order to call the message completion callback.
 			if (sigfox_ep_api_ctx.application_message_ptr != SFX_NULL) {
 				(sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag = 0;
@@ -1592,8 +1660,8 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 			if (sigfox_ep_api_ctx.frame_success_count == 0) {
 				// Stop DL_T_W timer.
 #ifdef ERROR_CODES
-				mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_W);
-				MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+				mcu_api_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_W);
+				MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 				MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_W);
 #endif
@@ -1665,7 +1733,7 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 #endif /* SINGLE_FRAME */
 #ifdef ASYNCHRONOUS
 	// Manage API callbacks.
-	if ((_is_last_frame_of_uplink_sequence() == SFX_TRUE) && (sigfox_ep_api_ctx.internal_flags.dl_conf_message == 0)) {
+	if ((_is_last_frame_of_uplink_sequence() == SFX_TRUE) && (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message == 0)) {
 		// Call uplink completion callback (except for ACK message).
 		_UPLINK_CPLT_CALLBACK();
 	}
@@ -1691,9 +1759,9 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
 	// Local variables.
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	RF_API_status_t rf_status = RF_API_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #ifdef REGULATORY
-	SIGFOX_TX_CONTROL_status_t tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
+	SIGFOX_TX_CONTROL_status_t sigfox_tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
 #endif
 #endif
 #ifdef REGULATORY
@@ -1701,16 +1769,16 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
 	SIGFOX_TX_CONTROL_result_t tx_control_post_check_result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
 #endif
 #ifdef BIDIRECTIONAL
-	sfx_u32 dl_t_w_ms = 0;
+	sfx_u16 dl_t_w_ms = 0;
 #endif
 	// Update message status.
 	_update_message_status();
 	// Stop RF.
 	// Note: if TX control returned forbidden result, the RF_API_de_init function was already called by the TX control itself.
-	if (sigfox_ep_api_ctx.internal_flags.frame_success != 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) {
 #ifdef ERROR_CODES
-		rf_status = RF_API_de_init();
-		RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+		rf_api_status = RF_API_de_init();
+		RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 		RF_API_de_init();
 #endif
@@ -1767,19 +1835,19 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
 	// Set parameters.
 	_set_tx_control_parameters(SIGFOX_TX_CONTROL_TYPE_POST_CHECK, &tx_control_params);
 #ifdef ERROR_CODES
-	tx_control_status = SIGFOX_TX_CONTROL_check(&tx_control_params);
-	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_TX_CONTROL);
+	sigfox_tx_control_status = SIGFOX_TX_CONTROL_check(&tx_control_params);
+	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 #else
 	SIGFOX_TX_CONTROL_check(&tx_control_params);
 #endif
-	sigfox_ep_api_ctx.internal_flags.tx_control_post_check_running = 1;
+	sigfox_ep_api_ctx.internal_flags.field.tx_control_post_check_running = 1;
 #ifndef ASYNCHRONOUS
-	sigfox_ep_api_ctx.irq_flags.tx_control_post_check_cplt = 1; // Set flag manually in blocking mode.
+	sigfox_ep_api_ctx.irq_flags.field.tx_control_post_check_cplt = 1; // Set flag manually in blocking mode.
 #endif
 	// Read result.
 #ifdef ERROR_CODES
-	tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_post_check_result);
-	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_TX_CONTROL);
+	sigfox_tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_post_check_result);
+	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 #else
 	SIGFOX_TX_CONTROL_get_result(&tx_control_post_check_result);
 #endif
@@ -1787,12 +1855,19 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
 	switch (tx_control_post_check_result) {
 	case SIGFOX_TX_CONTROL_RESULT_FORBIDDEN:
 		// Set network error flag.
-		sigfox_ep_api_ctx.message_status.network_error = 1;
+		sigfox_ep_api_ctx.message_status.field.network_error = 1;
 #ifdef ERROR_STACK
 		// Add error to stack.
-		SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_EP_LIBRARY, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
+		SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_API, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
 #endif
-		// Note: no break since "forbidden" and "allowed" cases are treated the same way (except for error flag).
+		// Compute next state.
+#ifdef ERROR_CODES
+		status = _compute_state_after_transmission();
+		CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
+#else
+		_compute_state_after_transmission();
+#endif
+		break;
 	case SIGFOX_TX_CONTROL_RESULT_ALLOWED:
 		// Compute next state.
 #ifdef ERROR_CODES
@@ -1807,7 +1882,7 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
 		sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_REGULATORY;
 		break;
 	default:
-		EXIT_ERROR(SIGFOX_EP_API_ERROR_TX_CONTROL);
+		EXIT_ERROR(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 		break;
 	}
 #else /* REGULATORY */
@@ -1827,13 +1902,13 @@ errors:
 
 #ifdef BIDIRECTIONAL
 /*******************************************************************/
-static SIGFOX_EP_API_status_t _start_reception(RF_API_rx_data_t *rx_data_ptr) {
+static SIGFOX_EP_API_status_t _start_reception(void) {
 	// Local variables.
 	RF_API_radio_parameters_t radio_params;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	RF_API_status_t rf_status = RF_API_SUCCESS;
-	SIGFOX_EP_FREQUENCY_status_t frequency_status = SIGFOX_EP_FREQUENCY_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
+	SIGFOX_EP_FREQUENCY_status_t sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_SUCCESS;
 #endif
 	// Reset downlink status.
 	sigfox_ep_api_ctx.dl_status = SFX_FALSE;
@@ -1851,8 +1926,8 @@ static SIGFOX_EP_API_status_t _start_reception(RF_API_rx_data_t *rx_data_ptr) {
 	else {
 #endif
 #ifdef ERROR_CODES
-	frequency_status = SIGFOX_EP_FREQUENCY_compute_downlink(&radio_params.frequency_hz);
-	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_FREQUENCY);
+	sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_compute_downlink(&radio_params.frequency_hz);
+	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_FREQUENCY);
 #else
 	SIGFOX_EP_FREQUENCY_compute_downlink(&radio_params.frequency_hz);
 #endif
@@ -1860,17 +1935,23 @@ static SIGFOX_EP_API_status_t _start_reception(RF_API_rx_data_t *rx_data_ptr) {
 	}
 #endif
 #ifdef ERROR_CODES
-	rf_status = RF_API_init(&radio_params);
-	RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+	rf_api_status = RF_API_init(&radio_params);
+	RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 	RF_API_init(&radio_params);
 #endif
+	// Prepare RX data structure.
+#ifdef ASYNCHRONOUS
+	sigfox_ep_api_ctx.rx_data.data_received_cb = (RF_API_rx_data_received_cb_t) &_RF_API_rx_data_received_cb;
+#else
+	sigfox_ep_api_ctx.rx_data.data_received = SFX_FALSE;
+#endif
 	// Start DL reception.
 #ifdef ERROR_CODES
-	rf_status = RF_API_receive(rx_data_ptr);
-	RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+	rf_api_status = RF_API_receive(&sigfox_ep_api_ctx.rx_data);
+	RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
-	RF_API_receive(rx_data_ptr);
+	RF_API_receive(&sigfox_ep_api_ctx.rx_data);
 #endif
 #ifdef ERROR_CODES
 errors:
@@ -1881,9 +1962,9 @@ errors:
 
 #ifdef BIDIRECTIONAL
 /*******************************************************************/
-static SIGFOX_EP_API_status_t _start_dl_sequence(RF_API_rx_data_t *rx_data_ptr) {
+static SIGFOX_EP_API_status_t _start_dl_sequence(void) {
 	// Local variables.
-	sfx_u32 dl_t_rx_ms = 0;
+	sfx_u16 dl_t_rx_ms = 0;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #endif
@@ -1907,17 +1988,6 @@ static SIGFOX_EP_API_status_t _start_dl_sequence(RF_API_rx_data_t *rx_data_ptr) 
 #else
 	_radio_wake_up();
 #endif
-#ifdef ASYNCHRONOUS
-	// Start DL reception.
-#ifdef ERROR_CODES
-	status = _start_reception(rx_data_ptr);
-	CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-	_start_reception(rx_data_ptr);
-#endif
-#endif /* ASYNCHRONOUS */
-	// Update state.
-	sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_DL_LISTENING;
 #ifdef ERROR_CODES
 errors:
 #endif
@@ -1932,16 +2002,16 @@ static void _message_prepare(void) {
 	// Note: the nvm_write_pending flag is checked to prevent multiple increments if the previous value was not written in NVM (due to TX control forbidden or error).
 #ifdef CERTIFICATION
 	// Do not increment message counter when UL is disabled.
-	if (sigfox_ep_api_ctx.test_parameters.flags.ul_enable != 0) {
+	if (sigfox_ep_api_ctx.test_parameters.flags.field.ul_enable != 0) {
 #endif
-	if (sigfox_ep_api_ctx.internal_flags.nvm_write_pending == 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.nvm_write_pending == 0) {
 #ifdef MESSAGE_COUNTER_ROLLOVER
-		sigfox_ep_api_ctx.message_counter = (sigfox_ep_api_ctx.message_counter + 1) % MESSAGE_COUNTER_ROLLOVER;
+		sigfox_ep_api_ctx.message_counter = (sfx_u16) ((sigfox_ep_api_ctx.message_counter + 1) % MESSAGE_COUNTER_ROLLOVER);
 #else
-		sigfox_ep_api_ctx.message_counter = (sigfox_ep_api_ctx.message_counter + 1) % (sigfox_ep_api_ctx.message_counter_rollover);
+		sigfox_ep_api_ctx.message_counter = (sfx_u16) ((sigfox_ep_api_ctx.message_counter + 1) % (sigfox_ep_api_ctx.message_counter_rollover));
 #endif
 		// Update flag.
-		sigfox_ep_api_ctx.internal_flags.nvm_write_pending = 1;
+		sigfox_ep_api_ctx.internal_flags.field.nvm_write_pending = 1;
 	}
 #ifdef CERTIFICATION
 	}
@@ -1963,71 +2033,62 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #if (defined ASYNCHRONOUS) || (defined BIDIRECTIONAL)
-	RF_API_status_t rf_status = RF_API_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 #if (defined ASYNCHRONOUS) || (defined BIDIRECTIONAL) || (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0)))
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 #ifdef REGULATORY
-	SIGFOX_TX_CONTROL_status_t tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
+	SIGFOX_TX_CONTROL_status_t sigfox_tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
 #endif
 #endif /* ERROR_CODES */
 #ifdef BIDIRECTIONAL
-	RF_API_rx_data_t rx_data;
 #endif
 #ifdef REGULATORY
 	SIGFOX_TX_CONTROL_result_t tx_control_result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
-#endif
-	// Prepare RX data structure.
-#ifdef BIDIRECTIONAL
-#ifdef ASYNCHRONOUS
-	rx_data.data_received_cb = (RF_API_rx_data_received_cb_t) &_RF_API_rx_data_received_cb;
-#else
-	rx_data.data_received = SFX_FALSE;
-#endif
 #endif
 	// Check library is opened.
 	_CHECK_LIBRARY_STATE(== SIGFOX_EP_API_STATE_CLOSED);
 #ifdef ASYNCHRONOUS
 	// Check error flag in case the process was called after a low level error callback.
-	if (sigfox_ep_api_ctx.irq_flags.low_level_error != 0) {
+	if (sigfox_ep_api_ctx.irq_flags.field.low_level_error != 0) {
 		// Clear flag.
-		sigfox_ep_api_ctx.irq_flags.low_level_error = 0;
+		sigfox_ep_api_ctx.irq_flags.field.low_level_error = 0;
 		// Exit.
 		EXIT_ERROR(sigfox_ep_api_ctx.status_from_callback);
 	}
 #endif
 	// Check low level process flags.
 #ifdef ASYNCHRONOUS
-    if (sigfox_ep_api_ctx.irq_flags.mcu_process != 0) {
+    if (sigfox_ep_api_ctx.irq_flags.field.mcu_process != 0) {
 #ifdef ERROR_CODES
-        mcu_status = MCU_API_process();
-        sigfox_ep_api_ctx.irq_flags.mcu_process = 0;
-        MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+        mcu_api_status = MCU_API_process();
+        sigfox_ep_api_ctx.irq_flags.field.mcu_process = 0;
+        MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
         MCU_API_process();
-        sigfox_ep_api_ctx.irq_flags.mcu_process = 0;
+        sigfox_ep_api_ctx.irq_flags.field.mcu_process = 0;
 #endif
     }
-	if (sigfox_ep_api_ctx.irq_flags.rf_process != 0) {
+	if (sigfox_ep_api_ctx.irq_flags.field.rf_process != 0) {
 #ifdef ERROR_CODES
-		rf_status = RF_API_process();
-		sigfox_ep_api_ctx.irq_flags.rf_process = 0;
-	    RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+		rf_api_status = RF_API_process();
+		sigfox_ep_api_ctx.irq_flags.field.rf_process = 0;
+	    RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 	    RF_API_process();
-	    sigfox_ep_api_ctx.irq_flags.rf_process = 0;
+	    sigfox_ep_api_ctx.irq_flags.field.rf_process = 0;
 #endif
 	}
 #ifdef REGULATORY
-	if (sigfox_ep_api_ctx.irq_flags.tx_control_process != 0) {
+	if (sigfox_ep_api_ctx.irq_flags.field.tx_control_process != 0) {
 #ifdef ERROR_CODES
-		tx_control_status = SIGFOX_TX_CONTROL_process();
-		sigfox_ep_api_ctx.irq_flags.tx_control_process = 0;
-		SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_TX_CONTROL);
+		sigfox_tx_control_status = SIGFOX_TX_CONTROL_process();
+		sigfox_ep_api_ctx.irq_flags.field.tx_control_process = 0;
+		SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 #else
 		SIGFOX_TX_CONTROL_process();
-		sigfox_ep_api_ctx.irq_flags.tx_control_process = 0;
+		sigfox_ep_api_ctx.irq_flags.field.tx_control_process = 0;
 #endif
 	}
 #endif
@@ -2036,10 +2097,10 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 	switch (sigfox_ep_api_ctx.state) {
 	case SIGFOX_EP_API_STATE_READY:
 		// Check pending requests.
-		if (sigfox_ep_api_ctx.internal_flags.send_message_request != 0) {
+		if (sigfox_ep_api_ctx.internal_flags.field.send_message_request != 0) {
 #ifdef CERTIFICATION
 			// Check uplink bypass flag.
-			if (sigfox_ep_api_ctx.test_parameters.flags.ul_enable != 0) {
+			if (sigfox_ep_api_ctx.test_parameters.flags.field.ul_enable != 0) {
 #ifdef ERROR_CODES
 				status = _start_transmission();
 				CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
@@ -2051,13 +2112,22 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 				// Bypass uplink sequence.
 #ifdef BIDIRECTIONAL
 				if (_is_downlink_required() == SFX_TRUE) {
-					// Directly start downlink reception.
+					// Directly start downlink sequence.
 #ifdef ERROR_CODES
-					status = _start_dl_sequence(&rx_data);
+					status = _start_dl_sequence();
 					CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
 #else
-					_start_dl_sequence(&rx_data);
+					_start_dl_sequence();
 #endif
+					// Start DL reception.
+#ifdef ERROR_CODES
+					status = _start_reception();
+					CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
+#else
+					_start_reception();
+#endif
+					// Update state.
+					sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_DL_LISTENING;
 				}
 				else {
 					// End of sequence.
@@ -2084,22 +2154,22 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #endif
 #endif /* CERTIFICATION */
 			// Clear request.
-			sigfox_ep_api_ctx.internal_flags.send_message_request = 0;
+			sigfox_ep_api_ctx.internal_flags.field.send_message_request = 0;
 		}
 		break;
 #ifdef REGULATORY
 	case SIGFOX_EP_API_STATE_REGULATORY:
 		// Check completion flags.
-		if ((sigfox_ep_api_ctx.irq_flags.tx_control_post_check_cplt != 0) || (sigfox_ep_api_ctx.irq_flags.tx_control_pre_check_cplt != 0)) {
+		if ((sigfox_ep_api_ctx.irq_flags.field.tx_control_post_check_cplt != 0) || (sigfox_ep_api_ctx.irq_flags.field.tx_control_pre_check_cplt != 0)) {
 			// Check pre-check flags.
-			if (sigfox_ep_api_ctx.irq_flags.tx_control_pre_check_cplt != 0) {
+			if (sigfox_ep_api_ctx.irq_flags.field.tx_control_pre_check_cplt != 0) {
 				// Clear flags.
-				sigfox_ep_api_ctx.irq_flags.tx_control_pre_check_cplt = 0;
-				sigfox_ep_api_ctx.internal_flags.tx_control_pre_check_running = 0;
+				sigfox_ep_api_ctx.irq_flags.field.tx_control_pre_check_cplt = 0;
+				sigfox_ep_api_ctx.internal_flags.field.tx_control_pre_check_running = 0;
 				// Read result.
 #ifdef ERROR_CODES
-				tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_result);
-				SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_TX_CONTROL);
+				sigfox_tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_result);
+				SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 #else
 				SIGFOX_TX_CONTROL_get_result(&tx_control_result);
 #endif
@@ -2117,10 +2187,10 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 				}
 				else {
 					// Set network error flag.
-					sigfox_ep_api_ctx.message_status.network_error = 1;
+					sigfox_ep_api_ctx.message_status.field.network_error = 1;
 #ifdef ERROR_STACK
 					// Add error to stack.
-					SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_EP_LIBRARY, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
+					SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_API, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
 #endif
 					// Compute next state.
 #ifdef ERROR_CODES
@@ -2132,24 +2202,24 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 				}
 			}
 			// Check post-check flag.
-			if (sigfox_ep_api_ctx.irq_flags.tx_control_post_check_cplt != 0) {
+			if (sigfox_ep_api_ctx.irq_flags.field.tx_control_post_check_cplt != 0) {
 				// Clear flags.
-				sigfox_ep_api_ctx.irq_flags.tx_control_post_check_cplt = 0;
-				sigfox_ep_api_ctx.internal_flags.tx_control_post_check_running = 0;
+				sigfox_ep_api_ctx.irq_flags.field.tx_control_post_check_cplt = 0;
+				sigfox_ep_api_ctx.internal_flags.field.tx_control_post_check_running = 0;
 				// Read result.
 #ifdef ERROR_CODES
-				tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_result);
-				SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_TX_CONTROL);
+				sigfox_tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_result);
+				SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 #else
 				SIGFOX_TX_CONTROL_get_result(&tx_control_result);
 #endif
 				// Set error flags if needed.
 				if (tx_control_result == SIGFOX_TX_CONTROL_RESULT_FORBIDDEN) {
 					// Set network error flag.
-					sigfox_ep_api_ctx.message_status.network_error = 1;
+					sigfox_ep_api_ctx.message_status.field.network_error = 1;
 #ifdef ERROR_STACK
 					// Add error to stack.
-					SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_EP_LIBRARY, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
+					SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_API, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
 #endif
 				}
 				// Switch to next state whatever the result.
@@ -2165,12 +2235,12 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #endif
 	case SIGFOX_EP_API_STATE_UL_MODULATION_PENDING:
 		// Check end of transmission flag..
-		if (sigfox_ep_api_ctx.irq_flags.rf_tx_cplt != 0) {
+		if (sigfox_ep_api_ctx.irq_flags.field.rf_tx_cplt != 0) {
 			// Clear flag.
-			sigfox_ep_api_ctx.irq_flags.rf_tx_cplt = 0;
+			sigfox_ep_api_ctx.irq_flags.field.rf_tx_cplt = 0;
 #ifdef ASYNCHRONOUS
 			// Increment success count.
-			sigfox_ep_api_ctx.internal_flags.frame_success = 1;
+			sigfox_ep_api_ctx.internal_flags.field.frame_success = 1;
 #ifndef SINGLE_FRAME
 			sigfox_ep_api_ctx.frame_success_count++;
 #endif
@@ -2189,23 +2259,23 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #ifndef ASYNCHRONOUS
 		// Wait for timer completion.
 #ifdef ERROR_CODES
-		mcu_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_IFX);
-		MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+		mcu_api_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_IFX);
+		MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 		MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_IFX);
 #endif
-		sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt = 1; // Set flag manually in blocking mode.
+		sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 1; // Set flag manually in blocking mode.
 #endif
 		// Check timer completion flag.
-		if (sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt != 0) {
+		if (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0) {
 			// Stop timer.
 #ifdef ERROR_CODES
-			mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_IFX);
-			MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+			mcu_api_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_IFX);
+			MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 			MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_IFX);
 #endif
-			sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt = 0;
+			sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 0;
 			// Start next frame.
 #ifdef ERROR_CODES
 			status = _start_transmission();
@@ -2221,58 +2291,60 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #ifndef ASYNCHRONOUS
 		// Wait for timer completion.
 #ifdef ERROR_CODES
-		mcu_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_W);
-		MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+		mcu_api_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_W);
+		MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 		MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_W);
 #endif
-		sigfox_ep_api_ctx.irq_flags.mcu_timer2_cplt = 1; // Set flag manually in blocking mode.
+		sigfox_ep_api_ctx.irq_flags.field.mcu_timer2_cplt = 1; // Set flag manually in blocking mode.
 #endif /* BLOCKING */
 		// Check timer completion flag.
-		if (sigfox_ep_api_ctx.irq_flags.mcu_timer2_cplt != 0) {
+		if (sigfox_ep_api_ctx.irq_flags.field.mcu_timer2_cplt != 0) {
 			// Stop timer.
 #ifdef ERROR_CODES
-			mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_W);
-			MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+			mcu_api_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_W);
+			MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 			MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_W);
 #endif
-			sigfox_ep_api_ctx.irq_flags.mcu_timer2_cplt = 0;
+			sigfox_ep_api_ctx.irq_flags.field.mcu_timer2_cplt = 0;
 			// Start DL sequence.
 #ifdef ERROR_CODES
-			status = _start_dl_sequence(&rx_data);
+			status = _start_dl_sequence();
 			CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
 #else
-			_start_dl_sequence(&rx_data);
+			_start_dl_sequence();
 #endif
+			// Start DL reception.
+#ifdef ERROR_CODES
+			status = _start_reception();
+			CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
+#else
+			_start_reception();
+#endif
+			// Update state.
+			sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_DL_LISTENING;
 		}
 		break;
 	case SIGFOX_EP_API_STATE_DL_LISTENING:
 #ifndef ASYNCHRONOUS
-		// Wait for incoming DL frame or timeout.
-#ifdef ERROR_CODES
-		status = _start_reception(&rx_data);
-		CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-		_start_reception(&rx_data);
+		// If the _start_reception() function exited with dl_frame_received flag set to 0, it means that the DL window timer has elapsed.
+		sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received = sigfox_ep_api_ctx.rx_data.data_received;
+		sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = !(sigfox_ep_api_ctx.rx_data.data_received);
 #endif
-		// If the function exits with dl_frame_received flag set to 0, it means that the DL window timer has elapsed.
-		sigfox_ep_api_ctx.irq_flags.rf_rx_data_received = rx_data.data_received;
-		sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt = !(rx_data.data_received);
-#endif /* BLOCKING */
 		// De init radio if any frame has been received or timeout is reached.
-		if ((sigfox_ep_api_ctx.irq_flags.rf_rx_data_received != 0) || (sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt != 0)) {
+		if ((sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received != 0) || (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0)) {
 #ifdef ERROR_CODES
-			rf_status = RF_API_de_init();
-			RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+			rf_api_status = RF_API_de_init();
+			RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 			RF_API_de_init();
 #endif
 		}
 		// Perform authentication if frame has been received.
-		if (sigfox_ep_api_ctx.irq_flags.rf_rx_data_received != 0) {
+		if (sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received != 0) {
 			// Clear flag.
-			sigfox_ep_api_ctx.irq_flags.rf_rx_data_received = 0;
+			sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received = 0;
 			// Decode downlink frame.
 #ifdef ERROR_CODES
 			status = _check_dl_frame();
@@ -2281,7 +2353,7 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 			_check_dl_frame();
 #endif
 		}
-		if (((sigfox_ep_api_ctx.dl_status) == SFX_TRUE) || (sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt != 0)) {
+		if (((sigfox_ep_api_ctx.dl_status) == SFX_TRUE) || (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0)) {
 			// RX sequence done.
 #ifdef ERROR_CODES
 			status = _radio_sleep();
@@ -2291,26 +2363,26 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #endif
 			// Stop Trx timer.
 #ifdef ERROR_CODES
-			mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_RX);
-			MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+			mcu_api_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_RX);
+			MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 			MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_RX);
 #endif
-			sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt = 0;
+			sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 0;
 			// Update state.
 			if ((sigfox_ep_api_ctx.dl_status) == SFX_TRUE) {
 				// Update message status.
-				sigfox_ep_api_ctx.message_status.dl_frame = 1;
+				sigfox_ep_api_ctx.message_status.field.dl_frame = 1;
 #ifdef ASYNCHRONOUS
 				_DOWNLINK_CPLT_CALLBACK();
 #endif
 #ifdef CERTIFICATION
 				// Check DL-CONF bypass flag.
-				if (sigfox_ep_api_ctx.test_parameters.flags.dl_conf_enable != 0) {
+				if (sigfox_ep_api_ctx.test_parameters.flags.field.dl_conf_enable != 0) {
 #endif
 				// Configure DL confirmation message.
-				sigfox_ep_api_ctx.internal_flags.control_message = 1;
-				sigfox_ep_api_ctx.internal_flags.dl_conf_message = 1;
+				sigfox_ep_api_ctx.internal_flags.field.control_message = 1;
+				sigfox_ep_api_ctx.internal_flags.field.dl_conf_message = 1;
 				_message_prepare();
 #ifndef SINGLE_FRAME
 				(sigfox_ep_api_ctx.common_parameters_ptr) -> number_of_frames = 1;
@@ -2337,10 +2409,10 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 			}
 			else {
 				// Dowlink timeout: set error flag.
-				sigfox_ep_api_ctx.message_status.network_error = 1;
+				sigfox_ep_api_ctx.message_status.field.network_error = 1;
 #ifdef ERROR_STACK
 				// Add error to stack.
-				SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_EP_LIBRARY, SIGFOX_EP_API_ERROR_DOWNLINK_TIMEOUT);
+				SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_API, SIGFOX_EP_API_ERROR_DOWNLINK_TIMEOUT);
 #endif
 #ifdef ASYNCHRONOUS
 				_MESSAGE_CPLT_CALLBACK();
@@ -2349,39 +2421,37 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 				sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_READY;
 			}
 		}
-#ifdef ASYNCHRONOUS
 		// Frame not authenticated and timeout not reached yet: restart reception.
 		else {
 #ifdef ERROR_CODES
-			status = _start_reception(&rx_data);
+			status = _start_reception();
 			CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
 #else
-			_start_reception(&rx_data);
+			_start_reception();
 #endif
 		}
-#endif
 		break;
 	case SIGFOX_EP_API_STATE_DL_CONFIRMATION_TIMER:
 #ifndef ASYNCHRONOUS
 		// Wait for timer completion.
 #ifdef ERROR_CODES
-		mcu_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_CONF);
-		MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+		mcu_api_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_CONF);
+		MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 		MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_CONF);
 #endif
-		sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt = 1; // Set flag manually in blocking mode.
+		sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 1; // Set flag manually in blocking mode.
 #endif
 		// Check timer completion flag.
-		if (sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt != 0) {
+		if (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0) {
 			// Stop timer.
 #ifdef ERROR_CODES
-			mcu_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_CONF);
-			MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+			mcu_api_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_CONF);
+			MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 			MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_CONF);
 #endif
-			sigfox_ep_api_ctx.irq_flags.mcu_timer1_cplt = 0;
+			sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 0;
 			// Start confirmation frame.
 #ifdef ERROR_CODES
 			status = _start_transmission();
@@ -2400,7 +2470,7 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 	RETURN();
 errors:
 	// Set error flag.
-	sigfox_ep_api_ctx.message_status.execution_error = 1;
+	sigfox_ep_api_ctx.message_status.field.execution_error = 1;
 #ifdef ERROR_CODES
 	// Notify error to low level drivers.
 	MCU_API_error();
@@ -2408,7 +2478,7 @@ errors:
 #endif
 #ifdef ASYNCHRONOUS
 	// Call completion callback (except on first process call).
-	if (sigfox_ep_api_ctx.internal_flags.send_message_request == 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.send_message_request == 0) {
 		_MESSAGE_CPLT_CALLBACK();
 	}
 #endif
@@ -2419,7 +2489,7 @@ errors:
 
 #ifdef APPLICATION_MESSAGES
 /*******************************************************************/
-SIGFOX_EP_API_status_t _send_application_message(SIGFOX_EP_API_application_message_t *application_message) {
+static SIGFOX_EP_API_status_t _send_application_message(SIGFOX_EP_API_application_message_t *application_message) {
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
@@ -2438,9 +2508,9 @@ SIGFOX_EP_API_status_t _send_application_message(SIGFOX_EP_API_application_messa
 	_store_application_message(application_message);
 #endif
 	// Set internal flags and prepare message.
-	sigfox_ep_api_ctx.internal_flags.send_message_request = 1;
-	sigfox_ep_api_ctx.internal_flags.control_message = 0;
-	sigfox_ep_api_ctx.internal_flags.dl_conf_message = 0;
+	sigfox_ep_api_ctx.internal_flags.field.send_message_request = 1;
+	sigfox_ep_api_ctx.internal_flags.field.control_message = 0;
+	sigfox_ep_api_ctx.internal_flags.field.dl_conf_message = 0;
 	_message_prepare();
 	// Trigger TX.
 #ifdef ERROR_CODES
@@ -2450,7 +2520,7 @@ SIGFOX_EP_API_status_t _send_application_message(SIGFOX_EP_API_application_messa
 	_internal_process();
 #endif
 #ifdef ASYNCHRONOUS
-	if (sigfox_ep_api_ctx.internal_flags.synchronous != 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.synchronous != 0) {
 #endif
 	// Block until library goes back to READY state.
 	while (sigfox_ep_api_ctx.state != SIGFOX_EP_API_STATE_READY) {
@@ -2465,14 +2535,14 @@ SIGFOX_EP_API_status_t _send_application_message(SIGFOX_EP_API_application_messa
 	}
 #endif
 errors:
-	sigfox_ep_api_ctx.internal_flags.send_message_request = 0;
+	sigfox_ep_api_ctx.internal_flags.field.send_message_request = 0;
 	RETURN();
 }
 #endif
 
 #ifdef CONTROL_KEEP_ALIVE_MESSAGE
 /*******************************************************************/
-SIGFOX_EP_API_status_t _send_control_message(SIGFOX_EP_API_control_message_t *control_message) {
+static SIGFOX_EP_API_status_t _send_control_message(SIGFOX_EP_API_control_message_t *control_message) {
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
@@ -2492,14 +2562,14 @@ SIGFOX_EP_API_status_t _send_control_message(SIGFOX_EP_API_control_message_t *co
 #endif
 	// Reset context.
 	/// Set internal flags and prepare message.
-	sigfox_ep_api_ctx.internal_flags.send_message_request = 1;
-	sigfox_ep_api_ctx.internal_flags.control_message = 1;
-	sigfox_ep_api_ctx.internal_flags.dl_conf_message = 0;
+	sigfox_ep_api_ctx.internal_flags.field.send_message_request = 1;
+	sigfox_ep_api_ctx.internal_flags.field.control_message = 1;
+	sigfox_ep_api_ctx.internal_flags.field.dl_conf_message = 0;
 	_message_prepare();
 	// Check message type.
 	if ((control_message -> type) != SIGFOX_CONTROL_MESSAGE_TYPE_KEEP_ALIVE) {
 		// Other control messages are not allowed.
-		sigfox_ep_api_ctx.message_status.execution_error = 1;
+		sigfox_ep_api_ctx.message_status.field.execution_error = 1;
 		EXIT_ERROR(SIGFOX_EP_API_ERROR_MESSAGE_TYPE);
 	}
 	// Trigger TX.
@@ -2510,7 +2580,7 @@ SIGFOX_EP_API_status_t _send_control_message(SIGFOX_EP_API_control_message_t *co
 	_internal_process();
 #endif
 #ifdef ASYNCHRONOUS
-	if (sigfox_ep_api_ctx.internal_flags.synchronous != 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.synchronous != 0) {
 #endif
 	// Block until library goes back to READY state.
 	while (sigfox_ep_api_ctx.state != SIGFOX_EP_API_STATE_READY) {
@@ -2526,7 +2596,7 @@ SIGFOX_EP_API_status_t _send_control_message(SIGFOX_EP_API_control_message_t *co
 #endif
 errors:
 	// Clear request.
-	sigfox_ep_api_ctx.internal_flags.send_message_request = 0;
+	sigfox_ep_api_ctx.internal_flags.field.send_message_request = 0;
 	RETURN();
 }
 #endif
@@ -2541,13 +2611,13 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 	sfx_u8 nvm_data[SIGFOX_NVM_DATA_SIZE_BYTES];
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
-	SIGFOX_EP_FREQUENCY_status_t frequency_status = SIGFOX_EP_FREQUENCY_SUCCESS;
-#if (defined ASYNCHRONOUS) || (defined LOW_LEVEL_OPEN_CLOSE)
-	RF_API_status_t rf_status = RF_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
+	SIGFOX_EP_FREQUENCY_status_t sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_SUCCESS;
+#if (defined ASYNCHRONOUS) || (defined LOW_LEVEL_OPEN_CLOSE) || ((defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION))
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 #ifdef REGULATORY
-	SIGFOX_TX_CONTROL_status_t tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
+	SIGFOX_TX_CONTROL_status_t sigfox_tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
 #endif
 #endif /* ERROR_CODES */
 #if (defined ASYNCHRONOUS) || (defined LOW_LEVEL_OPEN_CLOSE)
@@ -2563,7 +2633,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 #ifdef ERROR_STACK
 	// Init error stack.
 	SIGFOX_ERROR_init();
-	sigfox_ep_api_ctx.internal_flags.error_stack_initialized = 1;
+	sigfox_ep_api_ctx.internal_flags.field.error_stack_initialized = 1;
 #endif
 	// Check state.
 	_CHECK_LIBRARY_STATE(!= SIGFOX_EP_API_STATE_CLOSED);
@@ -2609,8 +2679,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 	mcu_config.error_cb = (MCU_API_error_cb_t) &_MCU_API_error_cb;
 #endif
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_open(&mcu_config);
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	mcu_api_status = MCU_API_open(&mcu_config);
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_open(&mcu_config);
 #endif
@@ -2623,8 +2693,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 	rf_config.error_cb = &_RF_API_error_cb;
 #endif
 #ifdef ERROR_CODES
-	rf_status = RF_API_open(&rf_config);
-	RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+	rf_api_status = RF_API_open(&rf_config);
+	RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 	RF_API_open(&rf_config);
 #endif
@@ -2636,8 +2706,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 	tx_control_config.process_cb = &_SIGFOX_TX_CONTROL_process_cb;
 #endif
 #ifdef ERROR_CODES
-	tx_control_status = SIGFOX_TX_CONTROL_open(&tx_control_config);
-	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_TX_CONTROL);
+	sigfox_tx_control_status = SIGFOX_TX_CONTROL_open(&tx_control_config);
+	SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
 #else
 	SIGFOX_TX_CONTROL_open(&tx_control_config);
 #endif
@@ -2646,25 +2716,25 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 	// Store process callback (even if NULL).
 	sigfox_ep_api_ctx.process_cb = (config -> process_cb);
 	// Update library behavior.
-	sigfox_ep_api_ctx.internal_flags.synchronous = (sigfox_ep_api_ctx.process_cb == SFX_NULL) ? 1 : 0;
+	sigfox_ep_api_ctx.internal_flags.field.synchronous = (sigfox_ep_api_ctx.process_cb == SFX_NULL) ? 1 : 0;
 #endif
 	// Read last message counter and last random value value in NVM.
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_get_nvm(nvm_data, SIGFOX_NVM_DATA_SIZE_BYTES);
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	mcu_api_status = MCU_API_get_nvm(nvm_data, SIGFOX_NVM_DATA_SIZE_BYTES);
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_get_nvm(nvm_data, SIGFOX_NVM_DATA_SIZE_BYTES);
 #endif
 	sigfox_ep_api_ctx.message_counter = 0;
-	sigfox_ep_api_ctx.message_counter |= ((((sfx_u16) (nvm_data[SIGFOX_NVM_DATA_INDEX_MESSAGE_COUNTER_MSB])) << 8) & 0xFF00);
-	sigfox_ep_api_ctx.message_counter |= ((((sfx_u16) (nvm_data[SIGFOX_NVM_DATA_INDEX_MESSAGE_COUNTER_LSB])) << 0) & 0x00FF);
+	sigfox_ep_api_ctx.message_counter = (sfx_u16) (sigfox_ep_api_ctx.message_counter | ((((sfx_u16) nvm_data[SIGFOX_NVM_DATA_INDEX_MESSAGE_COUNTER_MSB]) << 8) & 0xFF00));
+	sigfox_ep_api_ctx.message_counter = (sfx_u16) (sigfox_ep_api_ctx.message_counter | ((((sfx_u16) nvm_data[SIGFOX_NVM_DATA_INDEX_MESSAGE_COUNTER_LSB]) << 0) & 0x00FF));
 	sigfox_ep_api_ctx.random_value = 0;
-	sigfox_ep_api_ctx.random_value |= ((((sfx_u16) (nvm_data[SIGFOX_NVM_DATA_INDEX_RANDOM_VALUE_MSB])) << 8) & 0xFF00);
-	sigfox_ep_api_ctx.random_value |= ((((sfx_u16) (nvm_data[SIGFOX_NVM_DATA_INDEX_RANDOM_VALUE_LSB])) << 0) & 0x00FF);
+	sigfox_ep_api_ctx.random_value = (sfx_u16) (sigfox_ep_api_ctx.random_value | ((((sfx_u16) nvm_data[SIGFOX_NVM_DATA_INDEX_RANDOM_VALUE_MSB]) << 8) & 0xFF00));
+	sigfox_ep_api_ctx.random_value = (sfx_u16) (sigfox_ep_api_ctx.random_value | ((((sfx_u16) nvm_data[SIGFOX_NVM_DATA_INDEX_RANDOM_VALUE_LSB]) << 0) & 0x00FF));
 	// Read device ID.
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_get_ep_id(ep_id, SIGFOX_EP_ID_SIZE_BYTES);
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	mcu_api_status = MCU_API_get_ep_id(ep_id, SIGFOX_EP_ID_SIZE_BYTES);
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_get_ep_id(ep_id, SIGFOX_EP_ID_SIZE_BYTES);
 #endif
@@ -2673,12 +2743,12 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 	}
 	// Init frequency driver.
 #ifdef ERROR_CODES
-	frequency_status = SIGFOX_EP_FREQUENCY_init(sigfox_ep_api_ctx.rc_ptr, ep_id, sigfox_ep_api_ctx.random_value);
-	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_FREQUENCY);
+	sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_init(sigfox_ep_api_ctx.rc_ptr, ep_id, sigfox_ep_api_ctx.random_value);
+	SIGFOX_EP_FREQUENCY_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_EP_FREQUENCY);
 #else
 	SIGFOX_EP_FREQUENCY_init(sigfox_ep_api_ctx.rc_ptr, ep_id, sigfox_ep_api_ctx.random_value);
 #endif
-	// Update library state if no error occured.
+	// Update library state if no error occurred.
 	sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_READY;
 errors:
 	RETURN();
@@ -2690,8 +2760,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_close(void) {
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #ifdef LOW_LEVEL_OPEN_CLOSE
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
-	RF_API_status_t rf_status = RF_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 #endif
 	// Check library is opened.
@@ -2699,20 +2769,20 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_close(void) {
 #ifdef LOW_LEVEL_OPEN_CLOSE
 	// Close MCU.
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_close();
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	mcu_api_status = MCU_API_close();
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_close();
 #endif
 	// Close RF.
 #ifdef ERROR_CODES
-	rf_status = RF_API_close();
-	RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+	rf_api_status = RF_API_close();
+	RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 	RF_API_close();
 #endif
 #endif
-	// Update library state if no error occured.
+	// Update library state if no error occurred.
 	sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_CLOSED;
 errors:
 	RETURN();
@@ -2726,7 +2796,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_process(void) {
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #endif
 	// Set process flag.
-	sigfox_ep_api_ctx.internal_flags.process_running = 1;
+	sigfox_ep_api_ctx.internal_flags.field.process_running = 1;
 	// Run the internal process.
 	while (sigfox_ep_api_ctx.irq_flags.all != 0) {
 #ifdef ERROR_CODES
@@ -2740,7 +2810,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_process(void) {
 errors:
 #endif
 	// Reset process flag.
-	sigfox_ep_api_ctx.internal_flags.process_running = 0;
+	sigfox_ep_api_ctx.internal_flags.field.process_running = 0;
 	RETURN();
 }
 #endif
@@ -2909,7 +2979,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_get_dl_payload(sfx_u8 *dl_payload, sfx_u8 d
 	}
 #endif
 	// Check downlink status.
-	if (sigfox_ep_api_ctx.message_status.dl_frame == 0) {
+	if (sigfox_ep_api_ctx.message_status.field.dl_frame == 0) {
 		EXIT_ERROR(SIGFOX_EP_API_ERROR_DL_PAYLOAD_UNAVAILABLE);
 	}
 	// Copy local bytes into given buffer.
@@ -2943,7 +3013,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_get_ep_id(sfx_u8* ep_id, sfx_u8 ep_id_size_
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 #ifdef PARAMETERS_CHECK
 	if (ep_id == SFX_NULL) {
@@ -2957,8 +3027,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_get_ep_id(sfx_u8* ep_id, sfx_u8 ep_id_size_
 	_CHECK_LIBRARY_STATE(== SIGFOX_EP_API_STATE_CLOSED);
 	// Read ID directly from MCU driver.
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_get_ep_id(ep_id, ep_id_size_bytes);
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	mcu_api_status = MCU_API_get_ep_id(ep_id, ep_id_size_bytes);
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_get_ep_id(ep_id, ep_id_size_bytes);
 #endif
@@ -2973,7 +3043,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 #ifdef PARAMETERS_CHECK
 	if (initial_pac == SFX_NULL) {
@@ -2987,8 +3057,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8
 	_CHECK_LIBRARY_STATE(== SIGFOX_EP_API_STATE_CLOSED);
 	// Read PAC directly from MCU driver.
 #ifdef ERROR_CODES
-	mcu_status = MCU_API_get_initial_pac(initial_pac, initial_pac_size_bytes);
-	MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+	mcu_api_status = MCU_API_get_initial_pac(initial_pac, initial_pac_size_bytes);
+	MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_get_initial_pac(initial_pac, initial_pac_size_bytes);
 #endif
@@ -3003,8 +3073,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_get_version(SIGFOX_version_t version_type, 
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-	MCU_API_status_t mcu_status = MCU_API_SUCCESS;
-	RF_API_status_t rf_status = RF_API_SUCCESS;
+	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
+	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 #ifdef PARAMETERS_CHECK
 	if ((version == SFX_NULL) || (version_size_char == SFX_NULL)) {
@@ -3021,16 +3091,16 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_get_version(SIGFOX_version_t version_type, 
 		break;
 	case SIGFOX_VERSION_MCU_DRIVER:
 #ifdef ERROR_CODES
-		mcu_status = MCU_API_get_version(version, version_size_char);
-		MCU_API_check_status(SIGFOX_EP_API_ERROR_MCU);
+		mcu_api_status = MCU_API_get_version(version, version_size_char);
+		MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
 #else
 		MCU_API_get_version(version, version_size_char);
 #endif
 		break;
 	case SIGFOX_VERSION_RF_DRIVER:
 #ifdef ERROR_CODES
-		rf_status = RF_API_get_version(version, version_size_char);
-		RF_API_check_status(SIGFOX_EP_API_ERROR_RF);
+		rf_api_status = RF_API_get_version(version, version_size_char);
+		RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
 #else
 		RF_API_get_version(version, version_size_char);
 #endif
@@ -3078,7 +3148,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_unstack_error(SIGFOX_ERROR_t *error_ptr) {
 	}
 #endif
 	// Check error stack has been initialized.
-	if (sigfox_ep_api_ctx.internal_flags.error_stack_initialized == 0) {
+	if (sigfox_ep_api_ctx.internal_flags.field.error_stack_initialized == 0) {
 		EXIT_ERROR(SIGFOX_EP_API_ERROR_STATE);
 	}
 	// Directly call error stack driver.
