@@ -43,7 +43,7 @@
 
 /*** Main version ***/
 
-#define SIGFOX_EP_LIB_VERSION			"v3.2"
+#define SIGFOX_EP_LIB_VERSION			"v3.3"
 
 /*** Compilation flags ***/
 

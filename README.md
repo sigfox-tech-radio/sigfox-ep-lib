@@ -155,6 +155,7 @@ The addon can be directly generated from the Sigfox End-Point library **cmake** 
 
 ```bash
 $ cmake <all previous flags> -DADDON_RFP=ON ..
+$ make precompil_sigfox_ep_addon_rfp
 $ make sigfox_ep_addon_rfp
 ```
 
@@ -167,5 +168,16 @@ The [S2LP RF API example code](https://github.com/sigfox-tech-radio/sigfox-ep-rf
 
 ```bash
 $ cmake <all previous flags> -DS2LP_RF_API=ON ..
+$ make precompil_s2lp_rf_api
 $ make s2lp_rf_api
+```
+
+### Semtech LR11XX
+
+The [LR11XX RF API example code](https://github.com/sigfox-tech-radio/sigfox-ep-rf-api-semtech-lr11xx) can be directly generated from the Sigfox End-Point library **cmake** by using the `LR11XX_RF_API` option:
+
+```bash
+$ cmake <all previous flags> -DLR11XX_RF_API=ON ..
+$ make precompil_lr11xx_rf_api
+$ make lr11xx_rf_api
 ```

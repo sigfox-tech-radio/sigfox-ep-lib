@@ -159,6 +159,17 @@ typedef struct {
 } MCU_API_timer_t;
 #endif
 
+#if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION) && (defined BIDIRECTIONAL)
+/*!******************************************************************
+ * \enum MCU_API_latency_t
+ * \brief MCU latency sources.
+ *******************************************************************/
+typedef enum {
+	MCU_API_LATENCY_GET_VOLTAGE_TEMPERATURE = 0,
+	MCU_API_LATENCY_LAST
+} MCU_API_latency_t;
+#endif
+
 /*!******************************************************************
  * \struct MCU_API_encryption_data_t
  * \brief MCU API encryption data structure.
@@ -359,6 +370,18 @@ MCU_API_status_t MCU_API_print_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_
  * \retval		Function execution status.
  *******************************************************************/
 MCU_API_status_t MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac_size_bytes);
+#endif
+
+#if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION) && (defined BIDIRECTIONAL)
+/*!******************************************************************
+ * \fn MCU_API_status_t MCU_API_get_latency(MCU_API_latency_t latency_type, sfx_u32 *latency_ms)
+ * \brief Read MCU latency in milliseconds.
+ * \brief This functions is called by the core library to compensate the durations in the MCU_API_timer_start() function.
+ * \param[in]	latency_type: Type of latency to get.
+ * \param[out] 	latency_ms: Pointer to integer that will contain the MCU latency in milliseconds.
+ * \retval		Function execution status.
+ *******************************************************************/
+MCU_API_status_t MCU_API_get_latency(MCU_API_latency_t latency_type, sfx_u32 *latency_ms);
 #endif
 
 #ifdef VERBOSE

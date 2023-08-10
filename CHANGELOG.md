@@ -7,12 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.3](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.3) - 10 Aug 2023
+
+### Added
+
+* Add `MCU_API_get_latency()` function to manage MCU drivers latencies as well as radio latencies.
+* Add **LR11XX RF API** support in cmake.
+
+### Fixed
+
+* Fix **T_CONF** and **T_RX** latency compensation formula. Reset all latency values to 0 by default.
+* Fix compilation issue in `_start_timer()` function.
+* Improve **error callback** management. Add missing **volatile** keyword on low level status. Stack corresponding error in **process function** in order to avoid putting the whole stack in volatile domain.
+* Update manufacturer functions template.
+
+### Changed
+
+* Initialize **error stack** only once in order to keep history when closing and re-opening the library.
+* Internal improvements: optimize **control message type check**, use `EXIT_ERROR` when checking **library state**, improve **flags naming**.
+
+### Removed
+
+* Remove unused `SIGFOX_EP_API_STATE_DL_CONFIRMATION` item in library state enumeration.
+
+### Known limitations
+
+* **Payload encryption** not supported.
+* **Secure element** not supported.
+
 ## [v3.2](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.2) - 16 Jun 2023
 
 ### Added
 
 * New `LATENCY_COMPENSATION` flag which enables **radio latency compensation** to improve MCU timers accuracy. Delay computation is now performed by the core library.
 * Add `SIGFOX_ERROR_SOURCE_HW_API` item to handle **board drivers errors** in RF API or MCU API implementation.
+* Add **S2LP RF API** support in cmake.
 
 ### Changed
 

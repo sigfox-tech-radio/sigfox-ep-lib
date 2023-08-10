@@ -154,7 +154,7 @@ RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_
 }
 #endif
 
-#ifdef TIMER_REQUIRED
+#if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION)
 /*******************************************************************/
 RF_API_status_t RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *latency_ms) {
 	/* To be implemented by the device manufacturer */

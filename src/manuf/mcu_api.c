@@ -192,7 +192,7 @@ MCU_API_status_t MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u
 
 #ifdef CERTIFICATION
 /*******************************************************************/
-MCU_API_status_t MCU_API_print(sfx_char *log_message) {
+MCU_API_status_t MCU_API_print_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 rssi_dbm) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
@@ -204,6 +204,17 @@ MCU_API_status_t MCU_API_print(sfx_char *log_message) {
 #ifdef VERBOSE
 /*******************************************************************/
 MCU_API_status_t MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac_size_bytes) {
+	/* To be implemented by the device manufacturer */
+#ifdef ERROR_CODES
+	MCU_API_status_t status = MCU_API_SUCCESS;
+#endif
+	RETURN();
+}
+#endif
+
+#if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION) && (defined BIDIRECTIONAL)
+/*******************************************************************/
+MCU_API_status_t MCU_API_get_latency(MCU_API_latency_t latency_type, sfx_u32 *latency_ms) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;

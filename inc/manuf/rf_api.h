@@ -111,7 +111,7 @@ typedef enum {
 #if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION)
 /*!******************************************************************
  * \enum RF_API_latency_t
- * \brief RF latency delay type.
+ * \brief RF latency sources.
  *******************************************************************/
 typedef enum {
 	RF_API_LATENCY_WAKE_UP = 0,
