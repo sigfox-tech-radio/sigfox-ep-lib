@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.4](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.4) - 09 Nov 2023
+
+### Added
+
+* Add `RF_API_start_continuous_wave()` function template for **type approval addon**.
+* Add required macros for **frequency hopping test mode** of type approval addon.
+* Update `cmake` tool to generate **type approval addon** and add **predefined values list** for some parameters.
+
+### Fixed
+
+* Impose `READY` state to close the library (as shown in state machine).
+* **Reset core context** in case of low level error.
+* Fix downlink sequence in **pseudo-blocking mode** (asynchronous mode with process callback set to NULL).
+* Add `BIDIRECTIONAL` flag on `MCU_API_print_dl_payload()` function.
+
+### Changed
+
+* Use `sfx_u32` type for **timer durations** (for type approval addon).
+* Use **boolean type** for `bidirectional_flag` field in user API.
+
+### Removed
+
+* Remove **unused timer reasons** in local `_start_timer()` function.
+* Remove **unused inclusion** of `sigfox_rc.h` file.
+* Remove `doc` folder since images are now hosted on the GitHub wiki.
+
+### Known limitations
+
+* **Payload encryption** not supported.
+* **Secure element** not supported.
+
 ## [v3.3](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.3) - 10 Aug 2023
 
 ### Added

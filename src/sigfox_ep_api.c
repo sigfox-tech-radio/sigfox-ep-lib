@@ -43,7 +43,6 @@
 #include "manuf/rf_api.h"
 #include "core/sigfox_ep_bitstream.h"
 #include "core/sigfox_ep_frequency.h"
-#include "sigfox_rc.h"
 #ifdef CERTIFICATION
 #include "sigfox_ep_api_test.h"
 #endif
@@ -188,7 +187,7 @@ typedef struct {
 	sfx_u8 frame_success_count;
 #endif
 #if !(defined SINGLE_FRAME) || (defined BIDIRECTIONAL)
-	sfx_u16 interframe_ms; // Tifu, Tifb or Tconf.
+	sfx_u32 interframe_ms; // Tifu, Tifb or Tconf.
 #endif
 #ifdef CERTIFICATION
 	SIGFOX_EP_API_TEST_parameters_t test_parameters;
@@ -502,7 +501,7 @@ static SIGFOX_EP_API_status_t _check_application_message(SIGFOX_EP_API_applicati
 #endif
 #if (defined BIDIRECTIONAL) && !(defined T_CONF_MS)
 	// Check downlink parameters.
-	if ((app_msg -> bidirectional_flag) != 0) {
+	if ((app_msg -> bidirectional_flag) == SFX_TRUE) {
 		// Check DL confirmation delay.
 		if (((app_msg -> t_conf_ms) < SIGFOX_T_CONF_MIN_MS) || ((app_msg -> t_conf_ms) > SIGFOX_T_CONF_MAX_MS)) {
 			EXIT_ERROR(SIGFOX_EP_API_ERROR_T_CONF);
@@ -713,13 +712,13 @@ static SIGFOX_EP_API_status_t _compute_next_ul_frequency(void) {
 #ifdef BIDIRECTIONAL
 #ifdef APPLICATION_MESSAGES
 	if (sigfox_ep_api_ctx.application_message_ptr == SFX_NULL) {
-		frequency_parameters.bidirectional_flag = 0;
+		frequency_parameters.bidirectional_flag = SFX_FALSE;
 	}
 	else {
-		frequency_parameters.bidirectional_flag = (sigfox_ep_api_ctx.internal_flags.field.control_message != 0) ? 0 : ((sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag);
+		frequency_parameters.bidirectional_flag = (sigfox_ep_api_ctx.internal_flags.field.control_message != 0) ? SFX_FALSE : ((sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag);
 	}
 #else
-	frequency_parameters.bidirectional_flag = 0;
+	frequency_parameters.bidirectional_flag = SFX_FALSE;
 #endif
 #endif /* BIDIRECTIONAL */
 #endif /* SINGLE_FRAME */
@@ -773,7 +772,7 @@ static sfx_bool _is_downlink_required(void) {
 	// Check message pointer.
 	if (sigfox_ep_api_ctx.application_message_ptr == SFX_NULL) goto errors;
 	// Check bidirectional flag.
-	if (((sigfox_ep_api_ctx.application_message_ptr -> bidirectional_flag) != 0) && (sigfox_ep_api_ctx.internal_flags.field.control_message == 0)) {
+	if (((sigfox_ep_api_ctx.application_message_ptr -> bidirectional_flag) == SFX_TRUE) && (sigfox_ep_api_ctx.internal_flags.field.control_message == 0)) {
 		downlink_required = SFX_TRUE;
 	}
 #ifdef CERTIFICATION
@@ -1285,7 +1284,7 @@ errors:
 
 #if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL)
 /*******************************************************************/
-static SIGFOX_EP_API_status_t _start_timer(sfx_u16 duration_ms, MCU_API_timer_instance_t timer_instance, MCU_API_timer_reason_t timer_reason) {
+static SIGFOX_EP_API_status_t _start_timer(sfx_u32 duration_ms, MCU_API_timer_instance_t timer_instance, MCU_API_timer_reason_t timer_reason) {
 #ifdef ERROR_CODES
 	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
@@ -1371,20 +1370,7 @@ static SIGFOX_EP_API_status_t _start_timer(sfx_u16 duration_ms, MCU_API_timer_in
 		offset += (sfx_s32) rf_latency[RF_API_LATENCY_RECEIVE_START];
 		offset += (sfx_s32) rf_latency[RF_API_LATENCY_RECEIVE_STOP];
 		break;
-#endif
-#ifdef REGULATORY
-	case MCU_API_TIMER_REASON_FH:
-		offset = 0;
-		break;
-	case MCU_API_TIMER_REASON_LBT:
-		offset = 0;
-		break;
-#endif /* REGULATORY */
-#ifdef CERTIFICATION
-	case MCU_API_TIMER_REASON_ADDON_RFP:
-		offset = 0;
-		break;
-#endif /* CERTIFICATION */
+#endif /* BIDIRECTIONAL */
 	default:
 		EXIT_ERROR(SIGFOX_EP_API_ERROR_TIMER_REASON);
 		break;
@@ -1644,7 +1630,7 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 		if (sigfox_ep_api_ctx.internal_flags.field.frame_success == 0) {
 			// Force bidirectional to 0 in order to call the message completion callback.
 			if (sigfox_ep_api_ctx.application_message_ptr != SFX_NULL) {
-				(sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag = 0;
+				(sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag = SFX_FALSE;
 			}
 			// Force state to ready.
 			state = SIGFOX_EP_API_STATE_READY;
@@ -1678,7 +1664,7 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 #endif
 				// Force bidirectional to 0 in order to call the message completion callback.
 				if (sigfox_ep_api_ctx.application_message_ptr != SFX_NULL) {
-					(sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag = 0;
+					(sigfox_ep_api_ctx.application_message_ptr) -> bidirectional_flag = SFX_FALSE;
 				}
 				// Force state to ready.
 				state = SIGFOX_EP_API_STATE_READY;
@@ -1780,7 +1766,7 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
 	SIGFOX_TX_CONTROL_result_t tx_control_post_check_result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
 #endif
 #ifdef BIDIRECTIONAL
-	sfx_u16 dl_t_w_ms = 0;
+	sfx_u32 dl_t_w_ms = 0;
 #endif
 	// Update message status.
 	_update_message_status();
@@ -1797,7 +1783,7 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
 #ifdef BIDIRECTIONAL
 	// Set downlink T_W value.
 #ifdef CERTIFICATION
-	dl_t_w_ms = (sigfox_ep_api_ctx.test_parameters.dl_t_w_ms != 0) ? sigfox_ep_api_ctx.test_parameters.dl_t_w_ms : (((sigfox_ep_api_ctx.rc_ptr) -> spectrum_access) -> dl_t_w_ms);
+	dl_t_w_ms = (sigfox_ep_api_ctx.test_parameters.dl_t_w_ms != 0) ? sigfox_ep_api_ctx.test_parameters.dl_t_w_ms : (sfx_u32) (((sigfox_ep_api_ctx.rc_ptr) -> spectrum_access) -> dl_t_w_ms);
 #else
 	dl_t_w_ms = (((sigfox_ep_api_ctx.rc_ptr) -> spectrum_access) -> dl_t_w_ms);
 #endif
@@ -1975,13 +1961,13 @@ errors:
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _start_dl_sequence(void) {
 	// Local variables.
-	sfx_u16 dl_t_rx_ms = 0;
+	sfx_u32 dl_t_rx_ms = 0;
 #ifdef ERROR_CODES
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #endif
 	// Set downlink T_RX value.
 #ifdef CERTIFICATION
-	dl_t_rx_ms = (sigfox_ep_api_ctx.test_parameters.dl_t_rx_ms != 0) ? (sigfox_ep_api_ctx.test_parameters.dl_t_rx_ms) : (((sigfox_ep_api_ctx.rc_ptr) -> spectrum_access) -> dl_t_rx_ms);
+	dl_t_rx_ms = (sigfox_ep_api_ctx.test_parameters.dl_t_rx_ms != 0) ? (sigfox_ep_api_ctx.test_parameters.dl_t_rx_ms) : (sfx_u32) (((sigfox_ep_api_ctx.rc_ptr) -> spectrum_access) -> dl_t_rx_ms);
 #else
 	dl_t_rx_ms = (((sigfox_ep_api_ctx.rc_ptr) -> spectrum_access) -> dl_t_rx_ms);
 #endif
@@ -2054,6 +2040,8 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #endif
 #endif /* ERROR_CODES */
 #ifdef BIDIRECTIONAL
+	sfx_bool local_rx_data_received_flag = SFX_FALSE;
+	sfx_bool local_mcu_timer1_cplt_flag = SFX_FALSE;
 #endif
 #ifdef REGULATORY
 	SIGFOX_TX_CONTROL_result_t tx_control_result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
@@ -2355,8 +2343,19 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 		sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received = sigfox_ep_api_ctx.rx_data.data_received;
 		sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = !(sigfox_ep_api_ctx.rx_data.data_received);
 #endif
+		// Capture IRQ flags once to secure following multiple checks sequence.
+		if (sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received != 0) {
+			// Set local flag and clear IRQ.
+			local_rx_data_received_flag = SFX_TRUE;
+			sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received = 0;
+		}
+		if (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0) {
+			// Set local flag and clear IRQ.
+			local_mcu_timer1_cplt_flag = SFX_TRUE;
+			sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 0;
+		}
 		// De init radio if any frame has been received or timeout is reached.
-		if ((sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received != 0) || (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0)) {
+		if ((local_rx_data_received_flag == SFX_TRUE) || (local_mcu_timer1_cplt_flag == SFX_TRUE)) {
 #ifdef ERROR_CODES
 			rf_api_status = RF_API_de_init();
 			RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
@@ -2365,9 +2364,7 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #endif
 		}
 		// Perform authentication if frame has been received.
-		if (sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received != 0) {
-			// Clear flag.
-			sigfox_ep_api_ctx.irq_flags.field.rf_rx_data_received = 0;
+		if (local_rx_data_received_flag == SFX_TRUE) {
 			// Decode downlink frame.
 #ifdef ERROR_CODES
 			status = _check_dl_frame();
@@ -2376,7 +2373,7 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 			_check_dl_frame();
 #endif
 		}
-		if (((sigfox_ep_api_ctx.dl_status) == SFX_TRUE) || (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0)) {
+		if (((sigfox_ep_api_ctx.dl_status) == SFX_TRUE) || (local_mcu_timer1_cplt_flag == SFX_TRUE)) {
 			// RX sequence done.
 #ifdef ERROR_CODES
 			status = _radio_sleep();
@@ -2391,7 +2388,6 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #else
 			MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_RX);
 #endif
-			sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 0;
 			// Update state.
 			if ((sigfox_ep_api_ctx.dl_status) == SFX_TRUE) {
 				// Update message status.
@@ -2431,7 +2427,7 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #endif
 			}
 			else {
-				// Dowlink timeout: set error flag.
+				// Downlink timeout: set error flag.
 				sigfox_ep_api_ctx.message_status.field.network_error = 1;
 #ifdef ERROR_STACK
 				// Add error to stack.
@@ -2445,7 +2441,7 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 			}
 		}
 		// Frame not authenticated and timeout not reached yet: restart reception.
-		else {
+		if ((local_rx_data_received_flag == SFX_TRUE) && (sigfox_ep_api_ctx.dl_status == SFX_FALSE) && (local_mcu_timer1_cplt_flag == SFX_FALSE)) {
 #ifdef ERROR_CODES
 			status = _start_reception();
 			CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
@@ -2492,6 +2488,12 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 	// Return here if no error occurred.
 	RETURN();
 errors:
+	// Reset IRQ flags.
+	sigfox_ep_api_ctx.irq_flags.all = 0;
+	// Reset internal flags.
+	sigfox_ep_api_ctx.internal_flags.field.radio_woken_up = 0;
+	sigfox_ep_api_ctx.internal_flags.field.tx_control_pre_check_running = 0;
+	sigfox_ep_api_ctx.internal_flags.field.tx_control_post_check_running = 0;
 	// Set error flag.
 	sigfox_ep_api_ctx.message_status.field.execution_error = 1;
 #ifdef ERROR_CODES
@@ -2793,8 +2795,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_close(void) {
 	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 #endif
-	// Check library is opened.
-	_CHECK_LIBRARY_STATE(== SIGFOX_EP_API_STATE_CLOSED);
+	// Check library state.
+	_CHECK_LIBRARY_STATE(!= SIGFOX_EP_API_STATE_READY);
 #ifdef LOW_LEVEL_OPEN_CLOSE
 	// Close MCU.
 #ifdef ERROR_CODES

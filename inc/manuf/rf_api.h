@@ -67,7 +67,7 @@ typedef void RF_API_status_t;
  * \fn RF_API_process_cb_t			To be called when the RF driver needs to be processed.
  * \fn RF_API_error_cb_t			To be called when an error occurs during RF operation.
  * \fn RF_API_tx_cplt_cb_t			To be called when a frame transmission is complete.
- * \fn RF_API_rx_data_received_cb_t	To be called when a diwnlink frame is received.
+ * \fn RF_API_rx_data_received_cb_t	To be called when a downlink frame is received.
  * \fn RF_API_channel_free_cb_t		To be called when the carrier sense operation is complete.
  *******************************/
 typedef void (*RF_API_process_cb_t)(void);
@@ -332,13 +332,26 @@ RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_
 RF_API_status_t RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *latency_ms);
 #endif
 
+#ifdef CERTIFICATION
+/*!******************************************************************
+ * \fn RF_API_status_t RF_API_start_continuous_wave(void)
+ * \brief Start continuous wave transmission using radio parameters given in the RF_API_init() function.
+ * \brief This function is only called by the type approval addon (EP-ADDON-TA). In asynchronous mode, it must not issue any completion callback.
+ * \brief The transmission will be stopped by the RF_API_de_init() function.
+ * \param[in]  	none
+ * \param[out] 	none
+ * \retval		Function execution status.
+ *******************************************************************/
+RF_API_status_t RF_API_start_continuous_wave(void);
+#endif
+
 #ifdef VERBOSE
 /*!******************************************************************
  * \fn RF_API_status_t RF_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char)
  * \brief Get RF driver version.
  * \param[in]  	none
  * \param[out] 	version: RF driver version.
- * \param[out]	version_size_char: Pointer tha will contain the string size.
+ * \param[out]	version_size_char: Pointer that will contain the string size.
  * \retval		Function execution status.
  *******************************************************************/
 RF_API_status_t RF_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char);

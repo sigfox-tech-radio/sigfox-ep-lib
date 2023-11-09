@@ -60,6 +60,7 @@
 #endif
 #ifdef CERTIFICATION
 #define MCU_API_TIMER_INSTANCE_ADDON_RFP	MCU_API_TIMER_3
+#define MCU_API_TIMER_INSTANCE_ADDON_TA		MCU_API_TIMER_3
 #endif
 #endif /* TIMER_REQUIRED */
 
@@ -139,6 +140,7 @@ typedef enum {
 #endif
 #ifdef CERTIFICATION
 	MCU_API_TIMER_REASON_ADDON_RFP,
+	MCU_API_TIMER_REASON_ADDON_TA,
 #endif
 	MCU_API_TIMER_REASON_LAST
 } MCU_API_timer_reason_t;
@@ -348,7 +350,7 @@ MCU_API_status_t MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes);
 MCU_API_status_t MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u16 *voltage_tx_mv, sfx_s16 *temperature_tenth_degrees);
 #endif
 
-#ifdef CERTIFICATION
+#if (defined CERTIFICATION) && (defined BIDIRECTIONAL)
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_print_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 rssi_dbm)
  * \brief Print a downlink frame (only used by the RFP addon during downlink test modes).
@@ -364,7 +366,7 @@ MCU_API_status_t MCU_API_print_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_
 #ifdef VERBOSE
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac_size_bytes)
- * \brief Get device initital PAC code.
+ * \brief Get device initial PAC code.
  * \param[in] 	initial_pac_size_bytes: Number of bytes of the PAC to read (full size is SIGFOX_EP_PAC_SIZE_BYTES).
  * \param[out] 	initial_pac: Initial PAC.
  * \retval		Function execution status.

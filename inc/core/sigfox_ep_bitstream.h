@@ -146,9 +146,9 @@ typedef struct {
 #ifdef APPLICATION_MESSAGES
 /*!******************************************************************
  * \fn SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_EP_BITSTREAM_application_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes)
- * \brief Build an application frame bistream.
+ * \brief Build an application frame bitstream.
  * \param[in]  	input: Application frame input parameters.
- * \param[out] 	bitstream: Computed bistream.
+ * \param[out] 	bitstream: Computed bitstream.
  * \param[out]	bitstream_size_bytes: Size of the computed bitstream in bytes.
  * \retval		Function execution status.
  *******************************************************************/
@@ -158,9 +158,9 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL)
 /*!******************************************************************
  * \fn SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_BITSTREAM_control_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes)
- * \brief Build a control frame bistream.
+ * \brief Build a control frame bitstream.
  * \param[in]  	input: Control frame input parameters.
- * \param[out] 	bitstream: Computed bistream.
+ * \param[out] 	bitstream: Computed bitstream.
  * \param[out]	bitstream_size_bytes: Size of the computed bitstream in bytes.
  * \retval		Function execution status.
  *******************************************************************/

@@ -165,6 +165,17 @@ RF_API_status_t RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *laten
 }
 #endif
 
+#ifdef CERTIFICATION
+/*******************************************************************/
+RF_API_status_t RF_API_start_continuous_wave(void) {
+	/* To be implemented by the device manufacturer */
+#ifdef ERROR_CODES
+	RF_API_status_t status = RF_API_SUCCESS;
+#endif
+	RETURN();
+}
+#endif
+
 #ifdef VERBOSE
 /*******************************************************************/
 RF_API_status_t RF_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char) {

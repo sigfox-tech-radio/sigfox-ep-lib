@@ -70,7 +70,7 @@ typedef struct {
 #endif
 #if (defined REGULATORY) && (defined SPECTRUM_ACCESS_FH) && !(defined SINGLE_FRAME)
 	sfx_bool micro_channel_table_initialized;
-	sfx_u8 micro_channel_frame_count[SIGFOX_FH_MICRO_CHANNEL_NUMBER];
+	sfx_u8 micro_channel_frame_count[SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL];
 #endif
 } SIGFOX_EP_FREQUENCY_context_t;
 
@@ -147,7 +147,7 @@ static sfx_bool _is_baseband_frequency_allowed(sfx_u32 baseband_frequency_hz) {
 /*******************************************************************/
 static sfx_bool _is_micro_channel_free(sfx_u8 micro_channel_index) {
 	// Thanks to the FH timer, a micro-channel is free when all frames of the message have been sent.
-	sfx_bool micro_channel_free = (sigfox_ep_frequency_ctx.micro_channel_frame_count[micro_channel_index] >= SIGFOX_FH_MICRO_CHANNEL_USED) ? SFX_TRUE : SFX_FALSE;
+	sfx_bool micro_channel_free = (sigfox_ep_frequency_ctx.micro_channel_frame_count[micro_channel_index] >= SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED) ? SFX_TRUE : SFX_FALSE;
 	return micro_channel_free;
 }
 #endif
@@ -159,7 +159,7 @@ static sfx_u8 _get_micro_channel_index(sfx_u32 baseband_frequency_hz) {
 	sfx_u8 micro_channel_index = 0;
 	// Compute index.
 	micro_channel_index = (sfx_u8) ((baseband_frequency_hz + (SIGFOX_FH_MACRO_CHANNEL_DELTA / 2)) / SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ);
-	micro_channel_index %= SIGFOX_FH_MICRO_CHANNEL_NUMBER;
+	micro_channel_index %= SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL;
 	// Check micro-channels mask.
 	if (((SIGFOX_FH_MICRO_CHANNEL_MASK >> micro_channel_index) & 0x01) == 0) {
 		micro_channel_index = SIGFOX_EP_FREQUENCY_FH_MICRO_CHANNEL_ERROR;
@@ -297,8 +297,8 @@ SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_init(const SIGFOX_rc_t *rc, sfx
 #if (defined REGULATORY) && (defined SPECTRUM_ACCESS_FH) && !(defined SINGLE_FRAME)
 	// Init micro-channels frame count (only once).
 	if (sigfox_ep_frequency_ctx.micro_channel_table_initialized == SFX_FALSE) {
-		for (idx=0 ; idx<SIGFOX_FH_MICRO_CHANNEL_NUMBER ; idx++) {
-			sigfox_ep_frequency_ctx.micro_channel_frame_count[idx] = SIGFOX_FH_MICRO_CHANNEL_USED;
+		for (idx=0 ; idx<SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL ; idx++) {
+			sigfox_ep_frequency_ctx.micro_channel_frame_count[idx] = SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED;
 		}
 		sigfox_ep_frequency_ctx.micro_channel_table_initialized = SFX_TRUE;
 	}
@@ -350,8 +350,8 @@ SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_uplink(SIGFOX_EP_FREQUE
 #if (defined REGULATORY) && (defined SPECTRUM_ACCESS_FH)
 	// The FH timer (or Tw for DL-CONF) has necessarily been launched before a first frame, allowing all micro-channels to be used again.
 	if ((input -> ul_frame_rank) == SIGFOX_UL_FRAME_RANK_1) {
-		for (idx=0 ; idx<SIGFOX_FH_MICRO_CHANNEL_NUMBER ; idx++) {
-			sigfox_ep_frequency_ctx.micro_channel_frame_count[idx] = SIGFOX_FH_MICRO_CHANNEL_USED;
+		for (idx=0 ; idx<SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL ; idx++) {
+			sigfox_ep_frequency_ctx.micro_channel_frame_count[idx] = SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED;
 		}
 	}
 #endif
@@ -414,7 +414,7 @@ SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_uplink(SIGFOX_EP_FREQUE
 #endif /* SINGLE_FRAME */
 #if (defined REGULATORY) && (defined SPECTRUM_ACCESS_FH) && !(defined SINGLE_FRAME)
 	// Increment all micro-channels frame count.
-	for (idx=0 ; idx<SIGFOX_FH_MICRO_CHANNEL_NUMBER ; idx++) {
+	for (idx=0 ; idx<SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL ; idx++) {
 		sigfox_ep_frequency_ctx.micro_channel_frame_count[idx]++;
 	}
 #endif

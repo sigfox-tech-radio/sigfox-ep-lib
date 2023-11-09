@@ -193,7 +193,7 @@ typedef struct {
 	sfx_u8 ul_payload_size_bytes;
 #endif
 #ifdef BIDIRECTIONAL
-	sfx_u8 bidirectional_flag;
+	sfx_bool bidirectional_flag;
 #ifndef T_CONF_MS
 	sfx_u16 t_conf_ms;
 #endif

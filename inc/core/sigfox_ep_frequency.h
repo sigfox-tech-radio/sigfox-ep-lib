@@ -80,7 +80,7 @@ typedef struct {
 
 /*!******************************************************************
  * \fn SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_init(const SIGFOX_rc_t *rc, sfx_u8 *ep_id, sfx_u16 last_random_value)
- * \brief Init the frequecy driver.
+ * \brief Init the frequency driver.
  * \param[in]	rc: Radio configuration.
  * \param[in]	ep_id: Device ID (used to randomize the frequency algorithm).
  * \param[in]  	last_random_value: Last random value (read in NVM at device start-up).

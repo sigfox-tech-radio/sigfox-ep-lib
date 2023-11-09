@@ -77,8 +77,8 @@ typedef struct {
 	sfx_u32 tx_frequency_hz; // If non-zero, bypass the uplink random frequency generator of the core library.
 #ifdef BIDIRECTIONAL
 	sfx_u32 rx_frequency_hz; // If non-zero, bypass the downlink frequency generator of the core library.
-	sfx_u16 dl_t_w_ms; // If non-zero, bypass the downlink timer value (T_W) from the RC structure.
-	sfx_u16 dl_t_rx_ms; // If non-zero, bypass the downlink timeout value (T_RX) from the RC structure.
+	sfx_u32 dl_t_w_ms; // If non-zero, bypass the downlink timer value (T_W) from the RC structure.
+	sfx_u32 dl_t_rx_ms; // If non-zero, bypass the downlink timeout value (T_RX) from the RC structure.
 #endif
 #if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LBT)
 	sfx_u32 lbt_cs_max_duration_first_frame_ms; // If non-zero, bypass the first CS timeout value of the selected RC.
