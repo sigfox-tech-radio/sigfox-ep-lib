@@ -47,6 +47,10 @@
 
 /*** SIGFOX EP API TEST structures ***/
 
+/*!******************************************************************
+ * \union SIGFOX_EP_API_TEST_flags_t
+ * \brief Specific flags for test.
+ *******************************************************************/
 typedef union {
 	struct {
 		sfx_u8 ul_enable : 1; // Enable or disable uplink part of a message sequence.
@@ -70,7 +74,7 @@ typedef union {
 
 /*!******************************************************************
  * \struct SIGFOX_EP_API_TEST_parameters_t
- * \brief Specific parameters for test (RFP ADDON).
+ * \brief Specific parameters for test.
  *******************************************************************/
 typedef struct {
 	SIGFOX_EP_API_TEST_flags_t flags;

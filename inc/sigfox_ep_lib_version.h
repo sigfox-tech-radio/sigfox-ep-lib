@@ -43,7 +43,7 @@
 
 /*** Main version ***/
 
-#define SIGFOX_EP_LIB_VERSION			"v3.4"
+#define SIGFOX_EP_LIB_VERSION			"v3.5"
 
 /*** Compilation flags ***/
 
@@ -55,52 +55,52 @@
 #define FLAGS_OPT						"COMMAND_LINE_FLAGS"
 #endif
 
-#ifdef RC1
-#define RC1_OPT 						SIGFOX_VERSION_SEPARATOR "RC1"
+#ifdef RC1_ZONE
+#define RC1_ZONE_OPT 					SIGFOX_VERSION_SEPARATOR "RC1_ZONE"
 #else
-#define RC1_OPT
+#define RC1_ZONE_OPT
 #endif
 
-#ifdef RC2
-#define RC2_OPT 						SIGFOX_VERSION_SEPARATOR "RC2"
+#ifdef RC2_ZONE
+#define RC2_ZONE_OPT 					SIGFOX_VERSION_SEPARATOR "RC2_ZONE"
 #else
-#define RC2_OPT
+#define RC2_ZONE_OPT
 #endif
 
-#ifdef RC3C
-#define RC3C_OPT 						SIGFOX_VERSION_SEPARATOR "RC3C"
+#ifdef RC3C_ZONE
+#define RC3C_ZONE_OPT 					SIGFOX_VERSION_SEPARATOR "RC3C_ZONE"
 #else
-#define RC3C_OPT
+#define RC3C_ZONE_OPT
 #endif
 
-#ifdef RC3D
-#define RC3D_OPT 						SIGFOX_VERSION_SEPARATOR "RC3D"
+#ifdef RC3D_ZONE
+#define RC3D_ZONE_OPT 					SIGFOX_VERSION_SEPARATOR "RC3D_ZONE"
 #else
-#define RC3D_OPT
+#define RC3D_ZONE_OPT
 #endif
 
-#ifdef RC4
-#define RC4_OPT 						SIGFOX_VERSION_SEPARATOR "RC4"
+#ifdef RC4_ZONE
+#define RC4_ZONE_OPT 					SIGFOX_VERSION_SEPARATOR "RC4_ZONE"
 #else
-#define RC4_OPT
+#define RC4_ZONE_OPT
 #endif
 
-#ifdef RC5
-#define RC5_OPT 						SIGFOX_VERSION_SEPARATOR "RC5"
+#ifdef RC5_ZONE
+#define RC5_ZONE_OPT 					SIGFOX_VERSION_SEPARATOR "RC5_ZONE"
 #else
-#define RC5_OPT
+#define RC5_ZONE_OPT
 #endif
 
-#ifdef RC6
-#define RC6_OPT 						SIGFOX_VERSION_SEPARATOR "RC6"
+#ifdef RC6_ZONE
+#define RC6_ZONE_OPT 					SIGFOX_VERSION_SEPARATOR "RC6_ZONE"
 #else
-#define RC6_OPT
+#define RC6_ZONE_OPT
 #endif
 
-#ifdef RC7
-#define RC7_OPT 						SIGFOX_VERSION_SEPARATOR "RC7"
+#ifdef RC7_ZONE
+#define RC7_ZONE_OPT 					SIGFOX_VERSION_SEPARATOR "RC7_ZONE"
 #else
-#define RC7_OPT
+#define RC7_ZONE_OPT
 #endif
 
 #ifdef APPLICATION_MESSAGES
@@ -225,14 +225,14 @@
 
 #define SIGFOX_EP_FLAGS \
 	FLAGS_OPT \
-	RC1_OPT \
-	RC2_OPT \
-	RC3C_OPT \
-	RC3D_OPT \
-	RC4_OPT \
-	RC5_OPT \
-	RC6_OPT \
-	RC7_OPT \
+	RC1_ZONE_OPT \
+	RC2_ZONE_OPT \
+	RC3C_ZONE_OPT \
+	RC3D_ZONE_OPT \
+	RC4_ZONE_OPT \
+	RC5_ZONE_OPT \
+	RC6_ZONE_OPT \
+	RC7_ZONE_OPT \
 	APPLICATION_MESSAGES_OPT \
 	CONTROL_KEEP_ALIVE_MESSAGE_OPT \
 	BIDIRECTIONAL_OPT \

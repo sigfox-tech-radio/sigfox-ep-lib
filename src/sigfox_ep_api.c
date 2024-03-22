@@ -482,7 +482,7 @@ static SIGFOX_EP_API_status_t _check_application_message(SIGFOX_EP_API_applicati
 	// Check payload.
 	if ((app_msg -> type) == SIGFOX_APPLICATION_MESSAGE_TYPE_BYTE_ARRAY) {
 		// Payload is required.
-		if (((app_msg -> ul_payload) == SFX_NULL)) {
+		if ((app_msg -> ul_payload) == SFX_NULL) {
 			EXIT_ERROR(SIGFOX_EP_API_ERROR_NULL_PARAMETER);
 		}
 	}
@@ -560,7 +560,7 @@ static SIGFOX_EP_API_status_t _store_application_message(SIGFOX_EP_API_applicati
 	sigfox_ep_api_ctx.local_application_message.common_parameters.tx_power_dbm_eirp = ((application_message -> common_parameters).tx_power_dbm_eirp);
 #endif
 #ifndef SINGLE_FRAME
-	// Number of frames and inter frame delay.
+	// Number of frames and inter-frame delay.
 	sigfox_ep_api_ctx.local_application_message.common_parameters.number_of_frames = ((application_message -> common_parameters).number_of_frames);
 #ifndef T_IFU_MS
 	sigfox_ep_api_ctx.local_application_message.common_parameters.t_ifu_ms = ((application_message -> common_parameters).t_ifu_ms);
@@ -1587,10 +1587,12 @@ static SIGFOX_EP_API_status_t _write_nvm(void) {
 #endif
 	// Write message counter and random value in NVM when at least one frame has been successfully transmitted.
 #ifdef SINGLE_FRAME
-	if (sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) {
+	if ((sigfox_ep_api_ctx.internal_flags.field.frame_success != 0) && (sigfox_ep_api_ctx.internal_flags.field.nvm_write_pending != 0)) {
 #else
-	if (sigfox_ep_api_ctx.frame_success_count > 0) {
+	if ((sigfox_ep_api_ctx.frame_success_count > 0) && (sigfox_ep_api_ctx.internal_flags.field.nvm_write_pending != 0)) {
 #endif
+		// Reset flag.
+		sigfox_ep_api_ctx.internal_flags.field.nvm_write_pending = 0;
 		// Build local NVM array.
 		nvm_data[SIGFOX_NVM_DATA_INDEX_MESSAGE_COUNTER_MSB] = (sfx_u8) ((sigfox_ep_api_ctx.message_counter >> 8) & 0x00FF);
 		nvm_data[SIGFOX_NVM_DATA_INDEX_MESSAGE_COUNTER_LSB] = (sfx_u8) ((sigfox_ep_api_ctx.message_counter >> 0) & 0x00FF);
@@ -1603,8 +1605,6 @@ static SIGFOX_EP_API_status_t _write_nvm(void) {
 #else
 		MCU_API_set_nvm(nvm_data, SIGFOX_NVM_DATA_SIZE_BYTES);
 #endif
-		// Update flags.
-		sigfox_ep_api_ctx.internal_flags.field.nvm_write_pending = 0;
 	}
 #ifdef ERROR_CODES
 errors:
@@ -2496,6 +2496,8 @@ errors:
 	sigfox_ep_api_ctx.internal_flags.field.tx_control_post_check_running = 0;
 	// Set error flag.
 	sigfox_ep_api_ctx.message_status.field.execution_error = 1;
+	// Write NVM (without checking status in order to keep current error).
+	_write_nvm();
 #ifdef ERROR_CODES
 	// Notify error to low level drivers.
 	MCU_API_error();
@@ -2642,7 +2644,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 	MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 	SIGFOX_EP_FREQUENCY_status_t sigfox_ep_frequency_status = SIGFOX_EP_FREQUENCY_SUCCESS;
-#if (defined ASYNCHRONOUS) || (defined LOW_LEVEL_OPEN_CLOSE) || ((defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION))
+#if (defined ASYNCHRONOUS) || (defined LOW_LEVEL_OPEN_CLOSE)
 	RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 #ifdef REGULATORY
@@ -2879,9 +2881,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_send_application_message(SIGFOX_EP_API_appl
 #if (defined CERTIFICATION) && (defined APPLICATION_MESSAGES)
 /*******************************************************************/
 SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_application_message(SIGFOX_EP_API_application_message_t *application_message, SIGFOX_EP_API_TEST_parameters_t *test_parameters) {
-	// Local variables.
-	sfx_u8 idx = 0;
 #ifdef ERROR_CODES
+	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #endif
 #ifdef PARAMETERS_CHECK
@@ -2890,12 +2891,6 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_application_message(SIGFOX_EP_API
 		EXIT_ERROR(SIGFOX_EP_API_ERROR_NULL_PARAMETER);
 	}
 #endif
-	// Check EP-ID.
-	for (idx=0 ; idx<SIGFOX_EP_ID_SIZE_BYTES ; idx++) {
-		if (sigfox_ep_api_ctx.ep_id[idx] != SIGFOX_EP_TEST_ID[idx]) {
-			EXIT_ERROR(SIGFOX_EP_API_ERROR_EP_ID);
-		}
-	}
 	// Update local test parameters.
 	sigfox_ep_api_ctx.test_parameters.tx_frequency_hz = (test_parameters -> tx_frequency_hz);
 	sigfox_ep_api_ctx.test_parameters.flags = (test_parameters -> flags);
@@ -2913,7 +2908,9 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_application_message(SIGFOX_EP_API
 #else
 	_send_application_message(application_message);
 #endif
+#ifdef PARAMETERS_CHECK
 errors:
+#endif
 	RETURN();
 }
 #endif
@@ -2951,9 +2948,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_send_control_message(SIGFOX_EP_API_control_
 #if (defined CERTIFICATION) && (defined CONTROL_KEEP_ALIVE_MESSAGE)
 /*******************************************************************/
 SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_control_message(SIGFOX_EP_API_control_message_t *control_message, SIGFOX_EP_API_TEST_parameters_t *test_parameters) {
-	// Local variables.
-	sfx_u8 idx = 0;
 #ifdef ERROR_CODES
+	// Local variables.
 	SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #endif
 #ifdef PARAMETERS_CHECK
@@ -2962,12 +2958,6 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_control_message(SIGFOX_EP_API_con
 		EXIT_ERROR(SIGFOX_EP_API_ERROR_NULL_PARAMETER);
 	}
 #endif
-	// Check EP-ID.
-	for (idx=0 ; idx<SIGFOX_EP_ID_SIZE_BYTES ; idx++) {
-		if (sigfox_ep_api_ctx.ep_id[idx] != SIGFOX_EP_TEST_ID[idx]) {
-			EXIT_ERROR(SIGFOX_EP_API_ERROR_EP_ID);
-		}
-	}
 	// Update local test parameters.
 	sigfox_ep_api_ctx.test_parameters.tx_frequency_hz = (test_parameters -> tx_frequency_hz);
 	sigfox_ep_api_ctx.test_parameters.flags = (test_parameters -> flags);
@@ -2985,7 +2975,9 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_control_message(SIGFOX_EP_API_con
 #else
 	_send_control_message(control_message);
 #endif
+#ifdef PARAMETERS_CHECK
 errors:
+#endif
 	RETURN();
 }
 #endif

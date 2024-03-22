@@ -39,7 +39,7 @@ Below is the list of available flags.
 
 | **Flag name** | **Value** | **Description** |
 |:---:|:---:|:---:|
-| `RCx` | `undefined` / `defined` | Support the RCx radio configuration if defined. |
+| `RCx_ZONE` | `undefined` / `defined` | Support the RCx radio configuration if defined. |
 | `APPLICATION_MESSAGES` | `undefined` / `defined` | Support uplink application messages if defined. |
 | `CONTROL_KEEP_ALIVE_MESSAGE` | `undefined` / `defined` | Support uplink control keep alive message if defined. |
 | `BIDIRECTIONAL` | `undefined` / `defined` | Support bidirectional procedure (downlink) if defined. Only applicable to application messages. Otherwise all messages will be uplink only. |
@@ -138,14 +138,14 @@ make precompil
 
 ```bash
 cmake -DUSE_SIGFOX_EP_FLAGS_H=OFF \
-      -DRC1=ON \
-      -DRC2=ON \
-      -DRC3C=ON \
-      -DRC3D=ON \
-      -DRC4=ON \
-      -DRC5=ON \
-      -DRC6=ON \
-      -DRC7=ON \
+      -DRC1_ZONE=ON \
+      -DRC2_ZONE=ON \
+      -DRC3C_ZONE=ON \
+      -DRC3D_ZONE=ON \
+      -DRC4_ZONE=ON \
+      -DRC5_ZONE=ON \
+      -DRC6_ZONE=ON \
+      -DRC7_ZONE=ON \
       -DAPPLICATION_MESSAGES=ON \
       -DCONTROL_KEEP_ALIVE_MESSAGE=ON \
       -DBIDIRECTIONAL=ON \
@@ -198,14 +198,14 @@ make sigfox_ep_lib
 
 ```bash
 cmake -DUSE_SIGFOX_EP_FLAGS_H=OFF \
-      -DRC1=ON \
-      -DRC2=ON \
-      -DRC3C=ON \
-      -DRC3D=ON \
-      -DRC4=ON \
-      -DRC5=ON \
-      -DRC6=ON \
-      -DRC7=ON \
+      -DRC1_ZONE=ON \
+      -DRC2_ZONE=ON \
+      -DRC3C_ZONE=ON \
+      -DRC3D_ZONE=ON \
+      -DRC4_ZONE=ON \
+      -DRC5_ZONE=ON \
+      -DRC6_ZONE=ON \
+      -DRC7_ZONE=ON \
       -DAPPLICATION_MESSAGES=ON \
       -DCONTROL_KEEP_ALIVE_MESSAGE=ON \
       -DBIDIRECTIONAL=ON \
@@ -279,4 +279,14 @@ The [LR11XX RF API example code](https://github.com/sigfox-tech-radio/sigfox-ep-
 cmake <all previous flags> -DLR11XX_RF_API=ON ..
 make precompil_lr11xx_rf_api
 make lr11xx_rf_api
+```
+
+### Semtech SX126X
+
+The [SX126X RF API example code](https://github.com/sigfox-tech-radio/sigfox-ep-rf-api-semtech-sx126x) can be directly generated from the Sigfox End-Point library **cmake** by using the `SX126X_RF_API` option:
+
+```bash
+cmake <all previous flags> -DSX126X_RF_API=ON ..
+make precompil_sx126x_rf_api
+make sx126x_rf_api
 ```

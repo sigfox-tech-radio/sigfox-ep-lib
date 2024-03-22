@@ -66,13 +66,6 @@ typedef enum {
 typedef void SIGFOX_TX_CONTROL_status_t;
 #endif
 
-typedef enum {
-	SIGFOX_TX_CONTROL_RESULT_ALLOWED,
-	SIGFOX_TX_CONTROL_RESULT_FORBIDDEN,
-	SIGFOX_TX_CONTROL_RESULT_PENDING,
-	SIGFOX_TX_CONTROL_RESULT_LAST
-} SIGFOX_TX_CONTROL_result_t;
-
 #ifdef ASYNCHRONOUS
 /*!******************************************************************
  * \brief Sigfox TX control driver callback functions.
@@ -82,6 +75,17 @@ typedef enum {
 typedef void (*SIGFOX_TX_CONTROL_process_cb_t)(void);
 typedef void (*SIGFOX_TX_CONTROL_check_cplt_cb_t)(void);
 #endif
+
+/*!******************************************************************
+ * \enum SIGFOX_TX_CONTROL_result_t
+ * \brief Sigfox TX control results list.
+ *******************************************************************/
+typedef enum {
+	SIGFOX_TX_CONTROL_RESULT_ALLOWED,
+	SIGFOX_TX_CONTROL_RESULT_FORBIDDEN,
+	SIGFOX_TX_CONTROL_RESULT_PENDING,
+	SIGFOX_TX_CONTROL_RESULT_LAST
+} SIGFOX_TX_CONTROL_result_t;
 
 /*!******************************************************************
  * \enum SIGFOX_TX_CONTROL_check_type

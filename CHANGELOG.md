@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.5](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.5) - 22 Mar 2024
+
+### Added
+
+* Add `sigfox_rc.c` and `sigfox_types.c` files to define constants and optimize memory footprint when including these files multiple times (**extern** instead of **static**).
+* Add **SX126X RF API** support in cmake.
+
+### Fixed
+
+* Add **missing NVM writing operation** in case of error during message transmission.
+* Add **missing cast** on temperature field computation for control frames.
+* Fix **compilation issue** in `SIGFOX_EP_API_open()` function.
+* Fix **compilation issue** in bitstream driver.
+
+### Changed
+
+* Rename `RCx` compilation flags into `RCx_ZONE` for **Microchip MCUs compatibility**.
+
+### Removed
+
+* Remove EP-ID check when using test API.
+
 ## [v3.4](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.4) - 09 Nov 2023
 
 ### Added

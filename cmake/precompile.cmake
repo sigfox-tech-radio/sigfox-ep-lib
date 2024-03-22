@@ -49,7 +49,7 @@ if(${X} STREQUAL "inc/sigfox_types.h" AND ${USE_SIGFOX_EP_FLAGS_H} STREQUAL "OFF
 		DEPENDS ${LIB_HEADERS}
 		COMMAND ${CMAKE_COMMAND} -E make_directory ${PRECOMPIL_DIR}/inc/core ${PRECOMPIL_DIR}/inc/manuf
 	    COMMAND unifdef -B -k -x 2 -f ${CMAKE_BINARY_DIR}/undefs_file -f ${CMAKE_BINARY_DIR}/defs_file ${PROJECT_SOURCE_DIR}/${X} > "${PRECOMPIL_DIR}/${X}"
-		COMMAND sed -i "/SIGFOX library common macros/a ${DEF_FLAG_STRING}" ${PRECOMPIL_DIR}/${X}
+		COMMAND sed -i "/SIGFOX TYPES second-level/a ${DEF_FLAG_STRING}" ${PRECOMPIL_DIR}/${X}
 		VERBATIM
 	)
 else()

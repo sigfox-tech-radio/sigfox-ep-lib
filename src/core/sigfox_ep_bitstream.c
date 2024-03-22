@@ -295,7 +295,7 @@ static SIGFOX_EP_BITSTREAM_status_t _add_crc16(void) {
 #ifdef CRC_HW
 #ifdef ERROR_CODES
     mcu_api_status = MCU_API_compute_crc16(&(sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX]), crc_input_size_bytes, SIGFOX_EP_BITSTREAM_UL_CRC_POLYNOM, &ul_crc);
-    MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_MCU_API);
+    MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_DRIVER_MCU_API);
 #else
     MCU_API_compute_crc16(&(sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_INDEX]), crc_input_size_bytes, SIGFOX_EP_BITSTREAM_UL_CRC_POLYNOM, &ul_crc);
 #endif
@@ -482,7 +482,7 @@ static SIGFOX_EP_BITSTREAM_status_t _check_application_parameters(SIGFOX_EP_BITS
 #if !(defined UL_PAYLOAD_SIZE) || (UL_PAYLOAD_SIZE > 0)
 	if ((input -> message_type) == SIGFOX_APPLICATION_MESSAGE_TYPE_BYTE_ARRAY) {
 		// Payload is required.
-		if (((input -> ul_payload) == SFX_NULL)) {
+		if ((input -> ul_payload) == SFX_NULL) {
 			EXIT_ERROR(SIGFOX_EP_BITSTREAM_ERROR_NULL_PARAMETER);
 		}
 	}
@@ -777,8 +777,8 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_B
 		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 2] = (sfx_u8) (((input -> voltage_idle_mv) & 0xFF00) >> 8);
 		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 3] = (sfx_u8) (((input -> voltage_tx_mv) & 0x00FF) >> 0);
 		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 4] = (sfx_u8) (((input -> voltage_tx_mv) & 0xFF00) >> 8);
-		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 5] = (sfx_u8) (((input -> temperature_tenth_degrees) & 0x00FF) >> 0);
-		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 6] = (sfx_u8) (((input -> temperature_tenth_degrees) & 0xFF00) >> 8);
+		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 5] = (sfx_u8) ((((sfx_u16) (input -> temperature_tenth_degrees)) & 0x00FF) >> 0);
+		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 6] = (sfx_u8) ((((sfx_u16) (input -> temperature_tenth_degrees)) & 0xFF00) >> 8);
 		break;
 #endif
 #ifdef BIDIRECTIONAL
@@ -788,8 +788,8 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_B
 		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 2] = (sfx_u8) (((input -> voltage_idle_mv) & 0xFF00) >> 8);
 		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 3] = (sfx_u8) (((input -> voltage_tx_mv) & 0x00FF) >> 0);
 		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 4] = (sfx_u8) (((input -> voltage_tx_mv) & 0xFF00) >> 8);
-		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 5] = (sfx_u8) (((input -> temperature_tenth_degrees) & 0x00FF) >> 0);
-		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 6] = (sfx_u8) (((input -> temperature_tenth_degrees) & 0xFF00) >> 8);
+		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 5] = (sfx_u8) ((((sfx_u16) (input -> temperature_tenth_degrees)) & 0x00FF) >> 0);
+		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 6] = (sfx_u8) ((((sfx_u16) (input -> temperature_tenth_degrees)) & 0xFF00) >> 8);
 		bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + 7] = (sfx_u8) (rssi_plus_100);
 		break;
 #endif
@@ -862,7 +862,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
 #ifdef CRC_HW
 #ifdef ERROR_CODES
 	mcu_api_status = MCU_API_compute_crc8(&(local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX]), (SIGFOX_DL_PAYLOAD_SIZE_BYTES + SIGFOX_EP_BITSTREAM_DL_AUTH_SIZE_BYTES), SIGFOX_EP_BITSTREAM_DL_CRC_POLYNOM, &dl_crc);
-	MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_MCU_API);
+	MCU_API_check_status(SIGFOX_EP_BITSTREAM_ERROR_DRIVER_MCU_API);
 #else
 	MCU_API_compute_crc8(&(local_bitstream[SIGFOX_EP_BITSTREAM_DL_PAYLOAD_INDEX]), (SIGFOX_DL_PAYLOAD_SIZE_BYTES + SIGFOX_EP_BITSTREAM_DL_AUTH_SIZE_BYTES), SIGFOX_EP_BITSTREAM_DL_CRC_POLYNOM, &dl_crc);
 #endif

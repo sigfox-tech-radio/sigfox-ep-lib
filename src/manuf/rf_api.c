@@ -79,6 +79,7 @@ RF_API_status_t RF_API_process(void) {
 
 /*******************************************************************/
 RF_API_status_t RF_API_wake_up(void) {
+	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	RF_API_status_t status = RF_API_SUCCESS;
 #endif

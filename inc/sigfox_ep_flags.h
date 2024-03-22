@@ -39,14 +39,14 @@
 
 /*** Library compilation flags ***/
 
-#define RC1									/*!< \brief Support radio configuration zone 1 (Europe, Middle-East and Africa). > */
-#define RC2									/*!< \brief Support radio configuration zone 2 (Brazil, Canada, Mexico, Puerto Rico and USA). > */
-#define RC3C								/*!< \brief Support radio configuration zone 3 (Japan) with LBT. > */
-#define RC3D								/*!< \brief Support radio configuration zone 3 (Japan) with DC. */
-#define RC4									/*!< \brief Support radio configuration zone 4 (Latin America and Asia Pacific). > */
-#define RC5									/*!< \brief Support radio configuration zone 5 (South-Corea). > */
-#define RC6									/*!< \brief Support radio configuration zone 6 (India). > */
-#define RC7									/*!< \brief Support radio configuration zone 7 (Russia). > */
+#define RC1_ZONE							/*!< \brief Support radio configuration zone 1 (Europe, Middle-East and Africa). > */
+#define RC2_ZONE							/*!< \brief Support radio configuration zone 2 (Brazil, Canada, Mexico, Puerto Rico and USA). > */
+#define RC3C_ZONE							/*!< \brief Support radio configuration zone 3 (Japan) with LBT. > */
+#define RC3D_ZONE							/*!< \brief Support radio configuration zone 3 (Japan) with DC. */
+#define RC4_ZONE							/*!< \brief Support radio configuration zone 4 (Latin America and Asia Pacific). > */
+#define RC5_ZONE							/*!< \brief Support radio configuration zone 5 (South-Corea). > */
+#define RC6_ZONE							/*!< \brief Support radio configuration zone 6 (India). > */
+#define RC7_ZONE							/*!< \brief Support radio configuration zone 7 (Russia). > */
 
 #define APPLICATION_MESSAGES				/*!< \brief Support uplink application messages if defined. > */
 #define CONTROL_KEEP_ALIVE_MESSAGE			/*!< \brief Support uplink control keep alive message if defined. > */

@@ -41,73 +41,42 @@
 #include "sigfox_ep_flags.h"
 #endif
 
-/*** SIGFOX library common macros ***/
+/*** SIGFOX TYPES types ***/
 
-#define SIGFOX_EP_ID_SIZE_BYTES				4
-#define SIGFOX_EP_PAC_SIZE_BYTES			8
-#define SIGFOX_EP_KEY_SIZE_BYTES			16
-
-#define SIGFOX_UL_PAYLOAD_MAX_SIZE_BYTES	12
-#ifndef SINGLE_FRAME
-// Maximum delay between each frame of a same uplink message (for all RC).
-#define SIGFOX_T_IFU_MAX_MS					2000
-#ifdef BIDIRECTIONAL
-// Fixed inter frame delay when requesting a downlink.
-#define SIGFOX_T_IFB_MS						500
-#endif
-// Maximum duration of repeated frames transmission in case of LBT.
-#define SIGFOX_T_LF_MS						8000
-#endif
-
-#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
-#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26 // Maximum value used as default.
-#else
-#if (UL_PAYLOAD_SIZE == 0)
-#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		14
-#elif (UL_PAYLOAD_SIZE == 1)
-#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		15
-#elif (UL_PAYLOAD_SIZE == 2) || (UL_PAYLOAD_SIZE == 3) || (UL_PAYLOAD_SIZE == 4)
-#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		18
-#elif (UL_PAYLOAD_SIZE == 5) || (UL_PAYLOAD_SIZE == 6) || (UL_PAYLOAD_SIZE == 7) || (UL_PAYLOAD_SIZE == 8)
-#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		22
-#elif (UL_PAYLOAD_SIZE == 9) || (UL_PAYLOAD_SIZE == 10) || (UL_PAYLOAD_SIZE == 11) || (UL_PAYLOAD_SIZE == 12)
-#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26
-#else
-#define SIGFOX_UL_BITSTREAM_SIZE_BYTES		26
-#endif
-#endif
-
-#ifdef BIDIRECTIONAL
-// Downlink bit rate.
-#define SIGFOX_DL_BIT_RATE_BPS				600
-// Downlink GFSK deviation.
-#define SIGFOX_DL_GFSK_DEVIATION_HZ			800
-// Downlink frame size.
-#define SIGFOX_DL_PAYLOAD_SIZE_BYTES		8
-#define SIGFOX_DL_PHY_CONTENT_SIZE_BYTES	15
-// Downlink preamble.
-#define SIGFOX_DL_PR_PATTERN				0xAA
-// Downlink synchronization word.
-#define SIGFOX_DL_FT						{0xB2, 0X27}
-#define SIGFOX_DL_FT_SIZE_BYTES				2
-// Delay between downlink frame reception and uplink confirmation control message (for all RC).
-#define SIGFOX_T_CONF_MIN_MS				1400
-#define SIGFOX_T_CONF_MAX_MS				4000
-#endif
-
-// Sigfox operational band width (for all RC).
-#define SIGFOX_MACRO_CHANNEL_WIDTH_HZ		192000
-
-#define SFX_NULL							(void*) 0
-
-/*** SIGFOX library types ***/
-
-typedef char			sfx_char;
+/*!******************************************************************
+ * \typedef sfx_u8
+ * \brief Sigfox 8-bits unsigned type.
+ *******************************************************************/
 typedef unsigned char	sfx_u8;
+
+/*!******************************************************************
+ * \typedef sfx_s8
+ * \brief Sigfox 8-bits signed type.
+ *******************************************************************/
 typedef signed char		sfx_s8;
+
+/*!******************************************************************
+ * \typedef sfx_u16
+ * \brief Sigfox 16-bits unsigned type.
+ *******************************************************************/
 typedef unsigned short	sfx_u16;
+
+/*!******************************************************************
+ * \typedef sfx_s16
+ * \brief Sigfox 16-bits signed type.
+ *******************************************************************/
 typedef signed short	sfx_s16;
+
+/*!******************************************************************
+ * \typedef sfx_u32
+ * \brief Sigfox 32-bits unsigned type.
+ *******************************************************************/
 typedef unsigned long	sfx_u32;
+
+/*!******************************************************************
+ * \typedef sfx_s32
+ * \brief Sigfox 32-bits signed type.
+ *******************************************************************/
 typedef signed long		sfx_s32;
 
 /*!******************************************************************
@@ -119,7 +88,121 @@ typedef enum {
 	SFX_TRUE
 } sfx_bool;
 
-/*** SIGFOX library structures ***/
+/*** SIGFOX TYPES second-level compilation flags definition ***/
+
+#if (defined RC1_ZONE) || (defined RC6_ZONE) || (defined RC7_ZONE)
+#define SPECTRUM_ACCESS_DC
+#endif
+#if (defined RC2_ZONE) || (defined RC4_ZONE)
+#define SPECTRUM_ACCESS_FH
+#endif
+#if (defined RC3C_ZONE)
+#define SPECTRUM_ACCESS_LBT
+#define SPECTRUM_ACCESS_LBT_M80
+#endif
+#if (defined RC3D_ZONE)
+#define SPECTRUM_ACCESS_LDC
+#endif
+#if (defined RC5_ZONE)
+#define SPECTRUM_ACCESS_LBT
+#define SPECTRUM_ACCESS_LBT_M65
+#endif
+#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
+#define TIMER_REQUIRED
+#endif
+
+/*** SIGFOX TYPES macros ***/
+
+#define SFX_NULL											(void*) 0
+
+// Sigfox credentials size.
+#define SIGFOX_EP_ID_SIZE_BYTES								4
+#define SIGFOX_EP_PAC_SIZE_BYTES							8
+#define SIGFOX_EP_KEY_SIZE_BYTES							16
+
+// Sigfox uplink payload maximum size.
+#define SIGFOX_UL_PAYLOAD_MAX_SIZE_BYTES					12
+
+// Sigfox uplink bitstream size.
+#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL) || !(defined UL_PAYLOAD_SIZE)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES						26 // Maximum value used as default.
+#else
+#if (UL_PAYLOAD_SIZE == 0)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES						14
+#elif (UL_PAYLOAD_SIZE == 1)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES						15
+#elif (UL_PAYLOAD_SIZE == 2) || (UL_PAYLOAD_SIZE == 3) || (UL_PAYLOAD_SIZE == 4)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES						18
+#elif (UL_PAYLOAD_SIZE == 5) || (UL_PAYLOAD_SIZE == 6) || (UL_PAYLOAD_SIZE == 7) || (UL_PAYLOAD_SIZE == 8)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES						22
+#elif (UL_PAYLOAD_SIZE == 9) || (UL_PAYLOAD_SIZE == 10) || (UL_PAYLOAD_SIZE == 11) || (UL_PAYLOAD_SIZE == 12)
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES						26
+#else
+#define SIGFOX_UL_BITSTREAM_SIZE_BYTES						26
+#endif
+#endif
+
+#ifndef SINGLE_FRAME
+// Maximum delay between each frame of a same uplink message (for all RC).
+#define SIGFOX_T_IFU_MAX_MS									2000
+#ifdef BIDIRECTIONAL
+// Fixed inter-frame delay when requesting a downlink.
+#define SIGFOX_T_IFB_MS										500
+#endif
+#ifdef SPECTRUM_ACCESS_LBT
+// Maximum duration of repeated frames transmission in case of LBT.
+#define SIGFOX_T_LF_MS										8000
+#endif
+#endif
+
+#ifdef BIDIRECTIONAL
+// Downlink bit rate.
+#define SIGFOX_DL_BIT_RATE_BPS								600
+// Downlink GFSK deviation.
+#define SIGFOX_DL_GFSK_DEVIATION_HZ							800
+// Downlink frame size.
+#define SIGFOX_DL_PAYLOAD_SIZE_BYTES						8
+#define SIGFOX_DL_PHY_CONTENT_SIZE_BYTES					15
+// Downlink preamble.
+#define SIGFOX_DL_PR_PATTERN								0xAA
+// Downlink synchronization word.
+#define SIGFOX_DL_FT										{0xB2, 0X27}
+#define SIGFOX_DL_FT_SIZE_BYTES								2
+// Delay between downlink frame reception and uplink confirmation control message (for all RC).
+#define SIGFOX_T_CONF_MIN_MS								1400
+#define SIGFOX_T_CONF_MAX_MS								4000
+#endif
+
+// Sigfox operational band width (for all RC).
+#define SIGFOX_MACRO_CHANNEL_WIDTH_HZ						192000
+
+#ifdef SPECTRUM_ACCESS_FH
+// Sigfox frequency hopping macros.
+#define SIGFOX_FH_MACRO_CHANNEL_NUMBER						9
+#define SIGFOX_FH_MACRO_CHANNEL_WIDTH_HZ					200000
+#define SIGFOX_FH_MACRO_CHANNEL_SPACING_HZ					300000
+#define SIGFOX_FH_MACRO_CHANNEL_DELTA						(SIGFOX_FH_MACRO_CHANNEL_WIDTH_HZ - SIGFOX_MACRO_CHANNEL_WIDTH_HZ)
+
+#define SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL			8
+#define SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED	6
+#define SIGFOX_FH_MICRO_CHANNEL_MASK						0x7E
+#define SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ					(SIGFOX_FH_MACRO_CHANNEL_WIDTH_HZ / SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL)
+#define SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ				2000
+#define SIGFOX_FH_MICRO_CHANNEL_OPERATED_WIDTH_HZ			(SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ - (2 * SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ))
+#define SIGFOX_FH_MICRO_CHANNEL_NUMBER						(SIGFOX_FH_MACRO_CHANNEL_NUMBER * SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED)
+
+#define SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ				(SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ - (SIGFOX_FH_MACRO_CHANNEL_DELTA / 2))
+
+#define SIGFOX_FH_RC2_FIRST_MICRO_CHANNEL_FREQUENCY_HZ		902137500
+#define SIGFOX_FH_RC2_OPERATED_MACRO_CHANNEL_INDEX			0
+
+#define SIGFOX_FH_RC4_FIRST_MICRO_CHANNEL_FREQUENCY_HZ		920137500
+#define SIGFOX_FH_RC4_OPERATED_MACRO_CHANNEL_INDEX			2
+
+#define SIGFOX_FH_MICRO_CHANNEL_HOP 						((SIGFOX_FH_MACRO_CHANNEL_SPACING_HZ - SIGFOX_FH_MACRO_CHANNEL_WIDTH_HZ) + ((SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL - SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED) * SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ))
+#endif
+
+/*** SIGFOX TYPES structures ***/
 
 #if !(defined UL_BIT_RATE_BPS) || (defined PARAMETERS_CHECK)
 /*!******************************************************************
@@ -131,14 +214,6 @@ typedef enum {
 	SIGFOX_UL_BIT_RATE_600BPS,
 	SIGFOX_UL_BIT_RATE_LAST
 } SIGFOX_ul_bit_rate_t;
-#endif
-
-#if !(defined UL_BIT_RATE_BPS) || ((defined PARAMETERS_CHECK) && (defined ERROR_CODES))
-/*!******************************************************************
- * \const SIGFOX_EP_API_UL_BIT_RATE_BPS_LIST
- * \brief Sigfox bit rates value.
- *******************************************************************/
-static const sfx_u16 SIGFOX_UL_BIT_RATE_BPS_LIST[SIGFOX_UL_BIT_RATE_LAST] = {100, 600};
 #endif
 
 #ifdef APPLICATION_MESSAGES
@@ -210,66 +285,6 @@ typedef enum {
 } SIGFOX_message_counter_rollover_t;
 #endif
 
-#if !(defined MESSAGE_COUNTER_ROLLOVER) || (defined PARAMETERS_CHECK)
-/*!******************************************************************
- * \const SIGFOX_EP_API_MESSAGE_COUNTER_ROLLOVER_LIST
- * \brief Sigfox message counter value.
- *******************************************************************/
-static const sfx_u16 SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST[SIGFOX_MESSAGE_COUNTER_ROLLOVER_LAST] = {128, 256, 512, 1024, 2048, 4096};
-#endif
-
-/*** Automatic spectrum access definition according to selected RCs ***/
-
-#if (defined RC1) || (defined RC6) || (defined RC7)
-#define SPECTRUM_ACCESS_DC
-#endif
-#if (defined RC2) || (defined RC4)
-#define SPECTRUM_ACCESS_FH
-#endif
-#if (defined RC3C)
-#define SPECTRUM_ACCESS_LBT
-#define SPECTRUM_ACCESS_LBT_M80
-#endif
-#if (defined RC3D)
-#define SPECTRUM_ACCESS_LDC
-#endif
-#if (defined RC5)
-#define SPECTRUM_ACCESS_LBT
-#define SPECTRUM_ACCESS_LBT_M65
-#endif
-
-#ifdef SPECTRUM_ACCESS_FH
-#define SIGFOX_FH_MACRO_CHANNEL_NUMBER						9
-#define SIGFOX_FH_MACRO_CHANNEL_WIDTH_HZ					200000
-#define SIGFOX_FH_MACRO_CHANNEL_SPACING_HZ					300000
-#define SIGFOX_FH_MACRO_CHANNEL_DELTA						(SIGFOX_FH_MACRO_CHANNEL_WIDTH_HZ - SIGFOX_MACRO_CHANNEL_WIDTH_HZ)
-
-#define SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL			8
-#define SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED	6
-#define SIGFOX_FH_MICRO_CHANNEL_MASK						0x7E
-#define SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ					(SIGFOX_FH_MACRO_CHANNEL_WIDTH_HZ / SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL)
-#define SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ				2000
-#define SIGFOX_FH_MICRO_CHANNEL_OPERATED_WIDTH_HZ			(SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ - (2 * SIGFOX_FH_MICRO_CHANNEL_GUARD_BAND_HZ))
-#define SIGFOX_FH_MICRO_CHANNEL_NUMBER						(SIGFOX_FH_MACRO_CHANNEL_NUMBER * SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED)
-
-
-#define SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ				(SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ - (SIGFOX_FH_MACRO_CHANNEL_DELTA / 2))
-
-#define SIGFOX_FH_RC2_FIRST_MICRO_CHANNEL_FREQUENCY_HZ		902137500
-#define SIGFOX_FH_RC2_OPERATED_MACRO_CHANNEL_INDEX			0
-
-#define SIGFOX_FH_RC4_FIRST_MICRO_CHANNEL_FREQUENCY_HZ		920137500
-#define SIGFOX_FH_RC4_OPERATED_MACRO_CHANNEL_INDEX			2
-
-#define SIGFOX_FH_MICRO_CHANNEL_HOP 						((SIGFOX_FH_MACRO_CHANNEL_SPACING_HZ - SIGFOX_FH_MACRO_CHANNEL_WIDTH_HZ) + ((SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL - SIGFOX_FH_MICRO_CHANNEL_PER_MACRO_CHANNEL_OPERATED) * SIGFOX_FH_MICRO_CHANNEL_WIDTH_HZ))
-#endif
-
-/*** Automatic timer required flag definition ***/
-
-#if (!(defined SINGLE_FRAME) && (!(defined T_IFU_MS) || (T_IFU_MS > 0))) || (defined BIDIRECTIONAL) || (defined REGULATORY) || (defined CERTIFICATION)
-#define TIMER_REQUIRED
-#endif
-
 /*!******************************************************************
  * \enum SIGFOX_spectrum_access_type_t
  * \brief Spectrum access types list.
@@ -291,17 +306,17 @@ typedef enum {
 } SIGFOX_spectrum_access_type_t;
 
 /*!******************************************************************
- * \enum SIGFOX_spectrum_access_t
+ * \struct SIGFOX_spectrum_access_t
  * \brief Spectrum access parameters structure.
  *******************************************************************/
 typedef struct {
 	SIGFOX_spectrum_access_type_t type;
 #ifdef BIDIRECTIONAL
 	// Common parameters.
-	sfx_u16 dl_t_w_ms; // Delay between the end of the first uplink frame and the beginning of the RX window.
-	sfx_u16 dl_t_rx_ms; // Maximum duration of the RX window.
+	sfx_u16 dl_t_w_ms;
+	sfx_u16 dl_t_rx_ms;
 #ifndef SINGLE_FRAME
-	sfx_u16 delta_f_mf_hz; // Fixed frequency offset applied to frames 2 and 3 in bidirectional procedure.
+	sfx_u16 delta_f_mf_hz;
 #endif
 #endif
 #if (defined SPECTRUM_ACCESS_LBT) && (defined REGULATORY)
@@ -314,7 +329,7 @@ typedef struct {
 } SIGFOX_spectrum_access_t;
 
 /*!******************************************************************
- * \enum SIGFOX_rc_t
+ * \struct SIGFOX_rc_t
  * \brief Sigfox radio configuration structure.
  *******************************************************************/
 typedef struct {
@@ -354,24 +369,6 @@ typedef enum {
 } SIGFOX_ep_key_t;
 #endif
 
-#ifdef CERTIFICATION
-/*!******************************************************************
- * \var SIGFOX_EP_TEST_ID
- * \var SIGFOX_EP_TEST_KEY
- * \brief End-point IDs and keys used for test.
- *******************************************************************/
-static const sfx_u8 SIGFOX_EP_TEST_ID[SIGFOX_EP_ID_SIZE_BYTES] = {0xFE, 0xDC, 0xBA, 0x98};
-static const sfx_u8 SIGFOX_EP_TEST_KEY[SIGFOX_EP_KEY_SIZE_BYTES] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
-#endif
-
-#ifdef PUBLIC_KEY_CAPABLE
-/*!******************************************************************
- * \var SIGFOX_EP_PUBLIC_KEY
- * \brief End-point public key used for test.
- *******************************************************************/
-static const sfx_u8 SIGFOX_EP_PUBLIC_KEY[SIGFOX_EP_KEY_SIZE_BYTES] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
-#endif
-
 #ifdef VERBOSE
 /*!******************************************************************
  * \enum SIGFOX_version_t
@@ -385,16 +382,52 @@ typedef enum {
 } SIGFOX_version_t;
 #endif
 
-/*** Unwanted flag combinations and values ***/
+/*** SIGFOX TYPES global variables ***/
 
-#if !(defined RC1) && !(defined RC2) && !(defined RC3C) && !(defined RC3D) && !(defined RC4) && !(defined RC5) && !(defined RC6) && !(defined RC7)
+#if !(defined UL_BIT_RATE_BPS) || ((defined PARAMETERS_CHECK) && (defined ERROR_CODES))
+/*!******************************************************************
+ * \var SIGFOX_EP_API_UL_BIT_RATE_BPS_LIST
+ * \brief Sigfox bit rates value.
+ *******************************************************************/
+extern const sfx_u16 SIGFOX_UL_BIT_RATE_BPS_LIST[SIGFOX_UL_BIT_RATE_LAST];
+#endif
+
+#if !(defined MESSAGE_COUNTER_ROLLOVER) || (defined PARAMETERS_CHECK)
+/*!******************************************************************
+ * \var SIGFOX_EP_API_MESSAGE_COUNTER_ROLLOVER_LIST
+ * \brief Sigfox message counter value.
+ *******************************************************************/
+extern const sfx_u16 SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST[SIGFOX_MESSAGE_COUNTER_ROLLOVER_LAST];
+#endif
+
+#ifdef CERTIFICATION
+/*!******************************************************************
+ * \var SIGFOX_EP_TEST_ID
+ * \var SIGFOX_EP_TEST_KEY
+ * \brief End-point IDs and keys used for test.
+ *******************************************************************/
+extern const sfx_u8 SIGFOX_EP_TEST_ID[SIGFOX_EP_ID_SIZE_BYTES];
+extern const sfx_u8 SIGFOX_EP_TEST_KEY[SIGFOX_EP_KEY_SIZE_BYTES];
+#endif
+
+#ifdef PUBLIC_KEY_CAPABLE
+/*!******************************************************************
+ * \var SIGFOX_EP_PUBLIC_KEY
+ * \brief End-point public key used for test.
+ *******************************************************************/
+extern const sfx_u8 SIGFOX_EP_PUBLIC_KEY[SIGFOX_EP_KEY_SIZE_BYTES];
+#endif
+
+/*** SIGFOX TYPES unwanted flag combinations and values ***/
+
+#if !(defined RC1_ZONE) && !(defined RC2_ZONE) && !(defined RC3C_ZONE) && !(defined RC3D_ZONE) && !(defined RC4_ZONE) && !(defined RC5_ZONE) && !(defined RC6_ZONE) && !(defined RC7_ZONE)
 #error "SIGFOX EP LIB flags error: None RC defined"
 #endif
 #if !(defined APPLICATION_MESSAGES) && !(defined CONTROL_KEEP_ALIVE_MESSAGE)
 #error "SIGFOX EP LIB flags error: None message type defined"
 #endif
 #if !(defined APPLICATION_MESSAGES) && (defined BIDIRECTIONAL)
-#error "SIGFOX EP LIB flags error: Bidirectional communication only applies to application messages which are disabled"
+#error "SIGFOX EP LIB flags error: Bidirectional communication only applies when APPLICATION_MESSAGES is enabled"
 #endif
 #if (defined UL_BIT_RATE_BPS) && (UL_BIT_RATE_BPS != 100) && (UL_BIT_RATE_BPS != 600)
 #error "SIGFOX EP LIB flags error: Invalid UL_BIT_RATE_BPS value"
@@ -408,7 +441,7 @@ typedef enum {
 #endif
 #endif
 #if (defined T_CONF_MS) && !(defined BIDIRECTIONAL)
-#error "SIGFOX EP LIB flags error: T_CONF_MS only applies to bidirectional communication which is disabled"
+#error "SIGFOX EP LIB flags error: T_CONF_MS only applies when BIDIRECTIONAL is enabled"
 #endif
 #ifdef BIDIRECTIONAL
 #if (defined T_CONF_MS) && ((T_CONF_MS < SIGFOX_T_CONF_MIN_MS) || (T_CONF_MS > SIGFOX_T_CONF_MAX_MS))
