@@ -46,18 +46,19 @@
 
 #if (defined ASYNCHRONOUS) || (defined LOW_LEVEL_OPEN_CLOSE)
 /*******************************************************************/
-MCU_API_status_t MCU_API_open(MCU_API_config_t *mcu_api_config) {
+MCU_API_status_t __attribute__((weak)) MCU_API_open(MCU_API_config_t *mcu_api_config) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(mcu_api_config);
 	RETURN();
 }
 #endif
 
 #ifdef LOW_LEVEL_OPEN_CLOSE
 /*******************************************************************/
-MCU_API_status_t MCU_API_close(void) {
+MCU_API_status_t __attribute__((weak)) MCU_API_close(void) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
@@ -68,7 +69,7 @@ MCU_API_status_t MCU_API_close(void) {
 
 #ifdef ASYNCHRONOUS
 /*******************************************************************/
-MCU_API_status_t MCU_API_process(void) {
+MCU_API_status_t __attribute__((weak)) MCU_API_process(void) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
@@ -79,164 +80,196 @@ MCU_API_status_t MCU_API_process(void) {
 
 #ifdef TIMER_REQUIRED
 /*******************************************************************/
-MCU_API_status_t MCU_API_timer_start(MCU_API_timer_t *timer) {
+MCU_API_status_t __attribute__((weak)) MCU_API_timer_start(MCU_API_timer_t *timer) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(timer);
 	RETURN();
 }
 #endif
 
 #ifdef TIMER_REQUIRED
 /*******************************************************************/
-MCU_API_status_t MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance) {
+MCU_API_status_t __attribute__((weak)) MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(timer_instance);
 	RETURN();
 }
 #endif
 
 #if (defined TIMER_REQUIRED) && !(defined ASYNCHRONOUS)
 /*******************************************************************/
-MCU_API_status_t MCU_API_timer_status(MCU_API_timer_instance_t timer_instance, sfx_bool *timer_has_elapsed) {
+MCU_API_status_t __attribute__((weak)) MCU_API_timer_status(MCU_API_timer_instance_t timer_instance, sfx_bool *timer_has_elapsed) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(timer_instance);
+	SFX_UNUSED(timer_has_elapsed);
 	RETURN();
 }
 #endif
 
 #if (defined TIMER_REQUIRED) && !(defined ASYNCHRONOUS)
 /*******************************************************************/
-MCU_API_status_t MCU_API_timer_wait_cplt(MCU_API_timer_instance_t timer_instance) {
+MCU_API_status_t __attribute__((weak)) MCU_API_timer_wait_cplt(MCU_API_timer_instance_t timer_instance) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(timer_instance);
 	RETURN();
 }
 #endif
 
 /*******************************************************************/
-MCU_API_status_t MCU_API_aes_128_cbc_encrypt(MCU_API_encryption_data_t *aes_data) {
+MCU_API_status_t __attribute__((weak)) MCU_API_aes_128_cbc_encrypt(MCU_API_encryption_data_t *aes_data) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(aes_data);
 	RETURN();
 }
 
 #ifdef CRC_HW
 /*******************************************************************/
-MCU_API_status_t MCU_API_compute_crc16(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u16 *crc) {
+MCU_API_status_t __attribute__((weak)) MCU_API_compute_crc16(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u16 *crc) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(data);
+	SFX_UNUSED(data_size);
+	SFX_UNUSED(polynom);
+	SFX_UNUSED(crc);
 	RETURN();
 }
 #endif
 
 #if (defined CRC_HW) && (defined BIDIRECTIONAL)
 /*******************************************************************/
-MCU_API_status_t MCU_API_compute_crc8(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u8 *crc) {
+MCU_API_status_t __attribute__((weak)) MCU_API_compute_crc8(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u8 *crc) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(data);
+	SFX_UNUSED(data_size);
+	SFX_UNUSED(polynom);
+	SFX_UNUSED(crc);
 	RETURN();
 }
 #endif
 
 /*******************************************************************/
-MCU_API_status_t MCU_API_get_ep_id(sfx_u8 *ep_id, sfx_u8 ep_id_size_bytes) {
+MCU_API_status_t __attribute__((weak)) MCU_API_get_ep_id(sfx_u8 *ep_id, sfx_u8 ep_id_size_bytes) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(ep_id);
+	SFX_UNUSED(ep_id_size_bytes);
 	RETURN();
 }
 
 /*******************************************************************/
-MCU_API_status_t MCU_API_get_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
+MCU_API_status_t __attribute__((weak)) MCU_API_get_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(nvm_data);
+	SFX_UNUSED(nvm_data_size_bytes);
 	RETURN();
 }
 
 /*******************************************************************/
-MCU_API_status_t MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
+MCU_API_status_t __attribute__((weak)) MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(nvm_data);
+	SFX_UNUSED(nvm_data_size_bytes);
 	RETURN();
 }
 
 #if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL)
 /*******************************************************************/
-MCU_API_status_t MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u16 *voltage_tx_mv, sfx_s16 *temperature_tenth_degrees) {
+MCU_API_status_t __attribute__((weak)) MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u16 *voltage_tx_mv, sfx_s16 *temperature_tenth_degrees) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(voltage_idle_mv);
+	SFX_UNUSED(voltage_tx_mv);
+	SFX_UNUSED(temperature_tenth_degrees);
 	RETURN();
 }
 #endif
 
 #if (defined CERTIFICATION) && (defined BIDIRECTIONAL)
 /*******************************************************************/
-MCU_API_status_t MCU_API_print_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 rssi_dbm) {
+MCU_API_status_t __attribute__((weak)) MCU_API_print_dl_payload(sfx_u8 *dl_payload, sfx_u8 dl_payload_size, sfx_s16 rssi_dbm) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(dl_payload);
+	SFX_UNUSED(dl_payload_size);
+	SFX_UNUSED(rssi_dbm);
 	RETURN();
 }
 #endif
 
 #ifdef VERBOSE
 /*******************************************************************/
-MCU_API_status_t MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac_size_bytes) {
+MCU_API_status_t __attribute__((weak)) MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac_size_bytes) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(initial_pac);
+	SFX_UNUSED(initial_pac_size_bytes);
 	RETURN();
 }
 #endif
 
 #if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION) && (defined BIDIRECTIONAL)
 /*******************************************************************/
-MCU_API_status_t MCU_API_get_latency(MCU_API_latency_t latency_type, sfx_u32 *latency_ms) {
+MCU_API_status_t __attribute__((weak)) MCU_API_get_latency(MCU_API_latency_t latency_type, sfx_u32 *latency_ms) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(latency_type);
+	SFX_UNUSED(latency_ms);
 	RETURN();
 }
 #endif
 
 #ifdef VERBOSE
 /*******************************************************************/
-MCU_API_status_t MCU_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char) {
+MCU_API_status_t __attribute__((weak)) MCU_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char) {
 	/* To be implemented by the device manufacturer */
 #ifdef ERROR_CODES
 	MCU_API_status_t status = MCU_API_SUCCESS;
 #endif
+	SFX_UNUSED(version);
+	SFX_UNUSED(version_size_char);
 	RETURN();
 }
 #endif
 
 #ifdef ERROR_CODES
 /*******************************************************************/
-void MCU_API_error(void) {
+void __attribute__((weak)) MCU_API_error(void) {
 	/* To be implemented by the device manufacturer */
 }
 #endif

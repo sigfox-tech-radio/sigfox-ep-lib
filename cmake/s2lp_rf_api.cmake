@@ -4,7 +4,7 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(
     s2lp_rf_api
     GIT_REPOSITORY "https://github.com/sigfox-tech-radio/sigfox-ep-rf-api-st-s2lp"
-    GIT_TAG "v2.0"
+    GIT_TAG "v3.1"
     GIT_PROGRESS TRUE
     GIT_SHALLOW    1
     #SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/addons/rfp
