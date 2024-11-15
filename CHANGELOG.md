@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.6](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.6) - 30 May 2024
+
+### Added
+
+* Add weak attribute to functions templates.
+* Add **SFX_UNUSED** macro to remove extra warnings.
+
 ## [v3.5](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.5) - 22 Mar 2024
 
 ### Added

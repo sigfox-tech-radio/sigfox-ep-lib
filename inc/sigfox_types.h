@@ -113,7 +113,8 @@ typedef enum {
 
 /*** SIGFOX TYPES macros ***/
 
-#define SFX_NULL											(void*) 0
+#define SFX_NULL											((void*) 0)
+#define SFX_UNUSED(x)										((void) x)
 
 // Sigfox credentials size.
 #define SIGFOX_EP_ID_SIZE_BYTES								4
