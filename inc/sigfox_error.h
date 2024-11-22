@@ -37,12 +37,12 @@
 #ifndef __SIGFOX_ERROR_H__
 #define __SIGFOX_ERROR_H__
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 
 /*** SIGFOX ERROR structures ***/
 
@@ -51,107 +51,70 @@
  * \brief Sigfox library low level errors sources.
  *******************************************************************/
 typedef enum {
-	SIGFOX_ERROR_SOURCE_NONE = 0,
-	// Library.
-	SIGFOX_ERROR_SOURCE_SIGFOX_EP_API,
-	// Internal library drivers.
-	SIGFOX_ERROR_SOURCE_SIGFOX_EP_BITSTREAM,
-	SIGFOX_ERROR_SOURCE_SIGFOX_CRC,
-	SIGFOX_ERROR_SOURCE_SIGFOX_EP_FREQUENCY,
-	SIGFOX_ERROR_SOURCE_SIGFOX_TX_CONTROL,
-	// Manufacturer functions.
-	SIGFOX_ERROR_SOURCE_MCU_API,
-	SIGFOX_ERROR_SOURCE_RF_API,
-	// HW functions.
-	SIGFOX_ERROR_SOURCE_HW_API,
-	// Last index.
-	SIGFOX_ERROR_SOURCE_LAST
+    SIGFOX_ERROR_SOURCE_NONE = 0,
+    // Library.
+    SIGFOX_ERROR_SOURCE_SIGFOX_EP_API,
+    // Internal library drivers.
+    SIGFOX_ERROR_SOURCE_SIGFOX_EP_BITSTREAM,
+    SIGFOX_ERROR_SOURCE_SIGFOX_CRC,
+    SIGFOX_ERROR_SOURCE_SIGFOX_EP_FREQUENCY,
+    SIGFOX_ERROR_SOURCE_SIGFOX_TX_CONTROL,
+    // Manufacturer functions.
+    SIGFOX_ERROR_SOURCE_MCU_API,
+    SIGFOX_ERROR_SOURCE_RF_API,
+    // HW functions.
+    SIGFOX_ERROR_SOURCE_HW_API,
+    // Last index.
+    SIGFOX_ERROR_SOURCE_LAST
 } SIGFOX_ERROR_source_t;
 #endif
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*!******************************************************************
  * \struct SIGFOX_ERROR_t
  * \brief Sigfox library low level error.
  *******************************************************************/
 typedef struct {
-	SIGFOX_ERROR_source_t source;
-	sfx_u32 code;
+    SIGFOX_ERROR_source_t source;
+    sfx_u32 code;
 } SIGFOX_ERROR_t;
 #endif
 
 /*** SIGFOX ERROR functions ***/
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*!******************************************************************
  * \fn void SIGFOX_ERROR_init(void)
  * \brief Init error stack.
- * \param[in]  	none
- * \param[out] 	none
- * \retval		none
+ * \param[in]   none
+ * \param[out]  none
+ * \retval      none
  *******************************************************************/
 void SIGFOX_ERROR_init(void);
 #endif
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*!******************************************************************
  * \fn void SIGFOX_ERROR_stack(SIGFOX_ERROR_source_t source, sfx_u32 code)
  * \brief Store a new error in the internal stack.
- * \param[in]  	source: Error source.
- * \param[in]	code: Error code.
- * \param[out] 	none
- * \retval		none
+ * \param[in]   source: Error source.
+ * \param[in]   code: Error code.
+ * \param[out]  none
+ * \retval      none
  *******************************************************************/
 void SIGFOX_ERROR_stack(SIGFOX_ERROR_source_t source, sfx_u32 code);
 #endif
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*!******************************************************************
  * \fn  void SIGFOX_ERROR_unstack(SIGFOX_ERROR_t *error_ptr)
  * \brief Read and clear the last (newest) error stored in the internal error stack.
  * \brief This function can be called multiple times to unstack all errors which previously occurred during library execution, until it returns SIGFOX_EP_API_SUCCESS.
- * \param[in]  	none
- * \param[out] 	error_ptr: Pointer that will contain the last error in the stack.
- * \retval		none
+ * \param[in]   none
+ * \param[out]  error_ptr: Pointer that will contain the last error in the stack.
+ * \retval      none
  *******************************************************************/
 void SIGFOX_ERROR_unstack(SIGFOX_ERROR_t *error_ptr);
-#endif
-
-#ifdef ERROR_CODES
-/*!******************************************************************
- * \fn void CHECK_STATUS(success_code)
- * \brief Generic macro to check a status.
- * \param[in]  	success_code: Success code to compare with.
- * \param[out] 	none
- * \retval		none
- *******************************************************************/
-#define CHECK_STATUS(success_code) { if (status != success_code) goto errors; }
-#endif
-
-/*!******************************************************************
- * \fn void EXIT_ERROR(error)
- * \brief Generic macro to update a status and exit a function.
- * \param[in]  	error: Code of the risen error.
- * \param[out] 	none
- * \retval		none
- *******************************************************************/
-#ifdef ERROR_CODES
-#define EXIT_ERROR(error) { status = error; goto errors; }
-#else
-#define EXIT_ERROR(error) { goto errors; }
-#endif
-
-/*!******************************************************************
- * \fn void RETURN(void)
- * \brief Generic macro for function return.
- * \param[in]  	none
- * \param[out] 	none
- * \retval		none
- *******************************************************************/
-#ifdef ERROR_CODES
-#define RETURN()	{ return status; }
-#else
-#define RETURN()	{ return; }
 #endif
 
 #endif /* __SIGFOX_ERROR_H__ */

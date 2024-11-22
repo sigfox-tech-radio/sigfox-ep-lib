@@ -37,42 +37,42 @@
 #ifndef __SIGFOX_EP_FREQUENCY_H__
 #define __SIGFOX_EP_FREQUENCY_H__
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
 
 /*** SIGFOX EP FREQUENCY structures ***/
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \enum SIGFOX_EP_FREQUENCY_status_t
  * \brief Sigfox frequency error codes.
  *******************************************************************/
 typedef enum {
-	SIGFOX_EP_FREQUENCY_SUCCESS = 0,
-	SIGFOX_EP_FREQUENCY_ERROR_NULL_PARAMETER,
-	SIGFOX_EP_FREQUENCY_ERROR_FRAME_RANK,
-	SIGFOX_EP_FREQUENCY_ERROR_NUMBER_OF_FRAMES,
-	SIGFOX_EP_FREQUENCY_ERROR_SPECTRUM_ACCESS_TYPE,
-	SIGFOX_EP_FREQUENCY_ERROR_RANDOM_GENERATION,
-	SIGFOX_EP_FREQUENCY_ERROR_FRAME_1_FREQUENCY,
-	// Last index.
-	SIGFOX_EP_FREQUENCY_ERROR_LAST
+    SIGFOX_EP_FREQUENCY_SUCCESS = 0,
+    SIGFOX_EP_FREQUENCY_ERROR_NULL_PARAMETER,
+    SIGFOX_EP_FREQUENCY_ERROR_FRAME_RANK,
+    SIGFOX_EP_FREQUENCY_ERROR_NUMBER_OF_FRAMES,
+    SIGFOX_EP_FREQUENCY_ERROR_SPECTRUM_ACCESS_TYPE,
+    SIGFOX_EP_FREQUENCY_ERROR_RANDOM_GENERATION,
+    SIGFOX_EP_FREQUENCY_ERROR_FRAME_1_FREQUENCY,
+    // Last index.
+    SIGFOX_EP_FREQUENCY_ERROR_LAST
 } SIGFOX_EP_FREQUENCY_status_t;
 #else
 typedef void SIGFOX_EP_FREQUENCY_status_t;
 #endif
 
-#ifndef SINGLE_FRAME
+#ifndef SIGFOX_EP_SINGLE_FRAME
 /*!******************************************************************
  * \struct SIGFOX_EP_FREQUENCY_uplink_signal_t
  * \brief Frequency computation input parameters.
  *******************************************************************/
 typedef struct {
-	SIGFOX_ul_frame_rank_t ul_frame_rank;
-	sfx_u8 number_of_frames;
-	sfx_bool bidirectional_flag;
+    SIGFOX_ul_frame_rank_t ul_frame_rank;
+    sfx_u8 number_of_frames;
+    sfx_bool bidirectional_flag;
 } SIGFOX_EP_FREQUENCY_uplink_signal_t;
 #endif
 
@@ -81,79 +81,79 @@ typedef struct {
 /*!******************************************************************
  * \fn SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_init(const SIGFOX_rc_t *rc, sfx_u8 *ep_id, sfx_u16 last_random_value)
  * \brief Init the frequency driver.
- * \param[in]	rc: Radio configuration.
- * \param[in]	ep_id: Device ID (used to randomize the frequency algorithm).
- * \param[in]  	last_random_value: Last random value (read in NVM at device start-up).
- * \param[out] 	none
- * \retval		Function execution status.
+ * \param[in]   rc: Radio configuration.
+ * \param[in]   ep_id: Device ID (used to randomize the frequency algorithm).
+ * \param[in]   last_random_value: Last random value (read in NVM at device start-up).
+ * \param[out]  none
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_init(const SIGFOX_rc_t *rc, sfx_u8 *ep_id, sfx_u16 last_random_value);
 
-#ifdef SINGLE_FRAME
+#ifdef SIGFOX_EP_SINGLE_FRAME
 /*!******************************************************************
  * \fn SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_uplink(sfx_u32 *ul_frequency_hz)
  * \brief Compute the next Sigfox signal uplink frequency.
- * \param[in]  	none
+ * \param[in]   none
  * \param[out]  ul_frequency_hz: Pointer that will contain the computed frequency in Hz.
- * \retval		Function execution status.
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_uplink(sfx_u32 *ul_frequency_hz);
 #else
 /*!******************************************************************
  * \fn SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_uplink(SIGFOX_EP_FREQUENCY_uplink_signal_t *input, sfx_u32 *ul_frequency_hz)
  * \brief Compute the next Sigfox signal uplink frequency according to the input parameters.
- * \param[in]  	input: Pointer to the signal parameters structure.
+ * \param[in]   input: Pointer to the signal parameters structure.
  * \param[out]  ul_frequency_hz: Pointer that will contain the computed frequency in Hz.
- * \retval		Function execution status.
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_uplink(SIGFOX_EP_FREQUENCY_uplink_signal_t *input, sfx_u32 *ul_frequency_hz);
 #endif
 
-#ifdef BIDIRECTIONAL
+#ifdef SIGFOX_EP_BIDIRECTIONAL
 /*!******************************************************************
  * \fn SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_downlink(sfx_u32* dl_frequency_hz)
  * \brief Compute the Sigfox downlink frequency.
- * \param[in]  	none
- * \param[in]  	dl_frequency_hz: Pointer that will contain the downlink frequency in Hz (computed according to the last data given to the SIGFOX_EP_FREQUENCY_compute_uplink function).
- * \param[out] 	none
- * \retval		Function execution status.
+ * \param[in]   none
+ * \param[in]   dl_frequency_hz: Pointer that will contain the downlink frequency in Hz (computed according to the last data given to the SIGFOX_EP_FREQUENCY_compute_uplink function).
+ * \param[out]  none
+ * \retval      Function execution status.
  *******************************************************************/
-SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_downlink(sfx_u32* dl_frequency_hz);
+SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_compute_downlink(sfx_u32 *dl_frequency_hz);
 #endif
 
 /*!******************************************************************
  * \fn SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_get_random_value(sfx_u16 *random_value)
  * \brief Return the current random value of the frequency driver (to be stored in NVM).
- * \param[in]	none
+ * \param[in]   none
  * \param[out]  random_value: Pointer that will contain current random value.
- * \retval		Function execution status.
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_get_random_value(sfx_u16 *random_value);
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \fn void SIGFOX_EP_FREQUENCY_stack_error(void)
  * \brief Generic macro which calls the error stack function for frequency errors (if enabled).
- * \param[in]  	none
- * \param[out]	none
- * \retval		none
+ * \param[in]   none
+ * \param[out]  none
+ * \retval      none
  *******************************************************************/
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 #define SIGFOX_EP_FREQUENCY_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_FREQUENCY, sigfox_ep_frequency_status)
 #else
 #define SIGFOX_EP_FREQUENCY_stack_error(void)
 #endif
 #endif
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \fn void SIGFOX_EP_FREQUENCY_check_status(error)
  * \brief Generic macro to check a SIGFOX_EP_FREQUENCY function status and exit.
- * \param[in]  	error: High level error code to rise.
- * \param[out]	none
- * \retval		none
+ * \param[in]   error: High level error code to rise.
+ * \param[out]  none
+ * \retval      none
  *******************************************************************/
-#define SIGFOX_EP_FREQUENCY_check_status(error) { if (sigfox_ep_frequency_status != SIGFOX_EP_FREQUENCY_SUCCESS) { SIGFOX_EP_FREQUENCY_stack_error(); EXIT_ERROR(error) } }
+#define SIGFOX_EP_FREQUENCY_check_status(error) { if (sigfox_ep_frequency_status != SIGFOX_EP_FREQUENCY_SUCCESS) { SIGFOX_EP_FREQUENCY_stack_error(); SIGFOX_EXIT_ERROR(error) } }
 #endif
 
 #endif /* __SIGFOX_EP_FREQUENCY_H__ */

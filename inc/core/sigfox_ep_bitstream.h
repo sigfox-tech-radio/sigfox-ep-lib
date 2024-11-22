@@ -37,32 +37,32 @@
 #ifndef __SIGFOX_EP_BITSTREAM_H__
 #define __SIGFOX_EP_BITSTREAM_H__
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
 
 /*** SIGFOX EP BITSTREAM structures ***/
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \enum SIGFOX_EP_BITSTREAM_status_t
  * \brief Sigfox bitstream driver error codes.
  *******************************************************************/
 typedef enum {
-	SIGFOX_EP_BITSTREAM_SUCCESS = 0,
-	SIGFOX_EP_BITSTREAM_ERROR_NULL_PARAMETER,
-	SIGFOX_EP_BITSTREAM_ERROR_MESSAGE_TYPE,
-	SIGFOX_EP_BITSTREAM_ERROR_PAYLOAD_SIZE,
-	SIGFOX_EP_BITSTREAM_ERROR_KEY_TYPE,
-	SIGFOX_EP_BITSTREAM_ERROR_FRAME_RANK,
-	SIGFOX_EP_BITSTREAM_ERROR_MESSAGE_COUNTER,
-	// Low level drivers errors.
-	// Activate the ERROR_STACK flag and use the SIGFOX_EP_API_unstack_error() function to get more details.
-	SIGFOX_EP_BITSTREAM_ERROR_DRIVER_SIGFOX_CRC,
-	SIGFOX_EP_BITSTREAM_ERROR_DRIVER_MCU_API,
-	// Last index.
-	SIGFOX_EP_BITSTREAM_ERROR_LAST
+    SIGFOX_EP_BITSTREAM_SUCCESS = 0,
+    SIGFOX_EP_BITSTREAM_ERROR_NULL_PARAMETER,
+    SIGFOX_EP_BITSTREAM_ERROR_MESSAGE_TYPE,
+    SIGFOX_EP_BITSTREAM_ERROR_PAYLOAD_SIZE,
+    SIGFOX_EP_BITSTREAM_ERROR_KEY_TYPE,
+    SIGFOX_EP_BITSTREAM_ERROR_FRAME_RANK,
+    SIGFOX_EP_BITSTREAM_ERROR_MESSAGE_COUNTER,
+    // Low level drivers errors.
+    // Activate the SIGFOX_EP_ERROR_STACK flag and use the SIGFOX_EP_API_unstack_error() function to get more details.
+    SIGFOX_EP_BITSTREAM_ERROR_DRIVER_SIGFOX_CRC,
+    SIGFOX_EP_BITSTREAM_ERROR_DRIVER_MCU_API,
+    // Last index.
+    SIGFOX_EP_BITSTREAM_ERROR_LAST
 } SIGFOX_EP_BITSTREAM_status_t;
 #else
 typedef void SIGFOX_EP_BITSTREAM_status_t;
@@ -73,136 +73,136 @@ typedef void SIGFOX_EP_BITSTREAM_status_t;
  * \brief Common parameters of application and control frames bitstream.
  *******************************************************************/
 typedef struct {
-	sfx_u8 *ep_id;
-	sfx_u16 message_counter;
-#ifndef MESSAGE_COUNTER_ROLLOVER
-	sfx_u16 message_counter_rollover;
+    sfx_u8 *ep_id;
+    sfx_u16 message_counter;
+#ifndef SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER
+    sfx_u16 message_counter_rollover;
 #endif
-#ifndef SINGLE_FRAME
-	SIGFOX_ul_frame_rank_t ul_frame_rank;
+#ifndef SIGFOX_EP_SINGLE_FRAME
+    SIGFOX_ul_frame_rank_t ul_frame_rank;
 #endif
-#ifdef PUBLIC_KEY_CAPABLE
-	SIGFOX_ep_key_t ep_key_type;
+#ifdef SIGFOX_EP_PUBLIC_KEY_CAPABLE
+    SIGFOX_ep_key_t ep_key_type;
 #endif
 } SIGFOX_EP_BITSTREAM_common_t;
 
-#ifdef APPLICATION_MESSAGES
+#ifdef SIGFOX_EP_APPLICATION_MESSAGES
 /*!******************************************************************
  * \struct SIGFOX_EP_BITSTREAM_application_frame_t
  * \brief Specific parameters of application frames bitstream.
  *******************************************************************/
 typedef struct {
-	SIGFOX_EP_BITSTREAM_common_t common_parameters;
-	SIGFOX_application_message_type_t message_type;
-#if !(defined UL_PAYLOAD_SIZE) || (UL_PAYLOAD_SIZE > 0)
-	sfx_u8 *ul_payload;
+    SIGFOX_EP_BITSTREAM_common_t common_parameters;
+    SIGFOX_application_message_type_t message_type;
+#if !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0)
+    sfx_u8 *ul_payload;
 #endif
-#ifndef UL_PAYLOAD_SIZE
-	sfx_u8 ul_payload_size_bytes;
+#ifndef SIGFOX_EP_UL_PAYLOAD_SIZE
+    sfx_u8 ul_payload_size_bytes;
 #endif
-#ifdef BIDIRECTIONAL
-	sfx_bool bidirectional_flag;
+#ifdef SIGFOX_EP_BIDIRECTIONAL
+    sfx_bool bidirectional_flag;
 #endif
 } SIGFOX_EP_BITSTREAM_application_frame_t;
 #endif
 
-#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL)
+#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
 /*!******************************************************************
  * \struct SIGFOX_EP_BITSTREAM_control_frame_t
  * \brief Specific parameters of control frames bitstream.
  *******************************************************************/
 typedef struct {
-	SIGFOX_EP_BITSTREAM_common_t common_parameters;
-	SIGFOX_control_message_type_t message_type;
-	sfx_s16 temperature_tenth_degrees;
-	sfx_u16 voltage_tx_mv;
-	sfx_u16 voltage_idle_mv;
-#ifdef BIDIRECTIONAL
-	sfx_s16 rssi_dbm; // For DL confirmation only.
+    SIGFOX_EP_BITSTREAM_common_t common_parameters;
+    SIGFOX_control_message_type_t message_type;
+    sfx_s16 temperature_tenth_degrees;
+    sfx_u16 voltage_tx_mv;
+    sfx_u16 voltage_idle_mv;
+#ifdef SIGFOX_EP_BIDIRECTIONAL
+    sfx_s16 rssi_dbm; // For DL confirmation only.
 #endif
 } SIGFOX_EP_BITSTREAM_control_frame_t;
 #endif
 
-#ifdef BIDIRECTIONAL
+#ifdef SIGFOX_EP_BIDIRECTIONAL
 /*!******************************************************************
  * \struct SIGFOX_EP_BITSTREAM_dl_frame_t
  * \brief Specific parameters of downlink frames bitstream.
  *******************************************************************/
 typedef struct {
-	sfx_u8 *dl_phy_content; // Raw bytes from radio.
-	sfx_u8 *ep_id;
-	sfx_u16 message_counter; // Message counter of the corresponding uplink frame that requested bidirectional procedure.
-#ifdef PUBLIC_KEY_CAPABLE
-	SIGFOX_ep_key_t ep_key_type;
+    sfx_u8 *dl_phy_content; // Raw bytes from radio.
+    sfx_u8 *ep_id;
+    sfx_u16 message_counter; // Message counter of the corresponding uplink frame that requested bidirectional procedure.
+#ifdef SIGFOX_EP_PUBLIC_KEY_CAPABLE
+    SIGFOX_ep_key_t ep_key_type;
 #endif
-#ifdef CERTIFICATION
-	sfx_bool dl_decoding_enable; // Enable or disable downlink frame decoding (dewhitening, BCH, CRC and AUTH).
+#ifdef SIGFOX_EP_CERTIFICATION
+    sfx_bool dl_decoding_enable; // Enable or disable downlink frame decoding (dewhitening, BCH, CRC and AUTH).
 #endif
 } SIGFOX_EP_BITSTREAM_dl_frame_t;
 #endif
 
 /*** SIGFOX BISTREAM functions ***/
 
-#ifdef APPLICATION_MESSAGES
+#ifdef SIGFOX_EP_APPLICATION_MESSAGES
 /*!******************************************************************
  * \fn SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_EP_BITSTREAM_application_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes)
  * \brief Build an application frame bitstream.
- * \param[in]  	input: Application frame input parameters.
- * \param[out] 	bitstream: Computed bitstream.
- * \param[out]	bitstream_size_bytes: Size of the computed bitstream in bytes.
- * \retval		Function execution status.
+ * \param[in]   input: Application frame input parameters.
+ * \param[out]  bitstream: Computed bitstream.
+ * \param[out]  bitstream_size_bytes: Size of the computed bitstream in bytes.
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_EP_BITSTREAM_application_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes);
 #endif
 
-#if (defined CONTROL_KEEP_ALIVE_MESSAGE) || (defined BIDIRECTIONAL)
+#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
 /*!******************************************************************
  * \fn SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_BITSTREAM_control_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes)
  * \brief Build a control frame bitstream.
- * \param[in]  	input: Control frame input parameters.
- * \param[out] 	bitstream: Computed bitstream.
- * \param[out]	bitstream_size_bytes: Size of the computed bitstream in bytes.
- * \retval		Function execution status.
+ * \param[in]   input: Control frame input parameters.
+ * \param[out]  bitstream: Computed bitstream.
+ * \param[out]  bitstream_size_bytes: Size of the computed bitstream in bytes.
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_BITSTREAM_control_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes);
 #endif
 
-#ifdef BIDIRECTIONAL
+#ifdef SIGFOX_EP_BIDIRECTIONAL
 /*!******************************************************************
  * \fn SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP_BITSTREAM_dl_frame_t *input, sfx_bool *dl_frame_valid, sfx_u8 *dl_payload)
  * \brief Authenticate a downlink frame.
- * \param[in]  	input: Received downlink frame input parameters.
- * \param[out] 	dl_frame_valid: Pointer to the authentication result.
- * \param[out]	dl_payload:	Contains the extracted DL user payload if dl_frame_valid is returned with SFX_TRUE value.
- * \retval		Function execution status.
+ * \param[in]   input: Received downlink frame input parameters.
+ * \param[out]  dl_frame_valid: Pointer to the authentication result.
+ * \param[out]  dl_payload: Contains the extracted DL user payload if dl_frame_valid is returned with SIGFOX_TRUE value.
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP_BITSTREAM_dl_frame_t *input, sfx_bool *dl_frame_valid, sfx_u8 *dl_payload);
 #endif
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \fn void SIGFOX_EP_BITSTREAM_stack_error(void)
  * \brief Generic macro which calls the error stack function for bitstream errors (if enabled).
- * \param[in]  	none
- * \param[out]	none
- * \retval		none
+ * \param[in]   none
+ * \param[out]  none
+ * \retval      none
  *******************************************************************/
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 #define SIGFOX_EP_BITSTREAM_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_BITSTREAM, sigfox_ep_bitstream_status)
 #else
 #define SIGFOX_EP_BITSTREAM_stack_error(void)
 #endif
 #endif
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \fn void SIGFOX_EP_BITSTREAM_check_status(error)
  * \brief Generic macro to check a SIGFOX_EP_BITSTREAM function status and exit.
- * \param[in]  	error: High level error code to rise.
- * \param[out]	none
- * \retval		none
+ * \param[in]   error: High level error code to rise.
+ * \param[out]  none
+ * \retval      none
  *******************************************************************/
-#define SIGFOX_EP_BITSTREAM_check_status(error) { if (sigfox_ep_bitstream_status != SIGFOX_EP_BITSTREAM_SUCCESS) { SIGFOX_EP_BITSTREAM_stack_error(); EXIT_ERROR(error) } }
+#define SIGFOX_EP_BITSTREAM_check_status(error) { if (sigfox_ep_bitstream_status != SIGFOX_EP_BITSTREAM_SUCCESS) { SIGFOX_EP_BITSTREAM_stack_error(); SIGFOX_EXIT_ERROR(error) } }
 #endif
 
 #endif /* __SIGFOX_EP_BITSTREAM_H__ */

@@ -36,80 +36,80 @@
 
 #include "core/sigfox_crc.h"
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
 #include "sigfox_error.h"
 
-#ifndef CRC_HW
+#ifndef SIGFOX_EP_CRC_HW
 
 /*** SIGFOX CRC functions ***/
 
 /*******************************************************************/
 SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc16(sfx_u8 *crc_data, sfx_u8 data_size, sfx_u16 polynom, sfx_u16 *crc) {
-	// Local variables.
+    // Local variables.
     sfx_u8 i = 0;
     sfx_u8 j = 0;
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
     SIGFOX_CRC_status_t status = SIGFOX_CRC_SUCCESS;
 #endif
-#ifdef PARAMETERS_CHECK
-    if ((crc_data == SFX_NULL) || (crc == SFX_NULL)) {
-    	EXIT_ERROR(SIGFOX_CRC_ERROR_NULL_PARAMETER);
+#ifdef SIGFOX_EP_PARAMETERS_CHECK
+    if ((crc_data == SIGFOX_NULL) || (crc == SIGFOX_NULL)) {
+        SIGFOX_EXIT_ERROR(SIGFOX_CRC_ERROR_NULL_PARAMETER);
     }
 #endif
-	// Compute CRC.
+    // Compute CRC.
     (*crc) = 0;
-	for (j=0 ; j<data_size ; j++) {
-		(*crc) ^= (sfx_u16) ((sfx_u16) crc_data[j] << 8);
-		for (i=0 ; i<8 ; i++) {
-			if (((*crc) & 0x8000) != 0) {
-				(*crc) = (sfx_u16) (((*crc) << 1) ^ polynom);
-			}
-			else {
-				(*crc) = (sfx_u16) ((*crc) << 1);
-			}
-		}
-	}
-#ifdef PARAMETERS_CHECK
+    for (j = 0; j < data_size; j++) {
+        (*crc) ^= (sfx_u16) ((sfx_u16) crc_data[j] << 8);
+        for (i = 0; i < 8; i++) {
+            if (((*crc) & 0x8000) != 0) {
+                (*crc) = (sfx_u16) (((*crc) << 1) ^ polynom);
+            }
+            else {
+                (*crc) = (sfx_u16) ((*crc) << 1);
+            }
+        }
+    }
+#ifdef SIGFOX_EP_PARAMETERS_CHECK
 errors:
 #endif
-	RETURN();
+    SIGFOX_RETURN();
 }
 
-#ifdef BIDIRECTIONAL
+#ifdef SIGFOX_EP_BIDIRECTIONAL
 /*******************************************************************/
 SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc8(sfx_u8 *crc_data, sfx_u8 data_size, sfx_u8 polynom, sfx_u8 *crc) {
-	// Local variables.
-	sfx_u8 i = 0;
-	sfx_u8 j = 0;
-#ifdef ERROR_CODES
-	SIGFOX_CRC_status_t status = SIGFOX_CRC_SUCCESS;
+    // Local variables.
+    sfx_u8 i = 0;
+    sfx_u8 j = 0;
+#ifdef SIGFOX_EP_ERROR_CODES
+    SIGFOX_CRC_status_t status = SIGFOX_CRC_SUCCESS;
 #endif
-#ifdef PARAMETERS_CHECK
-    if ((crc_data == SFX_NULL) || (crc == SFX_NULL)) {
-    	EXIT_ERROR(SIGFOX_CRC_ERROR_NULL_PARAMETER);
+#ifdef SIGFOX_EP_PARAMETERS_CHECK
+    if ((crc_data == SIGFOX_NULL) || (crc == SIGFOX_NULL)) {
+        SIGFOX_EXIT_ERROR(SIGFOX_CRC_ERROR_NULL_PARAMETER);
     }
 #endif
-	// Compute CRC.
-	(*crc) = 0;
-	for (j=0 ; j<data_size ; j++) {
-		(*crc) = crc_data[j] ^ (*crc);
-		for (i=0 ; i<8; i++) {
-			if (((*crc) & 0x80) != 0) {
-				(*crc) = (sfx_u8) (((*crc) << 1) ^ polynom);
-			}
-			else {
-				(*crc) = (sfx_u8) ((*crc) << 1);
-			}
-		}
-	}
-#ifdef PARAMETERS_CHECK
+    // Compute CRC.
+    (*crc) = 0;
+    for (j = 0; j < data_size; j++) {
+        (*crc) = crc_data[j] ^ (*crc);
+        for (i = 0; i < 8; i++) {
+            if (((*crc) & 0x80) != 0) {
+                (*crc) = (sfx_u8) (((*crc) << 1) ^ polynom);
+            }
+            else {
+                (*crc) = (sfx_u8) ((*crc) << 1);
+            }
+        }
+    }
+#ifdef SIGFOX_EP_PARAMETERS_CHECK
 errors:
 #endif
-	RETURN();
+    SIGFOX_RETURN();
 }
 #endif
 
-#endif /* CRC_HW */
+#endif /* SIGFOX_EP_CRC_HW */

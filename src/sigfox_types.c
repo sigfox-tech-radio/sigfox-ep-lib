@@ -34,43 +34,43 @@
  *
  *******************************************************************/
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
 
 /*** SIGFOX TYPES global variables ***/
 
-#if !(defined UL_BIT_RATE_BPS) || ((defined PARAMETERS_CHECK) && (defined ERROR_CODES))
+#if !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 /*!******************************************************************
- * \var SIGFOX_EP_API_UL_BIT_RATE_BPS_LIST
+ * \var SIGFOX_UL_BIT_RATE_BPS_LIST
  * \brief Sigfox bit rates value.
  *******************************************************************/
-const sfx_u16 SIGFOX_UL_BIT_RATE_BPS_LIST[SIGFOX_UL_BIT_RATE_LAST] = {100, 600};
+const sfx_u16 SIGFOX_UL_BIT_RATE_BPS_LIST[SIGFOX_UL_BIT_RATE_LAST] = { 100, 600 };
 #endif
 
-#if !(defined MESSAGE_COUNTER_ROLLOVER) || (defined PARAMETERS_CHECK)
+#if !(defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) || (defined SIGFOX_EP_PARAMETERS_CHECK)
 /*!******************************************************************
- * \var SIGFOX_EP_API_MESSAGE_COUNTER_ROLLOVER_LIST
+ * \var SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST
  * \brief Sigfox message counter value.
  *******************************************************************/
-const sfx_u16 SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST[SIGFOX_MESSAGE_COUNTER_ROLLOVER_LAST] = {128, 256, 512, 1024, 2048, 4096};
+const sfx_u16 SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST[SIGFOX_MESSAGE_COUNTER_ROLLOVER_LAST] = { 128, 256, 512, 1024, 2048, 4096 };
 #endif
 
-#ifdef CERTIFICATION
+#ifdef SIGFOX_EP_CERTIFICATION
 /*!******************************************************************
  * \var SIGFOX_EP_TEST_ID
  * \var SIGFOX_EP_TEST_KEY
  * \brief End-point IDs and keys used for test.
  *******************************************************************/
-const sfx_u8 SIGFOX_EP_TEST_ID[SIGFOX_EP_ID_SIZE_BYTES] = {0xFE, 0xDC, 0xBA, 0x98};
-const sfx_u8 SIGFOX_EP_TEST_KEY[SIGFOX_EP_KEY_SIZE_BYTES] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+const sfx_u8 SIGFOX_EP_TEST_ID[SIGFOX_EP_ID_SIZE_BYTES] = { 0xFE, 0xDC, 0xBA, 0x98 };
+const sfx_u8 SIGFOX_EP_TEST_KEY[SIGFOX_EP_KEY_SIZE_BYTES] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF };
 #endif
 
-#ifdef PUBLIC_KEY_CAPABLE
+#ifdef SIGFOX_EP_PUBLIC_KEY_CAPABLE
 /*!******************************************************************
  * \var SIGFOX_EP_PUBLIC_KEY
  * \brief End-point public key used for test.
  *******************************************************************/
-const sfx_u8 SIGFOX_EP_PUBLIC_KEY[SIGFOX_EP_KEY_SIZE_BYTES] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+const sfx_u8 SIGFOX_EP_PUBLIC_KEY[SIGFOX_EP_KEY_SIZE_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
 #endif
