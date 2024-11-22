@@ -37,13 +37,13 @@
 #ifndef __SIGFOX_EP_API_TEST_H__
 #define __SIGFOX_EP_API_TEST_H__
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_ep_api.h"
 #include "sigfox_types.h"
 
-#ifdef CERTIFICATION
+#ifdef SIGFOX_EP_CERTIFICATION
 
 /*** SIGFOX EP API TEST structures ***/
 
@@ -52,24 +52,24 @@
  * \brief Specific flags for test.
  *******************************************************************/
 typedef union {
-	struct {
-		sfx_u8 ul_enable : 1; // Enable or disable uplink part of a message sequence.
-#ifdef BIDIRECTIONAL
-		sfx_u8 dl_enable : 1; // Enable or disable the downlink part of a message sequence.
-		sfx_u8 dl_decoding_enable : 1; // Enable or disable the downlink frame decoding (dewhitening, BCH, CRC and AUTH).
-		sfx_u8 dl_conf_enable : 1; // Enable or disable the downlink confirmation frame of a message sequence.
+    struct {
+        sfx_u8 ul_enable :1; // Enable or disable uplink part of a message sequence.
+#ifdef SIGFOX_EP_BIDIRECTIONAL
+        sfx_u8 dl_enable :1; // Enable or disable the downlink part of a message sequence.
+        sfx_u8 dl_decoding_enable :1; // Enable or disable the downlink frame decoding (dewhitening, BCH, CRC and AUTH).
+        sfx_u8 dl_conf_enable :1; // Enable or disable the downlink confirmation frame of a message sequence.
 #endif
-#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_FH)
-		sfx_u8 tx_control_fh_enable : 1; // Enable or disable FH check in TX control driver.
+#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_FH)
+        sfx_u8 tx_control_fh_enable :1; // Enable or disable FH check in TX control driver.
 #endif
-#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LBT)
-		sfx_u8 tx_control_lbt_enable : 1; // Enable or disable LBT check in TX control driver.
+#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+        sfx_u8 tx_control_lbt_enable :1; // Enable or disable LBT check in TX control driver.
 #endif
-#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LDC)
-		sfx_u8 tx_control_ldc_enable : 1; // Enable or disable LDC check in TX control driver.
+#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LDC)
+        sfx_u8 tx_control_ldc_enable :1; // Enable or disable LDC check in TX control driver.
 #endif
-	} field;
-	sfx_u8 all;
+    } field;
+    sfx_u8 all;
 } SIGFOX_EP_API_TEST_flags_t;
 
 /*!******************************************************************
@@ -77,42 +77,42 @@ typedef union {
  * \brief Specific parameters for test.
  *******************************************************************/
 typedef struct {
-	SIGFOX_EP_API_TEST_flags_t flags;
-	sfx_u32 tx_frequency_hz; // If non-zero, bypass the uplink random frequency generator of the core library.
-#ifdef BIDIRECTIONAL
-	sfx_u32 rx_frequency_hz; // If non-zero, bypass the downlink frequency generator of the core library.
-	sfx_u32 dl_t_w_ms; // If non-zero, bypass the downlink timer value (T_W) from the RC structure.
-	sfx_u32 dl_t_rx_ms; // If non-zero, bypass the downlink timeout value (T_RX) from the RC structure.
+    SIGFOX_EP_API_TEST_flags_t flags;
+    sfx_u32 tx_frequency_hz; // If non-zero, bypass the uplink random frequency generator of the core library.
+#ifdef SIGFOX_EP_BIDIRECTIONAL
+    sfx_u32 rx_frequency_hz; // If non-zero, bypass the downlink frequency generator of the core library.
+    sfx_u32 dl_t_w_ms; // If non-zero, bypass the downlink timer value (T_W) from the RC structure.
+    sfx_u32 dl_t_rx_ms; // If non-zero, bypass the downlink timeout value (T_RX) from the RC structure.
 #endif
-#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LBT)
-	sfx_u32 lbt_cs_max_duration_first_frame_ms; // If non-zero, bypass the first CS timeout value of the selected RC.
+#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+    sfx_u32 lbt_cs_max_duration_first_frame_ms; // If non-zero, bypass the first CS timeout value of the selected RC.
 #endif
 } SIGFOX_EP_API_TEST_parameters_t;
 
-#ifdef APPLICATION_MESSAGES
+#ifdef SIGFOX_EP_APPLICATION_MESSAGES
 /*!******************************************************************
  * \fn SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_application_message(SIGFOX_EP_API_application_message_t *application_message, SIGFOX_EP_API_TEST_parameters_t *test_parameters)
  * \brief Send an application message over Sigfox network.
- * \param[in]  	application_message: Pointer to the application message data.
- * \param[in]	test_parameters: Pointer to the test parameters.
- * \param[out] 	none
- * \retval		Function execution status.
+ * \param[in]   application_message: Pointer to the application message data.
+ * \param[in]   test_parameters: Pointer to the test parameters.
+ * \param[out]  none
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_application_message(SIGFOX_EP_API_application_message_t *application_message, SIGFOX_EP_API_TEST_parameters_t *test_parameters);
 #endif
 
-#ifdef CONTROL_KEEP_ALIVE_MESSAGE
+#ifdef SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE
 /*!******************************************************************
  * \fn SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_control_message(SIGFOX_EP_API_control_message_t *control_message, SIGFOX_EP_API_TEST_parameters_t *test_parameters)
  * \brief Send a control message over Sigfox network.
- * \param[in]  	control_message: Pointer to the control message data.
- * \param[in]	test_parameters: Pointer to the test parameters.
- * \param[out] 	none
- * \retval		Function execution status.
+ * \param[in]   control_message: Pointer to the control message data.
+ * \param[in]   test_parameters: Pointer to the test parameters.
+ * \param[out]  none
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_control_message(SIGFOX_EP_API_control_message_t *control_message, SIGFOX_EP_API_TEST_parameters_t *test_parameters);
 #endif
 
-#endif /* CERTIFICATION */
+#endif /* SIGFOX_EP_CERTIFICATION */
 
 #endif /* __SIGFOX_EP_API_TEST_H__ */

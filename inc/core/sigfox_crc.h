@@ -37,25 +37,25 @@
 #ifndef __SIGFOX_CRC_H__
 #define __SIGFOX_CRC_H__
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
 
-#ifndef CRC_HW
+#ifndef SIGFOX_EP_CRC_HW
 
 /*** SIGFOX CRC structures ***/
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \enum SIGFOX_CRC_status_t
  * \brief Sigfox CRC driver error codes.
  *******************************************************************/
 typedef enum {
-	SIGFOX_CRC_SUCCESS = 0,
-	SIGFOX_CRC_ERROR_NULL_PARAMETER,
-	// Last index.
-	SIGFOX_CRC_ERROR_LAST
+    SIGFOX_CRC_SUCCESS = 0,
+    SIGFOX_CRC_ERROR_NULL_PARAMETER,
+    // Last index.
+    SIGFOX_CRC_ERROR_LAST
 } SIGFOX_CRC_status_t;
 #else
 typedef void SIGFOX_CRC_status_t;
@@ -66,53 +66,53 @@ typedef void SIGFOX_CRC_status_t;
 /*!******************************************************************
  * \fn SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc16(sfx_u8 *crc_data, sfx_u8 data_size, sfx_u16 polynom, sfx_u16 *crc)
  * \brief Compute a CRC16.
- * \param[in]  	crc_data: Input data.
- * \param[in]	data_size: Number of bytes of the input data.
- * \param[in]	polynom: CRC polynom to use.
- * \param[out] 	crc: Pointer to the computed CRC16 value.
- * \retval		Function execution status.
+ * \param[in]   crc_data: Input data.
+ * \param[in]   data_size: Number of bytes of the input data.
+ * \param[in]   polynom: CRC polynom to use.
+ * \param[out]  crc: Pointer to the computed CRC16 value.
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc16(sfx_u8 *crc_data, sfx_u8 data_size, sfx_u16 polynom, sfx_u16 *crc);
 
-#ifdef BIDIRECTIONAL
+#ifdef SIGFOX_EP_BIDIRECTIONAL
 /*!******************************************************************
  * \fn SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc8(sfx_u8 *crc_data, sfx_u8 data_size, sfx_u8 polynom, sfx_u8 *crc)
  * \brief Compute a CRC8.
- * \param[in]  	crc_data: Input data.
- * \param[in]	data_size: Number of bytes of the input data.
- * \param[in]	polynom: CRC polynom to use.
- * \param[out] 	crc: Pointer to the computed CRC8 value.
- * \retval		Function execution status.
+ * \param[in]   crc_data: Input data.
+ * \param[in]   data_size: Number of bytes of the input data.
+ * \param[in]   polynom: CRC polynom to use.
+ * \param[out]  crc: Pointer to the computed CRC8 value.
+ * \retval      Function execution status.
  *******************************************************************/
 SIGFOX_CRC_status_t SIGFOX_CRC_compute_crc8(sfx_u8 *crc_data, sfx_u8 data_size, sfx_u8 polynom, sfx_u8 *crc);
 #endif
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \fn void SIGFOX_CRC_stack_error(void)
  * \brief Generic macro which calls the error stack function for CRC errors (if enabled).
- * \param[in]  	none
- * \param[out]	none
- * \retval		none
+ * \param[in]   none
+ * \param[out]  none
+ * \retval      none
  *******************************************************************/
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 #define SIGFOX_CRC_stack_error(void) SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_CRC, sigfox_crc_status)
 #else
 #define SIGFOX_CRC_stack_error(void)
 #endif
 #endif
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*!******************************************************************
  * \fn void SIGFOX_CRC_check_status(error)
  * \brief Generic macro to check a SIGFOX_CRC function status and exit.
- * \param[in]  	error: High level error code to rise.
- * \param[out]	none
- * \retval		none
+ * \param[in]   error: High level error code to rise.
+ * \param[out]  none
+ * \retval      none
  *******************************************************************/
-#define SIGFOX_CRC_check_status(error) { if (sigfox_crc_status != SIGFOX_CRC_SUCCESS) { SIGFOX_CRC_stack_error(); EXIT_ERROR(error) } }
+#define SIGFOX_CRC_check_status(error) { if (sigfox_crc_status != SIGFOX_CRC_SUCCESS) { SIGFOX_CRC_stack_error(); SIGFOX_EXIT_ERROR(error) } }
 #endif
 
-#endif /* CRC_HW */
+#endif /* SIGFOX_EP_CRC_HW */
 
 #endif /* __SIGFOX_CRC_H__ */

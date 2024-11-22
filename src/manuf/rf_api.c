@@ -36,7 +36,7 @@
 
 #include "manuf/rf_api.h"
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
@@ -44,165 +44,165 @@
 
 /*** RF API functions ***/
 
-#if (defined ASYNCHRONOUS) || (defined LOW_LEVEL_OPEN_CLOSE)
+#if (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE)
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_open(RF_API_config_t *rf_api_config) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	SFX_UNUSED(rf_api_config);
-	RETURN();
+    SIGFOX_UNUSED(rf_api_config);
+    SIGFOX_RETURN();
 }
 #endif
 
-#ifdef LOW_LEVEL_OPEN_CLOSE
+#ifdef SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_close(void) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	RETURN();
+    SIGFOX_RETURN();
 }
 #endif
 
-#ifdef ASYNCHRONOUS
+#ifdef SIGFOX_EP_ASYNCHRONOUS
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_process(void) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	RETURN();
+    SIGFOX_RETURN();
 }
 #endif
 
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_wake_up(void) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	RETURN();
+    SIGFOX_RETURN();
 }
 
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_sleep(void) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	RETURN();
+    SIGFOX_RETURN();
 }
 
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_init(RF_API_radio_parameters_t *radio_parameters) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	SFX_UNUSED(radio_parameters);
-	RETURN();
+    SIGFOX_UNUSED(radio_parameters);
+    SIGFOX_RETURN();
 }
 
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_de_init(void) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	RETURN();
+    SIGFOX_RETURN();
 }
 
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_send(RF_API_tx_data_t *tx_data) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	SFX_UNUSED(tx_data);
-	RETURN();
+    SIGFOX_UNUSED(tx_data);
+    SIGFOX_RETURN();
 }
 
-#ifdef BIDIRECTIONAL
+#ifdef SIGFOX_EP_BIDIRECTIONAL
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_receive(RF_API_rx_data_t *rx_data) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	SFX_UNUSED(rx_data);
-	RETURN();
+    SIGFOX_UNUSED(rx_data);
+    SIGFOX_RETURN();
 }
 #endif
 
-#ifdef BIDIRECTIONAL
+#ifdef SIGFOX_EP_BIDIRECTIONAL
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_get_dl_phy_content_and_rssi(sfx_u8 *dl_phy_content, sfx_u8 dl_phy_content_size, sfx_s16 *dl_rssi_dbm) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	SFX_UNUSED(dl_phy_content);
-	SFX_UNUSED(dl_phy_content_size);
-	SFX_UNUSED(dl_rssi_dbm);
-	RETURN();
+    SIGFOX_UNUSED(dl_phy_content);
+    SIGFOX_UNUSED(dl_phy_content_size);
+    SIGFOX_UNUSED(dl_rssi_dbm);
+    SIGFOX_RETURN();
 }
 #endif
 
-#if (defined REGULATORY) && (defined SPECTRUM_ACCESS_LBT)
+#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_sense_params) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	SFX_UNUSED(carrier_sense_params);
-	RETURN();
+    SIGFOX_UNUSED(carrier_sense_params);
+    SIGFOX_RETURN();
 }
 #endif
 
-#if (defined TIMER_REQUIRED) && (defined LATENCY_COMPENSATION)
+#if (defined SIGFOX_EP_TIMER_REQUIRED) && (defined SIGFOX_EP_LATENCY_COMPENSATION)
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *latency_ms) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	SFX_UNUSED(latency_type);
-	SFX_UNUSED(latency_ms);
-	RETURN();
+    SIGFOX_UNUSED(latency_type);
+    SIGFOX_UNUSED(latency_ms);
+    SIGFOX_RETURN();
 }
 #endif
 
-#ifdef CERTIFICATION
+#ifdef SIGFOX_EP_CERTIFICATION
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_start_continuous_wave(void) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	RETURN();
+    SIGFOX_RETURN();
 }
 #endif
 
-#ifdef VERBOSE
+#ifdef SIGFOX_EP_VERBOSE
 /*******************************************************************/
 RF_API_status_t __attribute__((weak)) RF_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char) {
-	/* To be implemented by the device manufacturer */
-#ifdef ERROR_CODES
-	RF_API_status_t status = RF_API_SUCCESS;
+    /* To be implemented by the device manufacturer */
+#ifdef SIGFOX_EP_ERROR_CODES
+    RF_API_status_t status = RF_API_SUCCESS;
 #endif
-	SFX_UNUSED(version);
-	SFX_UNUSED(version_size_char);
-	RETURN();
+    SIGFOX_UNUSED(version);
+    SIGFOX_UNUSED(version_size_char);
+    SIGFOX_RETURN();
 }
 #endif
 
-#ifdef ERROR_CODES
+#ifdef SIGFOX_EP_ERROR_CODES
 /*******************************************************************/
 void __attribute__((weak)) RF_API_error(void) {
-	/* To be implemented by the device manufacturer */
+    /* To be implemented by the device manufacturer */
 }
 #endif

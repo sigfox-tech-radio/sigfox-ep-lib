@@ -36,22 +36,22 @@
 
 #include "sigfox_error.h"
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*** SIGFOX EP API local structures ***/
 
 /*******************************************************************/
 typedef struct {
-	SIGFOX_ERROR_t error_stack[ERROR_STACK];
-	sfx_u32 error_stack_idx;
+    SIGFOX_ERROR_t error_stack[SIGFOX_EP_ERROR_STACK];
+    sfx_u32 error_stack_idx;
 } SIGFOX_ERROR_context_t;
 #endif
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*** SIGFOX EP API local global variables ***/
 
 static SIGFOX_ERROR_context_t sigfox_error_ctx;
@@ -59,48 +59,48 @@ static SIGFOX_ERROR_context_t sigfox_error_ctx;
 
 /*** SIGFOX ERROR functions ***/
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*******************************************************************/
 void SIGFOX_ERROR_init(void) {
-	// Reset all errors.
-	for (sigfox_error_ctx.error_stack_idx=0 ; sigfox_error_ctx.error_stack_idx<ERROR_STACK ; sigfox_error_ctx.error_stack_idx++) {
-		sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].source = SIGFOX_ERROR_SOURCE_NONE;
-		sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].code = 0;
-	}
-	// Reset index.
-	sigfox_error_ctx.error_stack_idx = 0;
+    // Reset all errors.
+    for (sigfox_error_ctx.error_stack_idx = 0; sigfox_error_ctx.error_stack_idx < SIGFOX_EP_ERROR_STACK; sigfox_error_ctx.error_stack_idx++) {
+        sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].source = SIGFOX_ERROR_SOURCE_NONE;
+        sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].code = 0;
+    }
+    // Reset index.
+    sigfox_error_ctx.error_stack_idx = 0;
 }
 #endif
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*******************************************************************/
 void SIGFOX_ERROR_stack(SIGFOX_ERROR_source_t source, sfx_u32 code) {
-	// Store new error.
-	sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].source = source;
-	sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].code = code;
-	// Increment index.
-	sigfox_error_ctx.error_stack_idx++;
-	if (sigfox_error_ctx.error_stack_idx >= ERROR_STACK) {
-		sigfox_error_ctx.error_stack_idx = 0;
-	}
+    // Store new error.
+    sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].source = source;
+    sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].code = code;
+    // Increment index.
+    sigfox_error_ctx.error_stack_idx++;
+    if (sigfox_error_ctx.error_stack_idx >= SIGFOX_EP_ERROR_STACK) {
+        sigfox_error_ctx.error_stack_idx = 0;
+    }
 }
 #endif
 
-#ifdef ERROR_STACK
+#ifdef SIGFOX_EP_ERROR_STACK
 /*******************************************************************/
 void SIGFOX_ERROR_unstack(SIGFOX_ERROR_t *error_ptr) {
-	// Set index to last error.
-	if (sigfox_error_ctx.error_stack_idx > 0) {
-		sigfox_error_ctx.error_stack_idx--;
-	}
-	else {
-		sigfox_error_ctx.error_stack_idx = (ERROR_STACK - 1);
-	}
-	// Read last error.
-	(error_ptr -> source) = sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].source;
-	(error_ptr -> code) = sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].code;
-	// Clear error.
-	sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].source = SIGFOX_ERROR_SOURCE_NONE;
-	sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].code = 0;
+    // Set index to last error.
+    if (sigfox_error_ctx.error_stack_idx > 0) {
+        sigfox_error_ctx.error_stack_idx--;
+    }
+    else {
+        sigfox_error_ctx.error_stack_idx = (SIGFOX_EP_ERROR_STACK - 1);
+    }
+    // Read last error.
+    (error_ptr->source) = sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].source;
+    (error_ptr->code) = sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].code;
+    // Clear error.
+    sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].source = SIGFOX_ERROR_SOURCE_NONE;
+    sigfox_error_ctx.error_stack[sigfox_error_ctx.error_stack_idx].code = 0;
 }
 #endif

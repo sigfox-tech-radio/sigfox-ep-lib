@@ -37,14 +37,14 @@
 #ifndef __SIGFOX_RC_H__
 #define __SIGFOX_RC_H__
 
-#ifdef USE_SIGFOX_EP_FLAGS_H
+#ifndef SIGFOX_EP_DISABLE_FLAGS_FILE
 #include "sigfox_ep_flags.h"
 #endif
 #include "sigfox_types.h"
 
 /*** SIGFOX RC global variables ***/
 
-#ifdef SPECTRUM_ACCESS_DC
+#ifdef SIGFOX_EP_SPECTRUM_ACCESS_DC
 /*!******************************************************************
  * \var SIGFOX_SPECTRUM_ACCESS_DC
  * \brief Duty cycle spectrum access parameters.
@@ -52,7 +52,7 @@
 extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_DC;
 #endif
 
-#ifdef SPECTRUM_ACCESS_LDC
+#ifdef SIGFOX_EP_SPECTRUM_ACCESS_LDC
 /*!******************************************************************
  * \var SIGFOX_SPECTRUM_ACCESS_LDC
  * \brief Low Duty cycle spectrum access parameters.
@@ -60,7 +60,7 @@ extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_DC;
 extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_LDC;
 #endif
 
-#ifdef SPECTRUM_ACCESS_FH
+#ifdef SIGFOX_EP_SPECTRUM_ACCESS_FH
 /*!******************************************************************
  * \var SIGFOX_SPECTRUM_ACCESS_FH
  * \brief Frequency hopping spectrum access definition.
@@ -68,7 +68,7 @@ extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_LDC;
 extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_FH;
 #endif
 
-#ifdef SPECTRUM_ACCESS_LBT_M80
+#ifdef SIGFOX_EP_SPECTRUM_ACCESS_LBT_M80
 /*!******************************************************************
  * \var SIGFOX_SPECTRUM_ACCESS_LBT_M80
  * \brief Listen before talk spectrum access -80dBm definition.
@@ -76,7 +76,7 @@ extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_FH;
 extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_LBT_M80;
 #endif
 
-#ifdef SPECTRUM_ACCESS_LBT_M65
+#ifdef SIGFOX_EP_SPECTRUM_ACCESS_LBT_M65
 /*!******************************************************************
  * \var SIGFOX_SPECTRUM_ACCESS_LBT_M65
  * \brief Listen before talk spectrum access -65dBm definition.
@@ -84,7 +84,7 @@ extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_LBT_M80;
 extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_LBT_M65;
 #endif
 
-#ifdef RC1_ZONE
+#ifdef SIGFOX_EP_RC1_ZONE
 /*!******************************************************************
  * \var SIGFOX_RC1
  * \brief RC1 radio configuration structure.
@@ -92,7 +92,7 @@ extern const SIGFOX_spectrum_access_t SIGFOX_SPECTRUM_ACCESS_LBT_M65;
 extern const SIGFOX_rc_t SIGFOX_RC1;
 #endif
 
-#ifdef RC2_ZONE
+#ifdef SIGFOX_EP_RC2_ZONE
 /*!******************************************************************
  * \var SIGFOX_RC2
  * \brief RC2 radio configuration structure.
@@ -100,23 +100,23 @@ extern const SIGFOX_rc_t SIGFOX_RC1;
 extern const SIGFOX_rc_t SIGFOX_RC2;
 #endif
 
-#ifdef RC3C_ZONE
+#ifdef SIGFOX_EP_RC3_LBT_ZONE
 /*!******************************************************************
- * \var SIGFOX_RC3C
- * \brief RC3C radio configuration structure.
+ * \var SIGFOX_RC3_LBT
+ * \brief RC3 LBT radio configuration structure.
  *******************************************************************/
-extern const SIGFOX_rc_t SIGFOX_RC3C;
+extern const SIGFOX_rc_t SIGFOX_RC3_LBT;
 #endif
 
-#ifdef RC3D_ZONE
+#ifdef SIGFOX_EP_RC3_LDC_ZONE
 /*!******************************************************************
- * \var SIGFOX_RC3D
- * \brief RC3D radio configuration structure.
+ * \var SIGFOX_RC3_LDC
+ * \brief RC3 LDC radio configuration structure.
  *******************************************************************/
-extern const SIGFOX_rc_t SIGFOX_RC3D;
+extern const SIGFOX_rc_t SIGFOX_RC3_LDC;
 #endif
 
-#ifdef RC4_ZONE
+#ifdef SIGFOX_EP_RC4_ZONE
 /*!******************************************************************
  * \var SIGFOX_RC4
  * \brief RC4 radio configuration structure.
@@ -124,7 +124,7 @@ extern const SIGFOX_rc_t SIGFOX_RC3D;
 extern const SIGFOX_rc_t SIGFOX_RC4;
 #endif
 
-#ifdef RC5_ZONE
+#ifdef SIGFOX_EP_RC5_ZONE
 /*!******************************************************************
  * \var SIGFOX_RC5
  * \brief RC5 radio configuration structure.
@@ -132,7 +132,7 @@ extern const SIGFOX_rc_t SIGFOX_RC4;
 extern const SIGFOX_rc_t SIGFOX_RC5;
 #endif
 
-#ifdef RC6_ZONE
+#ifdef SIGFOX_EP_RC6_ZONE
 /*!******************************************************************
  * \var SIGFOX_RC6
  * \brief RC6 radio configuration structure.
@@ -140,7 +140,7 @@ extern const SIGFOX_rc_t SIGFOX_RC5;
 extern const SIGFOX_rc_t SIGFOX_RC6;
 #endif
 
-#ifdef RC7_ZONE
+#ifdef SIGFOX_EP_RC7_ZONE
 /*!******************************************************************
  * \var SIGFOX_RC7
  * \brief RC7 radio configuration structure.
