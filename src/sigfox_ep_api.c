@@ -2787,27 +2787,33 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_close(void) {
     RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 #endif
-    // Check library state.
-    _CHECK_LIBRARY_STATE(!= SIGFOX_EP_API_STATE_READY);
 #ifdef SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE
     // Close MCU.
 #ifdef SIGFOX_EP_ERROR_CODES
     mcu_api_status = MCU_API_close();
-    MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
+    // Check status.
+    if (mcu_api_status != MCU_API_SUCCESS) {
+        MCU_API_stack_error();
+        status = SIGFOX_EP_API_ERROR_DRIVER_MCU_API;
+    }
 #else
     MCU_API_close();
 #endif
     // Close RF.
 #ifdef SIGFOX_EP_ERROR_CODES
     rf_api_status = RF_API_close();
-    RF_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_RF_API);
+    // Check status.
+    if (rf_api_status != RF_API_SUCCESS) {
+        RF_API_stack_error();
+        status = SIGFOX_EP_API_ERROR_DRIVER_RF_API;
+    }
 #else
     RF_API_close();
 #endif
 #endif
-    // Update library state if no error occurred.
+    // Update library state.
     sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_CLOSED;
-errors:
+    // Return.
     SIGFOX_RETURN();
 }
 

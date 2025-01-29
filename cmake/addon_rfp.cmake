@@ -36,7 +36,7 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(
     addon_rfp
     GIT_REPOSITORY "https://github.com/sigfox-tech-radio/sigfox-ep-addon-rfp"
-    GIT_TAG "v2.0"
+    GIT_TAG "v2.1"
     GIT_PROGRESS TRUE
     GIT_SHALLOW    1
     #SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/addons/rfp

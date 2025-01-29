@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v4.1](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.1) - 29 Jan 2025
+
+### Added
+
+* Add major and minor versions macros.
+
+### Fixed
+
+* Improve `SIGFOX_EP_API_close()` function to **force a reset** of the library and the low level drivers. In some execution error cases, the previous implementation could lead to a blocked state where the library could neither be opened anymore nor properly closed.
+
+### Known limitations
+
+* **Payload encryption** not supported.
+* **Secure element** not supported.
+
 ## [v4.0](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.0) - 22 Nov 2024
 
 ### Added
