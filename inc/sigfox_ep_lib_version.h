@@ -43,7 +43,10 @@
 
 /*** Main version ***/
 
-#define SIGFOX_EP_LIB_VERSION       "v4.0"
+#define SIGFOX_EP_LIB_VERSION           "v4.1"
+#define SIGFOX_EP_LIB_VERSION_MAJOR     4
+#define SIGFOX_EP_LIB_VERSION_MINOR     1
+#define SIGFOX_EP_LIB_VERSION_DEV_FLAG  0
 
 /*** Compilation flags ***/
 

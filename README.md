@@ -45,7 +45,7 @@ Below is the list of available flags.
 | `SIGFOX_EP_BIDIRECTIONAL` | `undefined` / `defined` | Support bidirectional procedure (downlink) if defined. Only applicable to application messages. Otherwise all messages will be uplink only. |
 | `SIGFOX_EP_ASYNCHRONOUS` | `undefined` / `defined` | Asynchronous mode if defined, blocking mode otherwise. |
 | `SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE` | `undefined` / `defined` | Enable MCU and RF open/close functions if defined. |
-| `SIGFOX_EP_REGULATORY` | `undefined` / `defined` | Enable radio regulatory control (DC, FH or LBT check) if defined. See [state machine](https://github.com/sigfox-tech-radio/sigfox-ep-lib/wiki/state-machine) |
+| `SIGFOX_EP_REGULATORY` | `undefined` / `defined` | Enable radio regulatory control (DC, FH or LBT check) if defined. See note below and [state machine](https://github.com/sigfox-tech-radio/sigfox-ep-lib/wiki/state-machine) |
 | `SIGFOX_EP_LATENCY_COMPENSATION` | `undefined` / `defined` | Enable radio latency compensation to improve MCU timers accuracy. |
 | `SIGFOX_EP_SINGLE_FRAME` | `undefined` / `defined` | Send 1 frame per message (N=1) if defined. Otherwise number of frames per message is dynamically given when sending a message (N=1, 2 or 3). |
 | `SIGFOX_EP_UL_BIT_RATE_BPS` | `undefined` / `100` / `600` | If defined, give the only uplink bit rate supported (100bps or 600bps depending on the RC). Otherwise, value is dynamically given when sending a message. |
@@ -62,6 +62,9 @@ Below is the list of available flags.
 | `SIGFOX_EP_VERBOSE` | `undefined` / `defined` | Enable credentials (ID / PAC) API access and version control functions if defined. |
 | `SIGFOX_EP_ERROR_CODES` | `undefined` / `defined` | Use return codes if defined, otherwise all functions return void. |
 | `SIGFOX_EP_ERROR_STACK` | `undefined` / `<error_stack_depth>` | If defined, store low level errors in a stack (the macro gives the depth). Errors can be read with the `SIGFOX_EP_API_unstack_error()` function. |
+
+> [!NOTE]
+> It is recommended to keep the `SIGFOX_EP_REGULATORY` flag enabled. However, the possibility of disabling this flag has been kept for optimization purposes: indeed, some devices could comply with their local regulation by design, thanks to a low TX power, a specific transmission periodicity, etc. In these specific cases, which depends on the application, the regulatory checks performed by the library become useless and can be removed to reduce the memory footprint.
 
 ## How to add Sigfox library to your project
 
