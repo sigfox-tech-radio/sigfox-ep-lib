@@ -105,14 +105,14 @@ static SIGFOX_TX_CONTROL_context_t sigfox_tx_control_ctx = { .flags.all = 0, };
 
 #ifdef SIGFOX_EP_ASYNCHRONOUS
 /*******************************************************************/
-#define _CHECK_CPLT_CALLBACK(void) { \
+#define _COMPLETION_CALLBACK(void) { \
     if (sigfox_tx_control_ctx.params.cplt_cb != SIGFOX_NULL) { \
         sigfox_tx_control_ctx.params.cplt_cb(); \
     } \
 }
 #endif
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && ((defined SIGFOX_EP_SPECTRUM_ACCESS_LBT) || (defined SIGFOX_EP_SPECTRUM_ACCESS_FH))
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && ((defined SIGFOX_EP_SPECTRUM_ACCESS_LBT) || (defined SIGFOX_EP_SPECTRUM_ACCESS_FH)))
 /*******************************************************************/
 static void _MCU_API_timer_cplt_cb(void) {
     // Set local flag.
@@ -121,7 +121,7 @@ static void _MCU_API_timer_cplt_cb(void) {
 }
 #endif
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
 /*******************************************************************/
 static void _RF_API_channel_free_cb(void) {
     // Set local flag.
@@ -131,7 +131,7 @@ static void _RF_API_channel_free_cb(void) {
 #endif
 
 /*******************************************************************/
-SIGFOX_TX_CONTROL_status_t _store_parameters(SIGFOX_TX_CONTROL_parameters_t *params) {
+static SIGFOX_TX_CONTROL_status_t _store_parameters(SIGFOX_TX_CONTROL_parameters_t *params) {
 #ifdef SIGFOX_EP_ERROR_CODES
     // Local variables.
     SIGFOX_TX_CONTROL_status_t status = SIGFOX_TX_CONTROL_SUCCESS;
@@ -155,7 +155,7 @@ SIGFOX_TX_CONTROL_status_t _store_parameters(SIGFOX_TX_CONTROL_parameters_t *par
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     sigfox_tx_control_ctx.params.dl_conf_message = (params->dl_conf_message);
 #endif
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
     sigfox_tx_control_ctx.params.interframe_ms = (params->interframe_ms);
 #endif
 #ifdef SIGFOX_EP_CERTIFICATION
@@ -219,14 +219,14 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
     // Local variables.
 #ifdef SIGFOX_EP_ERROR_CODES
     SIGFOX_TX_CONTROL_status_t status = SIGFOX_TX_CONTROL_SUCCESS;
-#if (defined SIGFOX_EP_SPECTRUM_ACCESS_FH) || (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_SPECTRUM_ACCESS_FH) || (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
     MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 #ifdef SIGFOX_EP_SPECTRUM_ACCESS_LBT
     RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
 #endif /* SIGFOX_EP_ERROR_CODES */
-#if (defined SIGFOX_EP_SPECTRUM_ACCESS_FH) || (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_SPECTRUM_ACCESS_FH) || (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
     MCU_API_timer_t mcu_timer;
 #endif
 #ifdef SIGFOX_EP_SPECTRUM_ACCESS_LBT
@@ -237,10 +237,10 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
     sfx_bool channel_free = SIGFOX_FALSE;
 #endif
 #endif
-#if ((defined SIGFOX_EP_SPECTRUM_ACCESS_LBT) || (defined SIGFOX_EP_SPECTRUM_ACCESS_LDC)) && !(defined SIGFOX_EP_SINGLE_FRAME)
+#if (((defined SIGFOX_EP_SPECTRUM_ACCESS_LBT) || ((defined SIGFOX_EP_SPECTRUM_ACCESS_LDC) && (defined SIGFOX_EP_INTERFRAME_TIMER_REQUIRED))) && !(defined SIGFOX_EP_SINGLE_FRAME))
     sfx_u8 number_of_repeated_frames = 0;
 #endif
-#if (defined SIGFOX_EP_SPECTRUM_ACCESS_LDC) && !(defined SIGFOX_EP_SINGLE_FRAME)
+#if ((defined SIGFOX_EP_SPECTRUM_ACCESS_LDC) && !(defined SIGFOX_EP_SINGLE_FRAME) && (defined SIGFOX_EP_INTERFRAME_TIMER_REQUIRED))
     sfx_u32 transmission_time_ms = 0;
 #endif
     // Store and check parameters.
@@ -250,7 +250,7 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
 #else
     _store_parameters(params);
 #endif
-#if ((defined SIGFOX_EP_SPECTRUM_ACCESS_LBT) || (defined SIGFOX_EP_SPECTRUM_ACCESS_LDC)) && !(defined SIGFOX_EP_SINGLE_FRAME)
+#if (((defined SIGFOX_EP_SPECTRUM_ACCESS_LBT) || ((defined SIGFOX_EP_SPECTRUM_ACCESS_LDC) && (defined SIGFOX_EP_INTERFRAME_TIMER_REQUIRED))) && !(defined SIGFOX_EP_SINGLE_FRAME))
     number_of_repeated_frames = (sfx_u8) (sigfox_tx_control_ctx.params.number_of_frames - 1);
 #endif
     // Reset flags.
@@ -269,7 +269,7 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
         // Bypass check if required.
         if ((params->ldc_check_enable) == SIGFOX_FALSE) break;
 #endif
-#ifndef SIGFOX_EP_SINGLE_FRAME
+#if ((defined SIGFOX_EP_INTERFRAME_TIMER_REQUIRED) && !(defined SIGFOX_EP_SINGLE_FRAME))
         // Execute LDC check in case of pre-check.
         if ((sigfox_tx_control_ctx.params.type) == SIGFOX_TX_CONTROL_TYPE_PRE_CHECK) {
             // Check interframe duration.
@@ -359,7 +359,9 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
             else {
                 // Use T_LF.
                 cs_max_duration_ms = SIGFOX_T_LF_MS;
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
                 cs_max_duration_ms -= ((sfx_u32) number_of_repeated_frames) * (sigfox_tx_control_ctx.params.interframe_ms); // Remove inter-frame delay(s).
+#endif
                 cs_max_duration_ms -= ((sfx_u32) (number_of_repeated_frames - 1)) * SIGFOX_TX_CONTROL_FRAME_DURATION_MS; // Remove frame 2 duration.
                 cs_max_duration_ms /= ((sfx_u32) number_of_repeated_frames); // Divide remaining time equitably for all repeated frames.
             }
@@ -444,6 +446,13 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_check(SIGFOX_TX_CONTROL_parameters_
         SIGFOX_EXIT_ERROR(SIGFOX_TX_CONTROL_ERROR_SPECTRUM_ACCESS);
         break;
     }
+#ifdef SIGFOX_EP_ASYNCHRONOUS
+    // Directly call the completion callback if the result is already available.
+    if (sigfox_tx_control_ctx.result != SIGFOX_TX_CONTROL_RESULT_PENDING) {
+        // Call completion callback.
+        _COMPLETION_CALLBACK();
+    }
+#endif
 errors:
     SIGFOX_RETURN();
 }
@@ -454,7 +463,7 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_process(void) {
     // Local variables.
 #ifdef SIGFOX_EP_ERROR_CODES
     SIGFOX_TX_CONTROL_status_t status = SIGFOX_TX_CONTROL_SUCCESS;
-#if (defined SIGFOX_EP_SPECTRUM_ACCESS_FH) || (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_SPECTRUM_ACCESS_FH) || (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
     MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 #ifdef SIGFOX_EP_SPECTRUM_ACCESS_LBT
@@ -490,7 +499,7 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_process(void) {
                 // Update result.
                 sigfox_tx_control_ctx.result = SIGFOX_TX_CONTROL_RESULT_ALLOWED;
                 // Call completion callback.
-                _CHECK_CPLT_CALLBACK();
+                _COMPLETION_CALLBACK();
             }
         }
         break;
@@ -526,7 +535,7 @@ SIGFOX_TX_CONTROL_status_t SIGFOX_TX_CONTROL_process(void) {
                 MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_LBT);
 #endif
                 // Call completion callback.
-                _CHECK_CPLT_CALLBACK();
+                _COMPLETION_CALLBACK();
             }
         }
         break;

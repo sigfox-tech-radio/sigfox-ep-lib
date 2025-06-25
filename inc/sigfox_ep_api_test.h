@@ -54,18 +54,19 @@
 typedef union {
     struct {
         sfx_u8 ul_enable :1; // Enable or disable uplink part of a message sequence.
+        sfx_u8 ul_bitstream_enable :1; // Enable or disable the internal frame builder.
 #ifdef SIGFOX_EP_BIDIRECTIONAL
         sfx_u8 dl_enable :1; // Enable or disable the downlink part of a message sequence.
         sfx_u8 dl_decoding_enable :1; // Enable or disable the downlink frame decoding (dewhitening, BCH, CRC and AUTH).
         sfx_u8 dl_conf_enable :1; // Enable or disable the downlink confirmation frame of a message sequence.
 #endif
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_FH)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_FH))
         sfx_u8 tx_control_fh_enable :1; // Enable or disable FH check in TX control driver.
 #endif
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
         sfx_u8 tx_control_lbt_enable :1; // Enable or disable LBT check in TX control driver.
 #endif
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LDC)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LDC))
         sfx_u8 tx_control_ldc_enable :1; // Enable or disable LDC check in TX control driver.
 #endif
     } field;
@@ -78,13 +79,14 @@ typedef union {
  *******************************************************************/
 typedef struct {
     SIGFOX_EP_API_TEST_flags_t flags;
+    sfx_u8 ul_bitstream_byte; // Fill the whole uplink frame with this byte if the ul_bitstream_enable flag is set to 0.
     sfx_u32 tx_frequency_hz; // If non-zero, bypass the uplink random frequency generator of the core library.
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     sfx_u32 rx_frequency_hz; // If non-zero, bypass the downlink frequency generator of the core library.
     sfx_u32 dl_t_w_ms; // If non-zero, bypass the downlink timer value (T_W) from the RC structure.
     sfx_u32 dl_t_rx_ms; // If non-zero, bypass the downlink timeout value (T_RX) from the RC structure.
 #endif
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
     sfx_u32 lbt_cs_max_duration_first_frame_ms; // If non-zero, bypass the first CS timeout value of the selected RC.
 #endif
 } SIGFOX_EP_API_TEST_parameters_t;

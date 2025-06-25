@@ -115,7 +115,7 @@ typedef struct {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     sfx_bool dl_conf_message;
 #endif
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
     sfx_u32 interframe_ms; // Tifu, Tifb or Tconf.
 #endif
 #ifdef SIGFOX_EP_CERTIFICATION

@@ -94,7 +94,7 @@ typedef struct {
 typedef struct {
     SIGFOX_EP_BITSTREAM_common_t common_parameters;
     SIGFOX_application_message_type_t message_type;
-#if !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0)
+#if (!(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0))
     sfx_u8 *ul_payload;
 #endif
 #ifndef SIGFOX_EP_UL_PAYLOAD_SIZE
@@ -106,7 +106,7 @@ typedef struct {
 } SIGFOX_EP_BITSTREAM_application_frame_t;
 #endif
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
 /*!******************************************************************
  * \struct SIGFOX_EP_BITSTREAM_control_frame_t
  * \brief Specific parameters of control frames bitstream.
@@ -155,7 +155,7 @@ typedef struct {
 SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_EP_BITSTREAM_application_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes);
 #endif
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
 /*!******************************************************************
  * \fn SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_BITSTREAM_control_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes)
  * \brief Build a control frame bitstream.

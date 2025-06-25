@@ -91,7 +91,7 @@ typedef void (*RF_API_channel_free_cb_t)(void);
  *******************************************************************/
 typedef enum {
     RF_API_MODE_TX,
-#if (defined SIGFOX_EP_BIDIRECTIONAL) || ((defined SIGFOX_EP_REGULATORY && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)))
+#if ((defined SIGFOX_EP_BIDIRECTIONAL) || ((defined SIGFOX_EP_REGULATORY && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))))
     RF_API_MODE_RX,
 #endif
     RF_API_MODE_LAST
@@ -171,7 +171,7 @@ typedef struct {
 } RF_API_rx_data_t;
 #endif
 
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
 /*!******************************************************************
  * \struct RF_API_carrier_sense_parameters_t
  * \brief RF carrier sense parameters structure.
@@ -202,7 +202,7 @@ typedef struct {
 
 /*** RF API functions ***/
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE))
 /*!******************************************************************
  * \fn RF_API_status_t RF_API_open(RF_API_config_t *rf_api_config)
  * \brief Open the RF driver.
@@ -309,7 +309,7 @@ RF_API_status_t RF_API_receive(RF_API_rx_data_t *rx_data);
 RF_API_status_t RF_API_get_dl_phy_content_and_rssi(sfx_u8 *dl_phy_content, sfx_u8 dl_phy_content_size, sfx_s16 *dl_rssi_dbm);
 #endif
 
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
 /*!******************************************************************
  * \fn RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_sense_params)
  * \brief In blocking mode, the function until the LBT condition is met or the MCU_API_TIMER_INSTANCE_LBT has elapsed.
@@ -321,7 +321,7 @@ RF_API_status_t RF_API_get_dl_phy_content_and_rssi(sfx_u8 *dl_phy_content, sfx_u
 RF_API_status_t RF_API_carrier_sense(RF_API_carrier_sense_parameters_t *carrier_sense_params);
 #endif
 
-#if (defined SIGFOX_EP_TIMER_REQUIRED) && (defined SIGFOX_EP_LATENCY_COMPENSATION)
+#if ((defined SIGFOX_EP_TIMER_REQUIRED) && (defined SIGFOX_EP_LATENCY_COMPENSATION))
 /*!******************************************************************
  * \fn RF_API_status_t RF_API_get_latency(RF_API_latency_t latency_type, sfx_u32 *latency_ms)
  * \brief Read radio latency in milliseconds.
