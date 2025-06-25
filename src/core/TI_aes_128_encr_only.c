@@ -36,6 +36,7 @@
  *      Author: Eric Peeters
  */
 
+#include "core/TI_aes_128_encr_only.h"
 
 // foreward sbox
 const unsigned char sbox[256] =   {
@@ -58,7 +59,7 @@ const unsigned char sbox[256] =   {
 0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 }; //F
 
 // multiply by 2 in the galois field
-unsigned char galois_mul2(unsigned char value)
+static unsigned char galois_mul2(unsigned char value)
 {
   signed char temp;
   // cast to signed value
@@ -112,15 +113,15 @@ void aes_encrypt(unsigned char *state, unsigned char *key)
       for (i=0; i <4; i++){
         // compute the current index
         buf4 = (i << 2);
-	buf1 = state[buf4] ^ state[buf4+1] ^ state[buf4+2] ^ state[buf4+3];
-	buf2 = state[buf4];
-	buf3 = state[buf4]^state[buf4+1]; buf3=galois_mul2(buf3); state[buf4] = state[buf4] ^ buf3 ^ buf1;
-	buf3 = state[buf4+1]^state[buf4+2]; buf3=galois_mul2(buf3); state[buf4+1] = state[buf4+1] ^ buf3 ^ buf1;
-	buf3 = state[buf4+2]^state[buf4+3]; buf3=galois_mul2(buf3); state[buf4+2] = state[buf4+2] ^ buf3 ^ buf1;
-	buf3 = state[buf4+3]^buf2;     buf3=galois_mul2(buf3); state[buf4+3] = state[buf4+3] ^ buf3 ^ buf1;
-	}
+        buf1 = state[buf4] ^ state[buf4+1] ^ state[buf4+2] ^ state[buf4+3];
+        buf2 = state[buf4];
+        buf3 = state[buf4]^state[buf4+1]; buf3=galois_mul2(buf3); state[buf4] = state[buf4] ^ buf3 ^ buf1;
+        buf3 = state[buf4+1]^state[buf4+2]; buf3=galois_mul2(buf3); state[buf4+1] = state[buf4+1] ^ buf3 ^ buf1;
+        buf3 = state[buf4+2]^state[buf4+3]; buf3=galois_mul2(buf3); state[buf4+2] = state[buf4+2] ^ buf3 ^ buf1;
+        buf3 = state[buf4+3]^buf2;     buf3=galois_mul2(buf3); state[buf4+3] = state[buf4+3] ^ buf3 ^ buf1;
+      }
     }
-	  
+
     //key schedule
     // compute the 16 next round key bytes
     key[0] = sbox[key[13]]^key[0]^rcon;
@@ -128,7 +129,7 @@ void aes_encrypt(unsigned char *state, unsigned char *key)
     key[2] = sbox[key[15]]^key[2];
     key[3] = sbox[key[12]]^key[3];
     for (i=4; i<16; i++) {
-	key[i] = key[i] ^ key[i-4];
+      key[i] = key[i] ^ key[i-4];
     }
     // compute the next Rcon value
     rcon = galois_mul2(rcon);

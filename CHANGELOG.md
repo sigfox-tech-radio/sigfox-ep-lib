@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v4.2](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.2) - 25 Jun 2025
+
+### Added
+
+* Add **new option in test API** to **bypass the frame builder** with a fixed byte. This feature can be used to facilitate the analysis of some RF parameters such as the spectrum template or the dynamic drift (continuous wave with 0xFF, continuous phase shifts with 0x00, etc.).
+
+### Fixed
+
+* Fix **frame transmission sequence** when the **uplink interframe** is **set to 0** (`t_ifu_ms` field of the message parameters structure ).
+* Fix **compilation issue** when the `SIGFOX_EP_T_IFU_MS` flag is **set to 0** in uplink only mode.
+* Remove **extra warnings**.
+
+### Changed
+
+* **Reduce memory footprint** when the **TX control** is enabled, by removing the recursive call of an internal function and factorizing the code in the process task.
+* Return **error by default in the weak functions** templates.
+
+### Known limitations
+
+* **Payload encryption** not supported.
+* **Secure element** not supported.
+
 ## [v4.1](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.1) - 29 Jan 2025
 
 ### Added

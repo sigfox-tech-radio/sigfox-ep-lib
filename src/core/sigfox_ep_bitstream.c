@@ -130,7 +130,7 @@ static const sfx_u16 SIGFOX_EP_BITSTREAM_UL_FT_APPLICATION_TABLE[5] = SIGFOX_EP_
 #endif /* SIGFOX_EP_UL_PAYLOAD_SIZE */
 #endif /* SIGFOX_EP_APPLICATION_MESSAGES */
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
 #ifdef SIGFOX_EP_SINGLE_FRAME
 static const sfx_u16 SIGFOX_EP_BITSTREAM_UL_FT_CONTROL = 0xAF67;
 #else
@@ -156,7 +156,7 @@ static const sfx_u16 SIGFOX_EP_BITSTREAM_UL_FT_CONTROL_TABLE[3] = { 0xAF67, 0xAF
 #define SIGFOX_EP_BITSTREAM_CONTROL_DL_CONFIRMATION_PAYLOAD_SIZE_BYTES  8
 #endif
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
 static const sfx_u8 SIGFOX_EP_BITSTREAM_UL_ENCRYPTION_LOOP_LUT[SIGFOX_UL_PAYLOAD_MAX_SIZE_BYTES + 1] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
 #endif
 
@@ -224,10 +224,10 @@ static SIGFOX_EP_BITSTREAM_status_t _aes_encrypt(void) {
 #endif
     sfx_u8 idx = 0;
     sfx_u8 aes_data[SIGFOX_EP_KEY_SIZE_BYTES];
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE >= 11)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE >= 11))
     sfx_u8 encryption_idx = 0;
 #endif
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
     sfx_u8 ul_auth_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + (sigfox_ep_bitstream_ctx.ul_payload_size_bytes));
 #else
     sfx_u8 ul_auth_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + SIGFOX_EP_UL_PAYLOAD_SIZE);
@@ -237,9 +237,9 @@ static SIGFOX_EP_BITSTREAM_status_t _aes_encrypt(void) {
     for (idx = 0; idx < SIGFOX_EP_KEY_SIZE_BYTES; idx++) {
         aes_data[idx] = 0x00;
     }
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE >= 11)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE >= 11))
     // Encryption loop.
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if( (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
     for (encryption_idx = 0; encryption_idx < SIGFOX_EP_BITSTREAM_UL_ENCRYPTION_LOOP_LUT[sigfox_ep_bitstream_ctx.ul_payload_size_bytes]; encryption_idx++) {
 #else
         for (encryption_idx = 0; encryption_idx < 2; encryption_idx++) {
@@ -299,18 +299,18 @@ static SIGFOX_EP_BITSTREAM_status_t _aes_encrypt(void) {
 #endif /* SIGFOX_EP_PUBLIC_KEY_CAPABLE */
     aes_encrypt(aes_data, (sfx_u8*) aes_key);
 #endif /* SIGFOX_EP_AES_HW */
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE >= 11)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE >= 11))
     }
 #endif
     // Add UL-AUTH field to bitstream.
     for (idx = 0; idx < (sigfox_ep_bitstream_ctx.ul_auth_size_bytes); idx++) {
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
         (sigfox_ep_bitstream_ctx.bitstream)[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + idx] = aes_data[idx];
 #else
         (sigfox_ep_bitstream_ctx.bitstream)[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + SIGFOX_EP_UL_PAYLOAD_SIZE + idx] = aes_data[idx];
 #endif
     }
-#if (defined SIGFOX_EP_ERROR_CODES) || ((defined SIGFOX_EP_PUBLIC_KEY_CAPABLE) && !(defined SIGFOX_EP_AES_HW))
+#if ((defined SIGFOX_EP_ERROR_CODES) || ((defined SIGFOX_EP_PUBLIC_KEY_CAPABLE) && !(defined SIGFOX_EP_AES_HW)))
 errors:
 #endif
     SIGFOX_RETURN();
@@ -320,7 +320,7 @@ errors:
 static SIGFOX_EP_BITSTREAM_status_t _add_crc16(void) {
     // Local variables.
     sfx_u16 ul_crc = 0;
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
     sfx_u8 crc_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes);
 #else
     sfx_u8 crc_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + SIGFOX_EP_UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes);
@@ -351,12 +351,12 @@ static SIGFOX_EP_BITSTREAM_status_t _add_crc16(void) {
 #endif
     ul_crc ^= 0xFFFF;
     // Add CRC16 field to bitstream.
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
     sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 0] = (sfx_u8) ((ul_crc >> 8) & 0xFF);
     sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 1] = (sfx_u8) ((ul_crc >> 0) & 0xFF);
 #else
-    sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + SIGFOX_EP_UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 0] = (ul_crc >> 8) & 0xFF;
-    sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + SIGFOX_EP_UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 1] = (ul_crc >> 0) & 0xFF;
+    sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + SIGFOX_EP_UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 0] = (sfx_u8) ((ul_crc >> 8) & 0xFF);
+    sigfox_ep_bitstream_ctx.bitstream[SIGFOX_EP_BITSTREAM_UL_PAYLOAD_INDEX + SIGFOX_EP_UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + 1] = (sfx_u8) ((ul_crc >> 0) & 0xFF);
 #endif
 #ifdef SIGFOX_EP_ERROR_CODES
 errors:
@@ -372,7 +372,7 @@ static void _convolve(SIGFOX_ul_frame_rank_t ul_frame_rank) {
     sfx_u8 idx = 0;
     sfx_u8 mask = 0;
     sfx_u8 state = 0;
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
     sfx_u8 convolution_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + sigfox_ep_bitstream_ctx.ul_payload_size_bytes + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES);
 #else
     sfx_u8 convolution_input_size_bytes = (sfx_u8) (SIGFOX_EP_BITSTREAM_LI_BF_REP_MC_SIZE_BYTES + SIGFOX_EP_ID_SIZE_BYTES + SIGFOX_EP_UL_PAYLOAD_SIZE + sigfox_ep_bitstream_ctx.ul_auth_size_bytes + SIGFOX_EP_BITSTREAM_UL_CRC_SIZE_BYTES);
@@ -471,7 +471,7 @@ static void _decode_bch(sfx_u8 *local_bitstream) {
 }
 #endif
 
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 /*******************************************************************/
 static SIGFOX_EP_BITSTREAM_status_t _check_common_parameters(SIGFOX_EP_BITSTREAM_common_t *common_params) {
     // Local variables.
@@ -509,7 +509,7 @@ errors:
 }
 #endif
 
-#if (defined SIGFOX_EP_APPLICATION_MESSAGES) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_APPLICATION_MESSAGES) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 /*******************************************************************/
 static SIGFOX_EP_BITSTREAM_status_t _check_application_parameters(SIGFOX_EP_BITSTREAM_application_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes) {
     // Local variables.
@@ -542,7 +542,7 @@ errors:
 }
 #endif
 
-#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if (((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 /*******************************************************************/
 static SIGFOX_EP_BITSTREAM_status_t _check_control_parameters(SIGFOX_EP_BITSTREAM_control_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes) {
     // Local variables.
@@ -559,7 +559,7 @@ errors:
 }
 #endif
 
-#if (defined SIGFOX_EP_BIDIRECTIONAL) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_BIDIRECTIONAL) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 /*******************************************************************/
 static SIGFOX_EP_BITSTREAM_status_t _check_dl_parameters(SIGFOX_EP_BITSTREAM_dl_frame_t *input, sfx_u8 *dl_payload) {
     // Local variables.
@@ -583,7 +583,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
 #ifdef SIGFOX_EP_ERROR_CODES
     SIGFOX_EP_BITSTREAM_status_t status = SIGFOX_EP_BITSTREAM_SUCCESS;
 #endif
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
     status = _check_application_parameters(input, bitstream, bitstream_size_bytes);
     SIGFOX_CHECK_STATUS(SIGFOX_EP_BITSTREAM_SUCCESS);
 #endif
@@ -594,7 +594,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_application_frame(SIGFOX_
 #ifdef SIGFOX_EP_PUBLIC_KEY_CAPABLE
     sigfox_ep_bitstream_ctx.key = (input->common_parameters.ep_key_type);
 #endif
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
     // UL payload size.
 #ifdef SIGFOX_EP_UL_PAYLOAD_SIZE
     sigfox_ep_bitstream_ctx.ul_payload_size_bytes = SIGFOX_EP_UL_PAYLOAD_SIZE;
@@ -749,7 +749,7 @@ errors:
 }
 #endif
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
 /*******************************************************************/
 SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_build_control_frame(SIGFOX_EP_BITSTREAM_control_frame_t *input, sfx_u8 *bitstream, sfx_u8 *bitstream_size_bytes) {
     // Local variables.
@@ -886,7 +886,7 @@ SIGFOX_EP_BITSTREAM_status_t SIGFOX_EP_BITSTREAM_decode_downlink_frame(SIGFOX_EP
     sfx_u8 aes_data[SIGFOX_EP_KEY_SIZE_BYTES];
     // Reset result.
     (*dl_frame_valid) = SIGFOX_FALSE;
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
     // Check parameters.
     status = _check_dl_parameters(input, dl_payload);
     SIGFOX_CHECK_STATUS(SIGFOX_EP_BITSTREAM_SUCCESS);

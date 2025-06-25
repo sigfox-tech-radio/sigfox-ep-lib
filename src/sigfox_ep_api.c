@@ -76,9 +76,7 @@ typedef enum {
     SIGFOX_EP_API_STATE_REGULATORY,
 #endif
     SIGFOX_EP_API_STATE_UL_MODULATION_PENDING,
-#if !(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0) || (defined SIGFOX_EP_BIDIRECTIONAL))
     SIGFOX_EP_API_STATE_UL_INTER_FRAME_TIMER,
-#endif
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     SIGFOX_EP_API_STATE_DL_TIMER,
     SIGFOX_EP_API_STATE_DL_LISTENING,
@@ -119,6 +117,7 @@ typedef union {
         sfx_u8 tx_control_pre_check_cplt :1;
         sfx_u8 tx_control_post_check_cplt :1;
         sfx_u8 low_level_error :1;
+        sfx_u8 internal_request :1;
     } field;
     sfx_u16 all;
 } SIGFOX_EP_API_irq_flags_t;
@@ -150,7 +149,7 @@ typedef struct {
 #endif
 #endif
     // Message data.
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     SIGFOX_EP_API_common_t *common_parameters_ptr;
 #endif
 #ifdef SIGFOX_EP_APPLICATION_MESSAGES
@@ -175,7 +174,7 @@ typedef struct {
     SIGFOX_EP_API_control_message_t local_control_message;
 #endif
 #endif
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
     sfx_s16 temperature_tenth_degrees;
     sfx_u16 voltage_tx_mv;
     sfx_u16 voltage_idle_mv;
@@ -186,7 +185,7 @@ typedef struct {
     SIGFOX_ul_frame_rank_t ul_frame_rank;
     sfx_u8 frame_success_count;
 #endif
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
     sfx_u32 interframe_ms; // Tifu, Tifb or Tconf.
 #endif
 #ifdef SIGFOX_EP_CERTIFICATION
@@ -196,34 +195,44 @@ typedef struct {
 
 /*** SIGFOX EP API local global variables ***/
 
-static SIGFOX_EP_API_context_t sigfox_ep_api_ctx = { .rc_ptr = SIGFOX_NULL, .state = SIGFOX_EP_API_STATE_CLOSED, .internal_flags.all = 0, .irq_flags.all = 0, .message_status.all = 0,
+static SIGFOX_EP_API_context_t sigfox_ep_api_ctx = {
+    .rc_ptr = SIGFOX_NULL,
+    .state = SIGFOX_EP_API_STATE_CLOSED,
+    .internal_flags.all = 0,
+    .irq_flags.all = 0,
+    .message_status.all = 0,
 #ifndef SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER
     .message_counter_rollover = 0,
 #endif
 #ifdef SIGFOX_EP_ASYNCHRONOUS
 #ifdef SIGFOX_EP_ERROR_CODES
-    .mcu_api_status_from_callback = MCU_API_SUCCESS, .rf_api_status_from_callback = RF_API_SUCCESS,
+    .mcu_api_status_from_callback = MCU_API_SUCCESS,
+    .rf_api_status_from_callback = RF_API_SUCCESS,
 #endif /* SIGFOX_EP_ERROR_CODES */
 #endif /* SIGFOX_EP_ASYNCHRONOUS */
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP))
     .common_parameters_ptr = SIGFOX_NULL,
 #endif
 #ifdef SIGFOX_EP_APPLICATION_MESSAGES
     .application_message_ptr = SIGFOX_NULL,
 #ifdef SIGFOX_EP_BIDIRECTIONAL
-    .dl_status = SIGFOX_FALSE, .dl_rssi_dbm = 0,
+    .dl_status = SIGFOX_FALSE,
+    .dl_rssi_dbm = 0,
 #endif /* SIGFOX_EP_BIDIRECTIONAL */
 #endif /* SIGFOX_EP_APPLICATION_MESSAGES */
 #ifdef SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE
     .control_message_ptr = SIGFOX_NULL,
 #endif
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
-    .temperature_tenth_degrees = 0, .voltage_tx_mv = 0, .voltage_idle_mv = 0,
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
+    .temperature_tenth_degrees = 0,
+    .voltage_tx_mv = 0,
+    .voltage_idle_mv = 0,
 #endif
 #ifndef SIGFOX_EP_SINGLE_FRAME
-    .ul_frame_rank = SIGFOX_UL_FRAME_RANK_1, .frame_success_count = 0,
+    .ul_frame_rank = SIGFOX_UL_FRAME_RANK_1,
+    .frame_success_count = 0,
 #endif
-    };
+};
 #ifdef SIGFOX_EP_VERBOSE
 static const sfx_u8 SIGFOX_EP_API_VERSION[] = SIGFOX_EP_LIB_VERSION;
 static const sfx_u8 SIGFOX_EP_API_FLAGS[] = SIGFOX_EP_FLAGS;
@@ -300,7 +309,7 @@ static void _MCU_API_error_cb(void) {
 #endif
 #endif
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && ((!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0))) || (defined SIGFOX_EP_BIDIRECTIONAL))
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_INTERFRAME_TIMER_REQUIRED))
 /*******************************************************************/
 static void _MCU_API_timer1_cplt_cb(void) {
     // Set local flag.
@@ -309,7 +318,7 @@ static void _MCU_API_timer1_cplt_cb(void) {
 }
 #endif
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_BIDIRECTIONAL))
 /*******************************************************************/
 static void _MCU_API_timer2_cplt_cb(void) {
     // Set local flag.
@@ -355,7 +364,7 @@ static void _RF_API_tx_cplt_cb(void) {
 }
 #endif
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_BIDIRECTIONAL))
 /*******************************************************************/
 static void _RF_API_rx_data_received_cb(void) {
     // Set local flag.
@@ -364,7 +373,7 @@ static void _RF_API_rx_data_received_cb(void) {
 }
 #endif
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_REGULATORY)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_REGULATORY))
 /*******************************************************************/
 static void _SIGFOX_TX_CONTROL_process_cb(void) {
     // Set local flag and result.
@@ -373,7 +382,7 @@ static void _SIGFOX_TX_CONTROL_process_cb(void) {
 }
 #endif
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_REGULATORY)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_REGULATORY))
 /*******************************************************************/
 static void _SIGFOX_TX_CONTROL_pre_check_cplt_cb(void) {
     // Set local flag and result.
@@ -382,7 +391,7 @@ static void _SIGFOX_TX_CONTROL_pre_check_cplt_cb(void) {
 }
 #endif
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_REGULATORY)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && (defined SIGFOX_EP_REGULATORY))
 /*******************************************************************/
 static void _SIGFOX_TX_CONTROL_post_check_cplt_cb(void) {
     // Set local flag and result.
@@ -391,7 +400,7 @@ static void _SIGFOX_TX_CONTROL_post_check_cplt_cb(void) {
 }
 #endif
 
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES) && (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES) && (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)))
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _check_common_parameters(SIGFOX_EP_API_common_t *common_params) {
     // Local variables.
@@ -459,7 +468,7 @@ errors:
 }
 #endif
 
-#if (defined SIGFOX_EP_APPLICATION_MESSAGES) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_APPLICATION_MESSAGES) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _check_application_message(SIGFOX_EP_API_application_message_t *app_msg) {
     // Local variables.
@@ -468,7 +477,7 @@ static SIGFOX_EP_API_status_t _check_application_message(SIGFOX_EP_API_applicati
     if (app_msg == SIGFOX_NULL) {
         SIGFOX_EXIT_ERROR(SIGFOX_EP_API_ERROR_NULL_PARAMETER);
     }
-#if !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0)
+#if (!(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0))
     // Check payload.
     if ((app_msg->type) == SIGFOX_APPLICATION_MESSAGE_TYPE_BYTE_ARRAY) {
         // Payload is required.
@@ -489,7 +498,7 @@ static SIGFOX_EP_API_status_t _check_application_message(SIGFOX_EP_API_applicati
         }
     }
 #endif
-#if (defined SIGFOX_EP_BIDIRECTIONAL) && !(defined SIGFOX_EP_T_CONF_MS)
+#if ((defined SIGFOX_EP_BIDIRECTIONAL) && !(defined SIGFOX_EP_T_CONF_MS))
     // Check downlink parameters.
     if ((app_msg->bidirectional_flag) == SIGFOX_TRUE) {
         // Check DL confirmation delay.
@@ -503,7 +512,7 @@ errors:
 }
 #endif
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) && (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _check_control_message(SIGFOX_EP_API_control_message_t *ctrl_msg) {
     // Local variables.
@@ -528,14 +537,14 @@ static SIGFOX_EP_API_status_t _store_application_message(SIGFOX_EP_API_applicati
 #ifdef SIGFOX_EP_ERROR_CODES
     SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #endif
-#if (defined SIGFOX_EP_ASYNCHRONOUS) && (((defined SIGFOX_EP_UL_PAYLOAD_SIZE) && (SIGFOX_EP_UL_PAYLOAD_SIZE > 0)) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) && (((defined SIGFOX_EP_UL_PAYLOAD_SIZE) && (SIGFOX_EP_UL_PAYLOAD_SIZE > 0)) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)))
     sfx_u8 idx = 0;
 #endif
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
     // Check parameters.
     status = _check_application_message(application_message);
     SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     status = _check_common_parameters(&(application_message->common_parameters));
     SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
 #endif
@@ -593,11 +602,11 @@ static SIGFOX_EP_API_status_t _store_application_message(SIGFOX_EP_API_applicati
 #endif
 #endif
     // Update pointers to local data.
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     sigfox_ep_api_ctx.common_parameters_ptr = &(sigfox_ep_api_ctx.local_application_message.common_parameters);
 #endif
     sigfox_ep_api_ctx.application_message_ptr = &(sigfox_ep_api_ctx.local_application_message);
-#if !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0)
+#if (!(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0))
     (sigfox_ep_api_ctx.application_message_ptr)->ul_payload = (sfx_u8*) sigfox_ep_api_ctx.local_ul_payload;
 #endif
 #else /* SIGFOX_EP_ASYNCHRONOUS */
@@ -606,11 +615,11 @@ static SIGFOX_EP_API_status_t _store_application_message(SIGFOX_EP_API_applicati
 #ifdef SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE
     sigfox_ep_api_ctx.control_message_ptr = SIGFOX_NULL;
 #endif
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     sigfox_ep_api_ctx.common_parameters_ptr = &(application_message->common_parameters);
 #endif
 #endif /* SIGFOX_EP_ASYNCHRONOUS */
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 errors:
     if (status != SIGFOX_EP_API_SUCCESS) {
         sigfox_ep_api_ctx.message_status.field.execution_error = 1;
@@ -627,11 +636,11 @@ static SIGFOX_EP_API_status_t _store_control_message(SIGFOX_EP_API_control_messa
     // Local variables.
     SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
 #endif
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
     // Check parameters.
     status = _check_control_message(control_message);
     SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     status = _check_common_parameters(&(control_message->common_parameters));
     SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
 #endif
@@ -661,7 +670,7 @@ static SIGFOX_EP_API_status_t _store_control_message(SIGFOX_EP_API_control_messa
     sigfox_ep_api_ctx.uplink_cplt_cb = (control_message->uplink_cplt_cb);
     sigfox_ep_api_ctx.message_cplt_cb = (control_message->message_cplt_cb);
     // Update pointer to local data.
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     sigfox_ep_api_ctx.common_parameters_ptr = &(sigfox_ep_api_ctx.local_control_message.common_parameters);
 #endif
     sigfox_ep_api_ctx.control_message_ptr = &(sigfox_ep_api_ctx.local_control_message);
@@ -671,11 +680,11 @@ static SIGFOX_EP_API_status_t _store_control_message(SIGFOX_EP_API_control_messa
     sigfox_ep_api_ctx.application_message_ptr = SIGFOX_NULL;
 #endif
     sigfox_ep_api_ctx.control_message_ptr = control_message;
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     sigfox_ep_api_ctx.common_parameters_ptr = &(control_message->common_parameters);
 #endif
 #endif /* SIGFOX_EP_ASYNCHRONOUS */
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
 errors:
     if (status != SIGFOX_EP_API_SUCCESS) {
         sigfox_ep_api_ctx.message_status.field.execution_error = 1;
@@ -791,7 +800,7 @@ static sfx_bool _is_last_frame_of_uplink_sequence(void) {
     return last_uplink_frame;
 }
 
-#if (defined SIGFOX_EP_REGULATORY) || (defined SIGFOX_EP_ASYNCHRONOUS)
+#if ((defined SIGFOX_EP_REGULATORY) || (defined SIGFOX_EP_ASYNCHRONOUS))
 /*******************************************************************/
 static sfx_bool _is_last_frame_of_message_sequence(void) {
     // Local variables.
@@ -856,7 +865,7 @@ static void _set_tx_control_parameters(SIGFOX_TX_CONTROL_check_type check_type, 
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     tx_control_params->dl_conf_message = sigfox_ep_api_ctx.internal_flags.field.dl_conf_message;
 #endif
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
     tx_control_params->interframe_ms = sigfox_ep_api_ctx.interframe_ms; // Tifu, Tifb or Tconf.
 #endif
 #ifdef SIGFOX_EP_CERTIFICATION
@@ -877,7 +886,7 @@ static void _set_tx_control_parameters(SIGFOX_TX_CONTROL_check_type check_type, 
 }
 #endif
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _read_mcu_voltage_temperature(void) {
     // Local variables.
@@ -1041,6 +1050,9 @@ static SIGFOX_EP_API_status_t _build_bitstream(void) {
     // Local variables.
     SIGFOX_EP_API_status_t status = SIGFOX_EP_API_ERROR_SEND_FUNCTION_POINTER;
 #endif
+#ifdef SIGFOX_EP_CERTIFICATION
+    sfx_u8 idx = 0;
+#endif
 #ifdef SIGFOX_EP_APPLICATION_MESSAGES
     if ((sigfox_ep_api_ctx.internal_flags.field.control_message == 0) && (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message == 0)) {
 #ifdef SIGFOX_EP_ERROR_CODES
@@ -1048,7 +1060,11 @@ static SIGFOX_EP_API_status_t _build_bitstream(void) {
 #else
         _build_application_frame();
 #endif
+#ifdef SIGFOX_EP_CERTIFICATION
+        goto bypass_check;
+#else
         goto end;
+#endif
     }
 #endif
 #ifdef SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE
@@ -1058,7 +1074,11 @@ static SIGFOX_EP_API_status_t _build_bitstream(void) {
 #else
         _build_control_keep_alive_frame();
 #endif
+#ifdef SIGFOX_EP_CERTIFICATION
+        goto bypass_check;
+#else
         goto end;
+#endif
     }
 #endif
 #ifdef SIGFOX_EP_BIDIRECTIONAL
@@ -1071,11 +1091,23 @@ static SIGFOX_EP_API_status_t _build_bitstream(void) {
         goto end;
     }
 #endif
+#ifdef SIGFOX_EP_CERTIFICATION
+bypass_check:
+    // Check bypass flag.
+    if (sigfox_ep_api_ctx.test_parameters.flags.field.ul_bitstream_enable == 0) {
+        // Fill uplink bitstream with given byte.
+        for (idx = 0; idx < SIGFOX_UL_BITSTREAM_SIZE_BYTES; idx++) {
+            sigfox_ep_api_ctx.bitstream[idx] = sigfox_ep_api_ctx.test_parameters.ul_bitstream_byte;
+        }
+    }
+#endif
+#if ((defined SIGFOX_EP_BIDIRECTIONAL) || (!(defined SIGFOX_EP_CERTIFICATION)))
 end:
+#endif
     SIGFOX_RETURN();
 }
 
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
 /*******************************************************************/
 static void _compute_interframe(void) {
 #ifndef SIGFOX_EP_SINGLE_FRAME
@@ -1272,7 +1304,7 @@ errors:
 }
 #endif
 
-#if (!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0))) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _start_timer(sfx_u32 duration_ms, MCU_API_timer_instance_t timer_instance, MCU_API_timer_reason_t timer_reason) {
 #ifdef SIGFOX_EP_ERROR_CODES
@@ -1329,7 +1361,7 @@ static SIGFOX_EP_API_status_t _start_timer(sfx_u32 duration_ms, MCU_API_timer_in
 #endif /* SIGFOX_EP_BIDIRECTIONAL */
     // Compute offset.
     switch (timer_reason) {
-#if !(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0) || (defined SIGFOX_EP_BIDIRECTIONAL))
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0) || (defined SIGFOX_EP_BIDIRECTIONAL)))
     case MCU_API_TIMER_REASON_T_IFX:
         offset -= (sfx_s32) rf_latency[RF_API_LATENCY_DE_INIT_TX];
         offset -= (sfx_s32) rf_latency[RF_API_LATENCY_SEND_STOP];
@@ -1390,15 +1422,12 @@ static SIGFOX_EP_API_status_t _start_timer(sfx_u32 duration_ms, MCU_API_timer_in
 #else
     MCU_API_timer_start(&mcu_timer);
 #endif
-#if (defined SIGFOX_EP_PARAMETERS_CHECK) || (defined SIGFOX_EP_LATENCY_COMPENSATION) || (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_PARAMETERS_CHECK) || (defined SIGFOX_EP_LATENCY_COMPENSATION) || (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_ERROR_CODES))
 errors:
 #endif
     SIGFOX_RETURN();
 }
 #endif
-
-/*******************************************************************/
-static SIGFOX_EP_API_status_t _end_transmission(void);
 
 /*******************************************************************/
 static SIGFOX_EP_API_status_t _start_transmission(void) {
@@ -1411,7 +1440,6 @@ static SIGFOX_EP_API_status_t _start_transmission(void) {
 #endif
 #ifdef SIGFOX_EP_REGULATORY
     SIGFOX_TX_CONTROL_parameters_t tx_control_params;
-    SIGFOX_TX_CONTROL_result_t tx_control_pre_check_result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
 #endif
     // Reset TX success flag.
     sigfox_ep_api_ctx.internal_flags.field.frame_success = 0;
@@ -1450,52 +1478,11 @@ static SIGFOX_EP_API_status_t _start_transmission(void) {
     SIGFOX_TX_CONTROL_check(&tx_control_params);
 #endif
     sigfox_ep_api_ctx.internal_flags.field.tx_control_pre_check_running = 1;
+    // Update state.
+    sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_REGULATORY;
 #ifndef SIGFOX_EP_ASYNCHRONOUS
     sigfox_ep_api_ctx.irq_flags.field.tx_control_pre_check_cplt = 1; // Set flag manually in blocking mode.
 #endif
-    // Read result.
-#ifdef SIGFOX_EP_ERROR_CODES
-    sigfox_tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_pre_check_result);
-    SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
-#else
-    SIGFOX_TX_CONTROL_get_result(&tx_control_pre_check_result);
-#endif
-    // Update state according to result.
-    switch (tx_control_pre_check_result) {
-    case SIGFOX_TX_CONTROL_RESULT_ALLOWED:
-        // Send frame.
-#ifdef SIGFOX_EP_ERROR_CODES
-        status = _send_frame();
-        SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-        _send_frame();
-#endif
-        // Update state.
-        sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_UL_MODULATION_PENDING;
-        break;
-    case SIGFOX_TX_CONTROL_RESULT_FORBIDDEN:
-        // Set network error flag.
-        sigfox_ep_api_ctx.message_status.field.network_error = 1;
-#ifdef SIGFOX_EP_ERROR_STACK
-        // Add error to stack.
-        SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_API, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
-#endif
-        // Try next frame.
-#ifdef SIGFOX_EP_ERROR_CODES
-        status = _end_transmission();
-        SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-        _end_transmission();
-#endif
-        break;
-    case SIGFOX_TX_CONTROL_RESULT_PENDING:
-        // Wait for completion.
-        sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_REGULATORY;
-        break;
-    default:
-        SIGFOX_EXIT_ERROR(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
-        break;
-    }
 #else /* SIGFOX_EP_REGULATORY */
     // Send frame.
 #ifdef SIGFOX_EP_ERROR_CODES
@@ -1507,7 +1494,7 @@ static SIGFOX_EP_API_status_t _start_transmission(void) {
     // Update state.
     sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_UL_MODULATION_PENDING;
 #endif /* SIGFOX_EP_REGULATORY */
-#if (defined SIGFOX_EP_ERROR_CODES) || (defined SIGFOX_EP_REGULATORY)
+#if ((defined SIGFOX_EP_ERROR_CODES) || ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_ERROR_CODES)))
 errors:
 #endif
     SIGFOX_RETURN();
@@ -1676,18 +1663,15 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 #else
             _start_timer(sigfox_ep_api_ctx.interframe_ms, MCU_API_TIMER_INSTANCE_T_IFX, MCU_API_TIMER_REASON_T_IFX);
 #endif
-            // Update state.
-            state = SIGFOX_EP_API_STATE_UL_INTER_FRAME_TIMER;
         }
+#ifdef SIGFOX_EP_ASYNCHRONOUS
         else {
-            // Inter-frame delay set to 0, directly start next frame.
-#ifdef SIGFOX_EP_ERROR_CODES
-            status = _start_transmission();
-            SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-            _start_transmission();
-#endif
+            // Set internal IRQ to start the next frame instantaneously.
+            sigfox_ep_api_ctx.irq_flags.field.internal_request = 1;
         }
+#endif
+        // Update state.
+        state = SIGFOX_EP_API_STATE_UL_INTER_FRAME_TIMER;
     }
 #else /* SIGFOX_EP_BIDIRECTIONAL */
     // Compute next state.
@@ -1695,6 +1679,7 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
         state = SIGFOX_EP_API_STATE_READY;
     }
     else {
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
         // Start inter-frame timer if required.
         if ((sigfox_ep_api_ctx.interframe_ms) != 0) {
 #ifdef SIGFOX_EP_ERROR_CODES
@@ -1703,18 +1688,21 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 #else
             _start_timer(sigfox_ep_api_ctx.interframe_ms, MCU_API_TIMER_INSTANCE_T_IFX, MCU_API_TIMER_REASON_T_IFX);
 #endif
-            // Update state.
-            state = SIGFOX_EP_API_STATE_UL_INTER_FRAME_TIMER;
         }
+#ifdef SIGFOX_EP_ASYNCHRONOUS
         else {
-            // Inter-frame delay set to 0, directly start next frame.
-#ifdef SIGFOX_EP_ERROR_CODES
-            status = _start_transmission();
-            SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-            _start_transmission();
-#endif
+            // Set internal IRQ to start the next frame instantaneously.
+            sigfox_ep_api_ctx.irq_flags.field.internal_request = 1;
         }
+#endif
+#else
+#ifdef SIGFOX_EP_ASYNCHRONOUS
+        // Set internal IRQ to start the next frame instantaneously.
+        sigfox_ep_api_ctx.irq_flags.field.internal_request = 1;
+#endif
+#endif
+        // Update state.
+        state = SIGFOX_EP_API_STATE_UL_INTER_FRAME_TIMER;
     }
 #endif /* SIGFOX_EP_BIDIRECTIONAL */
 #endif /* SIGFOX_EP_SINGLE_FRAME */
@@ -1735,7 +1723,7 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 #endif
     // Update global state.
     sigfox_ep_api_ctx.state = state;
-#if (defined SIGFOX_EP_ERROR_CODES) && (!defined SIGFOX_EP_SINGLE_FRAME)
+#if ((defined SIGFOX_EP_ERROR_CODES) && (defined SIGFOX_EP_INTERFRAME_TIMER_REQUIRED) && !(defined SIGFOX_EP_SINGLE_FRAME))
 errors:
 #endif
     SIGFOX_RETURN();
@@ -1753,7 +1741,6 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
 #endif
 #ifdef SIGFOX_EP_REGULATORY
     SIGFOX_TX_CONTROL_parameters_t tx_control_params;
-    SIGFOX_TX_CONTROL_result_t tx_control_post_check_result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
 #endif
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     sfx_u32 dl_t_w_ms = 0;
@@ -1828,50 +1815,11 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
     SIGFOX_TX_CONTROL_check(&tx_control_params);
 #endif
     sigfox_ep_api_ctx.internal_flags.field.tx_control_post_check_running = 1;
+    // Update state.
+    sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_REGULATORY;
 #ifndef SIGFOX_EP_ASYNCHRONOUS
     sigfox_ep_api_ctx.irq_flags.field.tx_control_post_check_cplt = 1; // Set flag manually in blocking mode.
 #endif
-    // Read result.
-#ifdef SIGFOX_EP_ERROR_CODES
-    sigfox_tx_control_status = SIGFOX_TX_CONTROL_get_result(&tx_control_post_check_result);
-    SIGFOX_TX_CONTROL_check_status(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
-#else
-    SIGFOX_TX_CONTROL_get_result(&tx_control_post_check_result);
-#endif
-    // Update state according to result.
-    switch (tx_control_post_check_result) {
-    case SIGFOX_TX_CONTROL_RESULT_FORBIDDEN:
-        // Set network error flag.
-        sigfox_ep_api_ctx.message_status.field.network_error = 1;
-#ifdef SIGFOX_EP_ERROR_STACK
-        // Add error to stack.
-        SIGFOX_ERROR_stack(SIGFOX_ERROR_SOURCE_SIGFOX_EP_API, SIGFOX_EP_API_ERROR_TX_FORBIDDEN);
-#endif
-        // Compute next state.
-#ifdef SIGFOX_EP_ERROR_CODES
-        status = _compute_state_after_transmission();
-        SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-        _compute_state_after_transmission();
-#endif
-        break;
-    case SIGFOX_TX_CONTROL_RESULT_ALLOWED:
-        // Compute next state.
-#ifdef SIGFOX_EP_ERROR_CODES
-        status = _compute_state_after_transmission();
-        SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-        _compute_state_after_transmission();
-#endif
-        break;
-    case SIGFOX_TX_CONTROL_RESULT_PENDING:
-        // Wait for completion.
-        sigfox_ep_api_ctx.state = SIGFOX_EP_API_STATE_REGULATORY;
-        break;
-    default:
-        SIGFOX_EXIT_ERROR(SIGFOX_EP_API_ERROR_DRIVER_SIGFOX_TX_CONTROL);
-        break;
-    }
 #else /* SIGFOX_EP_REGULATORY */
     // Compute next state.
 #ifdef SIGFOX_EP_ERROR_CODES
@@ -1881,7 +1829,7 @@ static SIGFOX_EP_API_status_t _end_transmission(void) {
     _compute_state_after_transmission();
 #endif
 #endif /* SIGFOX_EP_REGULATORY */
-#if (defined SIGFOX_EP_ERROR_CODES) || (defined SIGFOX_EP_REGULATORY)
+#if ((defined SIGFOX_EP_ERROR_CODES) || ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_ERROR_CODES)))
 errors:
 #endif
     SIGFOX_RETURN();
@@ -2008,7 +1956,7 @@ static void _message_prepare(void) {
     sigfox_ep_api_ctx.ul_frame_rank = SIGFOX_UL_FRAME_RANK_1;
     sigfox_ep_api_ctx.frame_success_count = 0;
 #endif
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
     // Compute interframe duration.
     _compute_interframe();
 #endif
@@ -2019,10 +1967,10 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
     // Local variables.
 #ifdef SIGFOX_EP_ERROR_CODES
     SIGFOX_EP_API_status_t status = SIGFOX_EP_API_SUCCESS;
-#if (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_BIDIRECTIONAL))
     RF_API_status_t rf_api_status = RF_API_SUCCESS;
 #endif
-#if (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_BIDIRECTIONAL) || (!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0)))
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_BIDIRECTIONAL) || (!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0))))
     MCU_API_status_t mcu_api_status = MCU_API_SUCCESS;
 #endif
 #ifdef SIGFOX_EP_REGULATORY
@@ -2036,6 +1984,8 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #ifdef SIGFOX_EP_REGULATORY
     SIGFOX_TX_CONTROL_result_t tx_control_result = SIGFOX_TX_CONTROL_RESULT_FORBIDDEN;
 #endif
+    // Clear internal request.
+    sigfox_ep_api_ctx.irq_flags.field.internal_request = 0;
     // Check library is opened.
     _CHECK_LIBRARY_STATE(== SIGFOX_EP_API_STATE_CLOSED);
 #ifdef SIGFOX_EP_ASYNCHRONOUS
@@ -2255,29 +2205,10 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
 #endif
         }
         break;
-#if !(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0) || (defined SIGFOX_EP_BIDIRECTIONAL))
     case SIGFOX_EP_API_STATE_UL_INTER_FRAME_TIMER:
-#ifndef SIGFOX_EP_ASYNCHRONOUS
-        // Wait for timer completion.
-#ifdef SIGFOX_EP_ERROR_CODES
-        mcu_api_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_IFX);
-        MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
-#else
-        MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_IFX);
-#endif
-        sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 1; // Set flag manually in blocking mode.
-#endif
-        // Check timer completion flag.
-        if (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0) {
-            // Stop timer.
-#ifdef SIGFOX_EP_ERROR_CODES
-            mcu_api_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_IFX);
-            MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
-#else
-            MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_IFX);
-#endif
-            sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 0;
-            // Start next frame.
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
+        if (sigfox_ep_api_ctx.interframe_ms == 0) {
+            // Directly start next frame.
 #ifdef SIGFOX_EP_ERROR_CODES
             status = _start_transmission();
             SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
@@ -2285,8 +2216,46 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
             _start_transmission();
 #endif
         }
-        break;
+        else {
+#ifndef SIGFOX_EP_ASYNCHRONOUS
+            // Wait for timer completion.
+#ifdef SIGFOX_EP_ERROR_CODES
+            mcu_api_status = MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_IFX);
+            MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
+#else
+            MCU_API_timer_wait_cplt(MCU_API_TIMER_INSTANCE_T_IFX);
 #endif
+            sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 1; // Set flag manually in blocking mode.
+#endif
+            // Check timer completion flag.
+            if (sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt != 0) {
+                // Stop timer.
+#ifdef SIGFOX_EP_ERROR_CODES
+                mcu_api_status = MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_IFX);
+                MCU_API_check_status(SIGFOX_EP_API_ERROR_DRIVER_MCU_API);
+#else
+                MCU_API_timer_stop(MCU_API_TIMER_INSTANCE_T_IFX);
+#endif
+                sigfox_ep_api_ctx.irq_flags.field.mcu_timer1_cplt = 0;
+                // Start next frame.
+#ifdef SIGFOX_EP_ERROR_CODES
+                status = _start_transmission();
+                SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
+#else
+                _start_transmission();
+#endif
+            }
+        }
+#else
+        // Directly start next frame.
+#ifdef SIGFOX_EP_ERROR_CODES
+        status = _start_transmission();
+        SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
+#else
+        _start_transmission();
+#endif
+#endif
+        break;
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     case SIGFOX_EP_API_STATE_DL_TIMER:
 #ifndef SIGFOX_EP_ASYNCHRONOUS
@@ -2641,14 +2610,14 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
     SIGFOX_TX_CONTROL_status_t sigfox_tx_control_status = SIGFOX_TX_CONTROL_SUCCESS;
 #endif
 #endif /* SIGFOX_EP_ERROR_CODES */
-#if (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE))
     MCU_API_config_t mcu_config;
     RF_API_config_t rf_config;
 #endif
 #ifdef SIGFOX_EP_REGULATORY
     SIGFOX_TX_CONTROL_config_t tx_control_config;
 #endif
-#if (defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) && (defined SIGFOX_EP_PARAMETERS_CHECK)
+#if ((defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) && (defined SIGFOX_EP_PARAMETERS_CHECK))
     sfx_bool message_counter_rollover_valid = SIGFOX_FALSE;
 #endif
 #ifdef SIGFOX_EP_ERROR_STACK
@@ -2695,7 +2664,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
     sigfox_ep_api_ctx.message_counter_rollover = SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST[config->message_counter_rollover];
 #endif  /* SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER */
     // Init MCU API.
-#if (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE))
     mcu_config.rc = sigfox_ep_api_ctx.rc_ptr;
 #ifdef SIGFOX_EP_ASYNCHRONOUS
     mcu_config.process_cb = (MCU_API_process_cb_t) &_MCU_API_process_cb;
@@ -2709,7 +2678,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
 #endif
 #endif
     // Init RF API.
-#if (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE))
     rf_config.rc = sigfox_ep_api_ctx.rc_ptr;
 #ifdef SIGFOX_EP_ASYNCHRONOUS
     rf_config.process_cb = (RF_API_process_cb_t) &_RF_API_process_cb;
@@ -2860,7 +2829,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_send_application_message(SIGFOX_EP_API_appl
     sigfox_ep_api_ctx.test_parameters.dl_t_w_ms = 0;
     sigfox_ep_api_ctx.test_parameters.dl_t_rx_ms = 0;
 #endif
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
     sigfox_ep_api_ctx.test_parameters.lbt_cs_max_duration_first_frame_ms = 0;
 #endif
 #endif
@@ -2874,7 +2843,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_send_application_message(SIGFOX_EP_API_appl
 }
 #endif
 
-#if (defined SIGFOX_EP_CERTIFICATION) && (defined SIGFOX_EP_APPLICATION_MESSAGES)
+#if ((defined SIGFOX_EP_CERTIFICATION) && (defined SIGFOX_EP_APPLICATION_MESSAGES))
 /*******************************************************************/
 SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_application_message(SIGFOX_EP_API_application_message_t *application_message, SIGFOX_EP_API_TEST_parameters_t *test_parameters) {
 #ifdef SIGFOX_EP_ERROR_CODES
@@ -2888,14 +2857,15 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_application_message(SIGFOX_EP_API
     }
 #endif
     // Update local test parameters.
-    sigfox_ep_api_ctx.test_parameters.tx_frequency_hz = (test_parameters->tx_frequency_hz);
     sigfox_ep_api_ctx.test_parameters.flags = (test_parameters->flags);
+    sigfox_ep_api_ctx.test_parameters.ul_bitstream_byte = (test_parameters->ul_bitstream_byte);
+    sigfox_ep_api_ctx.test_parameters.tx_frequency_hz = (test_parameters->tx_frequency_hz);
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     sigfox_ep_api_ctx.test_parameters.rx_frequency_hz = (test_parameters->rx_frequency_hz);
     sigfox_ep_api_ctx.test_parameters.dl_t_w_ms = (test_parameters->dl_t_w_ms);
     sigfox_ep_api_ctx.test_parameters.dl_t_rx_ms = (test_parameters->dl_t_rx_ms);
 #endif
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
     sigfox_ep_api_ctx.test_parameters.lbt_cs_max_duration_first_frame_ms = (test_parameters->lbt_cs_max_duration_first_frame_ms);
 #endif
     // Send message.
@@ -2927,7 +2897,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_send_control_message(SIGFOX_EP_API_control_
     sigfox_ep_api_ctx.test_parameters.dl_t_w_ms = 0;
     sigfox_ep_api_ctx.test_parameters.dl_t_rx_ms = 0;
 #endif
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
     sigfox_ep_api_ctx.test_parameters.lbt_cs_max_duration_first_frame_ms = 0;
 #endif
 #endif
@@ -2941,7 +2911,7 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_send_control_message(SIGFOX_EP_API_control_
 }
 #endif
 
-#if (defined SIGFOX_EP_CERTIFICATION) && (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE)
+#if ((defined SIGFOX_EP_CERTIFICATION) && (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE))
 /*******************************************************************/
 SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_control_message(SIGFOX_EP_API_control_message_t *control_message, SIGFOX_EP_API_TEST_parameters_t *test_parameters) {
 #ifdef SIGFOX_EP_ERROR_CODES
@@ -2955,14 +2925,15 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_TEST_send_control_message(SIGFOX_EP_API_con
     }
 #endif
     // Update local test parameters.
-    sigfox_ep_api_ctx.test_parameters.tx_frequency_hz = (test_parameters->tx_frequency_hz);
     sigfox_ep_api_ctx.test_parameters.flags = (test_parameters->flags);
+    sigfox_ep_api_ctx.test_parameters.ul_bitstream_byte = (test_parameters->ul_bitstream_byte);
+    sigfox_ep_api_ctx.test_parameters.tx_frequency_hz = (test_parameters->tx_frequency_hz);
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     sigfox_ep_api_ctx.test_parameters.rx_frequency_hz = (test_parameters->rx_frequency_hz);
     sigfox_ep_api_ctx.test_parameters.dl_t_w_ms = (test_parameters->dl_t_w_ms);
     sigfox_ep_api_ctx.test_parameters.dl_t_rx_ms = (test_parameters->dl_t_rx_ms);
 #endif
-#if (defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT)
+#if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))
     sigfox_ep_api_ctx.test_parameters.lbt_cs_max_duration_first_frame_ms = (test_parameters->lbt_cs_max_duration_first_frame_ms);
 #endif
     // Send message.

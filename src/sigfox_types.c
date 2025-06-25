@@ -41,7 +41,7 @@
 
 /*** SIGFOX TYPES global variables ***/
 
-#if !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
+#if (!(defined SIGFOX_EP_UL_BIT_RATE_BPS) || ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)))
 /*!******************************************************************
  * \var SIGFOX_UL_BIT_RATE_BPS_LIST
  * \brief Sigfox bit rates value.
@@ -49,7 +49,7 @@
 const sfx_u16 SIGFOX_UL_BIT_RATE_BPS_LIST[SIGFOX_UL_BIT_RATE_LAST] = { 100, 600 };
 #endif
 
-#if !(defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) || (defined SIGFOX_EP_PARAMETERS_CHECK)
+#if (!(defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) || (defined SIGFOX_EP_PARAMETERS_CHECK))
 /*!******************************************************************
  * \var SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST
  * \brief Sigfox message counter value.

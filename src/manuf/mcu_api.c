@@ -49,7 +49,7 @@
 MCU_API_status_t __attribute__((weak)) MCU_API_open(MCU_API_config_t *mcu_api_config) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(mcu_api_config);
     SIGFOX_RETURN();
@@ -61,7 +61,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_open(MCU_API_config_t *mcu_api_co
 MCU_API_status_t __attribute__((weak)) MCU_API_close(void) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_RETURN();
 }
@@ -72,7 +72,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_close(void) {
 MCU_API_status_t __attribute__((weak)) MCU_API_process(void) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_RETURN();
 }
@@ -83,7 +83,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_process(void) {
 MCU_API_status_t __attribute__((weak)) MCU_API_timer_start(MCU_API_timer_t *timer) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(timer);
     SIGFOX_RETURN();
@@ -95,7 +95,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_timer_start(MCU_API_timer_t *time
 MCU_API_status_t __attribute__((weak)) MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(timer_instance);
     SIGFOX_RETURN();
@@ -107,7 +107,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_timer_stop(MCU_API_timer_instance
 MCU_API_status_t __attribute__((weak)) MCU_API_timer_status(MCU_API_timer_instance_t timer_instance, sfx_bool *timer_has_elapsed) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(timer_instance);
     SIGFOX_UNUSED(timer_has_elapsed);
@@ -120,7 +120,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_timer_status(MCU_API_timer_instan
 MCU_API_status_t __attribute__((weak)) MCU_API_timer_wait_cplt(MCU_API_timer_instance_t timer_instance) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(timer_instance);
     SIGFOX_RETURN();
@@ -132,7 +132,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_timer_wait_cplt(MCU_API_timer_ins
 MCU_API_status_t __attribute__((weak)) MCU_API_aes_128_cbc_encrypt(MCU_API_encryption_data_t *aes_data) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(aes_data);
     SIGFOX_RETURN();
@@ -144,7 +144,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_aes_128_cbc_encrypt(MCU_API_encry
 MCU_API_status_t __attribute__((weak)) MCU_API_compute_crc16(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u16 *crc) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(data);
     SIGFOX_UNUSED(data_size);
@@ -159,7 +159,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_compute_crc16(sfx_u8 *data, sfx_u
 MCU_API_status_t __attribute__((weak)) MCU_API_compute_crc8(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u8 *crc) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(data);
     SIGFOX_UNUSED(data_size);
@@ -173,7 +173,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_compute_crc8(sfx_u8 *data, sfx_u8
 MCU_API_status_t __attribute__((weak)) MCU_API_get_ep_id(sfx_u8 *ep_id, sfx_u8 ep_id_size_bytes) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(ep_id);
     SIGFOX_UNUSED(ep_id_size_bytes);
@@ -185,7 +185,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_get_ep_id(sfx_u8 *ep_id, sfx_u8 e
 MCU_API_status_t __attribute__((weak)) MCU_API_get_ep_key(sfx_u8 *ep_key, sfx_u8 ep_key_size_bytes) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(ep_key);
     SIGFOX_UNUSED(ep_key_size_bytes);
@@ -197,7 +197,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_get_ep_key(sfx_u8 *ep_key, sfx_u8
 MCU_API_status_t __attribute__((weak)) MCU_API_get_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(nvm_data);
     SIGFOX_UNUSED(nvm_data_size_bytes);
@@ -208,7 +208,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_get_nvm(sfx_u8 *nvm_data, sfx_u8 
 MCU_API_status_t __attribute__((weak)) MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(nvm_data);
     SIGFOX_UNUSED(nvm_data_size_bytes);
@@ -220,7 +220,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 
 MCU_API_status_t __attribute__((weak)) MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u16 *voltage_tx_mv, sfx_s16 *temperature_tenth_degrees) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(voltage_idle_mv);
     SIGFOX_UNUSED(voltage_tx_mv);
@@ -234,7 +234,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_get_voltage_temperature(sfx_u16 *
 MCU_API_status_t __attribute__((weak)) MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac_size_bytes) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(initial_pac);
     SIGFOX_UNUSED(initial_pac_size_bytes);
@@ -247,7 +247,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_get_initial_pac(sfx_u8 *initial_p
 MCU_API_status_t __attribute__((weak)) MCU_API_get_latency(MCU_API_latency_t latency_type, sfx_u32 *latency_ms) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(latency_type);
     SIGFOX_UNUSED(latency_ms);
@@ -260,7 +260,7 @@ MCU_API_status_t __attribute__((weak)) MCU_API_get_latency(MCU_API_latency_t lat
 MCU_API_status_t __attribute__((weak)) MCU_API_get_version(sfx_u8 **version, sfx_u8 *version_size_char) {
     /* To be implemented by the device manufacturer */
 #ifdef SIGFOX_EP_ERROR_CODES
-    MCU_API_status_t status = MCU_API_SUCCESS;
+    MCU_API_status_t status = MCU_API_ERROR;
 #endif
     SIGFOX_UNUSED(version);
     SIGFOX_UNUSED(version_size_char);

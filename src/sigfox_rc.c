@@ -49,7 +49,7 @@
 #define SIGFOX_RC1_EPSILON_SNW_HZ       1410
 #define SIGFOX_RC1_EPSILON_EP_HZ        17370
 #endif
-#if (defined SIGFOX_EP_RC3_LBT_ZONE) || (defined SIGFOX_EP_RC3_LDC_ZONE)
+#if ((defined SIGFOX_EP_RC3_LBT_ZONE) || (defined SIGFOX_EP_RC3_LDC_ZONE))
 #define SIGFOX_RC3_EPSILON_SNW_HZ       1500
 #define SIGFOX_RC3_EPSILON_EP_HZ        18470
 #endif

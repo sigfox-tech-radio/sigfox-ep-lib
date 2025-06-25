@@ -46,7 +46,7 @@
 
 #ifdef SIGFOX_EP_TIMER_REQUIRED
 // Timer instances mapping.
-#if !(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0) || (defined SIGFOX_EP_BIDIRECTIONAL))
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
 #define MCU_API_TIMER_INSTANCE_T_IFX        MCU_API_TIMER_1
 #endif
 #ifdef SIGFOX_EP_BIDIRECTIONAL
@@ -96,7 +96,7 @@ typedef void (*MCU_API_error_cb_t)(MCU_API_status_t status);
 #else
 typedef void (*MCU_API_error_cb_t)(void);
 #endif
-#if (!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0))) || (defined SIGFOX_EP_BIDIRECTIONAL) || (defined SIGFOX_EP_REGULATORY) || (defined SIGFOX_EP_CERTIFICATION)
+#ifdef SIGFOX_EP_TIMER_REQUIRED
 typedef void (*MCU_API_timer_cplt_cb_t)(void);
 #endif
 #endif
@@ -107,7 +107,7 @@ typedef void (*MCU_API_timer_cplt_cb_t)(void);
  * \brief MCU timer instances.
  *******************************************************************/
 typedef enum {
-#if (!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0))) || (defined SIGFOX_EP_BIDIRECTIONAL) || (defined SIGFOX_EP_REGULATORY)
+#if ((defined SIGFOX_EP_INTERFRAME_TIMER_REQUIRED) || (defined SIGFOX_EP_REGULATORY))
     MCU_API_TIMER_1,
 #endif
 #ifdef SIGFOX_EP_BIDIRECTIONAL
@@ -126,7 +126,7 @@ typedef enum {
  * \brief MCU timer instances mapping.
  *******************************************************************/
 typedef enum {
-#if !(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0) || (defined SIGFOX_EP_BIDIRECTIONAL))
+#ifdef SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
     MCU_API_TIMER_REASON_T_IFX,
 #endif
 #ifdef SIGFOX_EP_BIDIRECTIONAL
@@ -161,7 +161,7 @@ typedef struct {
 } MCU_API_timer_t;
 #endif
 
-#if (defined SIGFOX_EP_TIMER_REQUIRED) && (defined SIGFOX_EP_LATENCY_COMPENSATION) && (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_TIMER_REQUIRED) && (defined SIGFOX_EP_LATENCY_COMPENSATION) && (defined SIGFOX_EP_BIDIRECTIONAL))
 /*!******************************************************************
  * \enum MCU_API_latency_t
  * \brief MCU latency sources.
@@ -200,7 +200,7 @@ typedef struct {
 
 /*** MCU API functions ***/
 
-#if (defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE)
+#if ((defined SIGFOX_EP_ASYNCHRONOUS) || (defined SIGFOX_EP_LOW_LEVEL_OPEN_CLOSE))
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_open(MCU_API_config_t *mcu_api_config)
  * \brief Open the MCU driver.
@@ -255,7 +255,7 @@ MCU_API_status_t MCU_API_timer_start(MCU_API_timer_t *timer);
 MCU_API_status_t MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance);
 #endif
 
-#if (defined SIGFOX_EP_TIMER_REQUIRED) && !(defined SIGFOX_EP_ASYNCHRONOUS)
+#if ((defined SIGFOX_EP_TIMER_REQUIRED) && !(defined SIGFOX_EP_ASYNCHRONOUS))
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_timer_status(MCU_API_timer_instance_t timer_instance, sfx_bool *timer_has_elapsed)
  * \brief Get timer status.
@@ -267,7 +267,7 @@ MCU_API_status_t MCU_API_timer_stop(MCU_API_timer_instance_t timer_instance);
 MCU_API_status_t MCU_API_timer_status(MCU_API_timer_instance_t timer_instance, sfx_bool *timer_has_elapsed);
 #endif
 
-#if (defined SIGFOX_EP_TIMER_REQUIRED) && !(defined SIGFOX_EP_ASYNCHRONOUS)
+#if ((defined SIGFOX_EP_TIMER_REQUIRED) && !(defined SIGFOX_EP_ASYNCHRONOUS))
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_timer_wait_cplt(MCU_API_timer_instance_t timer_instance)
  * \brief Blocking function waiting for timer completion.
@@ -302,7 +302,7 @@ MCU_API_status_t MCU_API_aes_128_cbc_encrypt(MCU_API_encryption_data_t *aes_data
 MCU_API_status_t MCU_API_compute_crc16(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u16 *crc);
 #endif
 
-#if (defined SIGFOX_EP_CRC_HW) && (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CRC_HW) && (defined SIGFOX_EP_BIDIRECTIONAL))
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_compute_crc8(sfx_u8 *data, sfx_u8 data_size, sfx_u16 polynom, sfx_u8 *crc)
  * \brief Compute a CRC8.
@@ -353,7 +353,7 @@ MCU_API_status_t MCU_API_get_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes);
  *******************************************************************/
 MCU_API_status_t MCU_API_set_nvm(sfx_u8 *nvm_data, sfx_u8 nvm_data_size_bytes);
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u16 *voltage_tx_mv, sfx_s16 *temperature_tenth_degrees)
  * \brief Get voltage and temperature measurements (used in control message payload).
@@ -376,7 +376,7 @@ MCU_API_status_t MCU_API_get_voltage_temperature(sfx_u16 *voltage_idle_mv, sfx_u
 MCU_API_status_t MCU_API_get_initial_pac(sfx_u8 *initial_pac, sfx_u8 initial_pac_size_bytes);
 #endif
 
-#if (defined SIGFOX_EP_TIMER_REQUIRED) && (defined SIGFOX_EP_LATENCY_COMPENSATION) && (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_TIMER_REQUIRED) && (defined SIGFOX_EP_LATENCY_COMPENSATION) && (defined SIGFOX_EP_BIDIRECTIONAL))
 /*!******************************************************************
  * \fn MCU_API_status_t MCU_API_get_latency(MCU_API_latency_t latency_type, sfx_u32 *latency_ms)
  * \brief Read MCU latency in milliseconds.

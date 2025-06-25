@@ -103,9 +103,7 @@ typedef enum {
     SIGFOX_EP_API_STATE_REGULATORY,
 #endif
     SIGFOX_EP_API_STATE_UL_MODULATION_PENDING,
-#if !(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0) || (defined SIGFOX_EP_BIDIRECTIONAL))
     SIGFOX_EP_API_STATE_UL_INTER_FRAME_TIMER,
-#endif
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     SIGFOX_EP_API_STATE_DL_TIMER,
     SIGFOX_EP_API_STATE_DL_LISTENING,
@@ -145,7 +143,7 @@ typedef struct {
 #endif
 } SIGFOX_EP_API_config_t;
 
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
 /*!******************************************************************
  * \struct SIGFOX_EP_API_common_t
  * \brief Common parameters of application and control messages structures.
@@ -175,7 +173,7 @@ typedef struct {
  * \brief Application message data.
  *******************************************************************/
 typedef struct {
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     SIGFOX_EP_API_common_t common_parameters;
 #endif
     SIGFOX_application_message_type_t type;
@@ -186,7 +184,7 @@ typedef struct {
 #endif
     SIGFOX_EP_API_message_cplt_cb_t message_cplt_cb;
 #endif
-#if !(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0)
+#if (!(defined SIGFOX_EP_UL_PAYLOAD_SIZE) || (SIGFOX_EP_UL_PAYLOAD_SIZE > 0))
     sfx_u8 *ul_payload;
 #endif
 #ifndef SIGFOX_EP_UL_PAYLOAD_SIZE
@@ -207,7 +205,7 @@ typedef struct {
  * \brief Control message data.
  *******************************************************************/
 typedef struct {
-#if !(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE)
+#if (!(defined SIGFOX_EP_SINGLE_FRAME) || !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || !(defined SIGFOX_EP_TX_POWER_DBM_EIRP) || (defined SIGFOX_EP_PUBLIC_KEY_CAPABLE))
     SIGFOX_EP_API_common_t common_parameters;
 #endif
     SIGFOX_control_message_type_t type;

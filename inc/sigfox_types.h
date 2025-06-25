@@ -90,10 +90,10 @@ typedef enum {
 
 /*** SIGFOX TYPES second-level compilation flags definition ***/
 
-#if (defined SIGFOX_EP_RC1_ZONE) || (defined SIGFOX_EP_RC6_ZONE) || (defined SIGFOX_EP_RC7_ZONE)
+#if ((defined SIGFOX_EP_RC1_ZONE) || (defined SIGFOX_EP_RC6_ZONE) || (defined SIGFOX_EP_RC7_ZONE))
 #define SIGFOX_EP_SPECTRUM_ACCESS_DC
 #endif
-#if (defined SIGFOX_EP_RC2_ZONE) || (defined SIGFOX_EP_RC4_ZONE)
+#if ((defined SIGFOX_EP_RC2_ZONE) || (defined SIGFOX_EP_RC4_ZONE))
 #define SIGFOX_EP_SPECTRUM_ACCESS_FH
 #endif
 #if (defined SIGFOX_EP_RC3_LBT_ZONE)
@@ -107,7 +107,10 @@ typedef enum {
 #define SIGFOX_EP_SPECTRUM_ACCESS_LBT
 #define SIGFOX_EP_SPECTRUM_ACCESS_LBT_M65
 #endif
-#if (!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0))) || (defined SIGFOX_EP_BIDIRECTIONAL) || (defined SIGFOX_EP_REGULATORY) || (defined SIGFOX_EP_CERTIFICATION)
+#if ((!(defined SIGFOX_EP_SINGLE_FRAME) && (!(defined SIGFOX_EP_T_IFU_MS) || (SIGFOX_EP_T_IFU_MS > 0))) || (defined SIGFOX_EP_BIDIRECTIONAL))
+#define SIGFOX_EP_INTERFRAME_TIMER_REQUIRED
+#endif
+#if ((defined SIGFOX_EP_INTERFRAME_TIMER_REQUIRED) || (defined SIGFOX_EP_REGULATORY) || (defined SIGFOX_EP_CERTIFICATION))
 #define SIGFOX_EP_TIMER_REQUIRED
 #endif
 
@@ -133,7 +136,7 @@ typedef enum {
 #define SIGFOX_UL_PAYLOAD_MAX_SIZE_BYTES                    12
 
 // Sigfox uplink bitstream size.
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL) || !(defined SIGFOX_EP_UL_PAYLOAD_SIZE))
 #define SIGFOX_UL_BITSTREAM_SIZE_BYTES                      26 // Maximum value used as default.
 #else
 #if (SIGFOX_EP_UL_PAYLOAD_SIZE == 0)
@@ -216,7 +219,7 @@ typedef enum {
 
 /*** SIGFOX TYPES structures ***/
 
-#if !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || (defined SIGFOX_EP_PARAMETERS_CHECK)
+#if (!(defined SIGFOX_EP_UL_BIT_RATE_BPS) || (defined SIGFOX_EP_PARAMETERS_CHECK))
 /*!******************************************************************
  * \enum SIGFOX_bit_rate_t
  * \brief Sigfox signals bit rates list.
@@ -252,7 +255,7 @@ typedef enum {
 } SIGFOX_application_message_type_t;
 #endif
 
-#if (defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE) || (defined SIGFOX_EP_BIDIRECTIONAL))
 /*!******************************************************************
  * \enum SIGFOX_control_message_type_t
  * \brief Sigfox control message types.
@@ -281,7 +284,7 @@ typedef enum {
 } SIGFOX_ul_frame_rank_t;
 #endif
 
-#if !(defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) || (defined SIGFOX_EP_PARAMETERS_CHECK)
+#if (!(defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) || (defined SIGFOX_EP_PARAMETERS_CHECK))
 /*!******************************************************************
  * \enum SIGFOX_message_counter_rollover_t
  * \brief Sigfox message counter rollover values list.
@@ -331,7 +334,7 @@ typedef struct {
     sfx_u16 delta_f_mf_hz;
 #endif
 #endif
-#if (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT) && (defined SIGFOX_EP_REGULATORY)
+#if ((defined SIGFOX_EP_SPECTRUM_ACCESS_LBT) && (defined SIGFOX_EP_REGULATORY))
     // For LBT.
     sfx_u32 cs_bandwidth_hz;
     sfx_s8 cs_threshold_dbm;
@@ -396,7 +399,7 @@ typedef enum {
 
 /*** SIGFOX TYPES global variables ***/
 
-#if !(defined SIGFOX_EP_UL_BIT_RATE_BPS) || ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES))
+#if (!(defined SIGFOX_EP_UL_BIT_RATE_BPS) || ((defined SIGFOX_EP_PARAMETERS_CHECK) && (defined SIGFOX_EP_ERROR_CODES)))
 /*!******************************************************************
  * \var SIGFOX_EP_API_SIGFOX_UL_BIT_RATE_BPS_LIST
  * \brief Sigfox bit rates value.
@@ -404,7 +407,7 @@ typedef enum {
 extern const sfx_u16 SIGFOX_UL_BIT_RATE_BPS_LIST[SIGFOX_UL_BIT_RATE_LAST];
 #endif
 
-#if !(defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) || (defined SIGFOX_EP_PARAMETERS_CHECK)
+#if (!(defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) || (defined SIGFOX_EP_PARAMETERS_CHECK))
 /*!******************************************************************
  * \var SIGFOX_EP_API_SIGFOX_MESSAGE_COUNTER_ROLLOVER_LIST
  * \brief Sigfox message counter value.
@@ -432,41 +435,41 @@ extern const sfx_u8 SIGFOX_EP_PUBLIC_KEY[SIGFOX_EP_KEY_SIZE_BYTES];
 
 /*** SIGFOX TYPES unwanted flag combinations and values ***/
 
-#if !(defined SIGFOX_EP_RC1_ZONE) && !(defined SIGFOX_EP_RC2_ZONE) && !(defined SIGFOX_EP_RC3_LBT_ZONE) && !(defined SIGFOX_EP_RC3_LDC_ZONE) && !(defined SIGFOX_EP_RC4_ZONE) && !(defined SIGFOX_EP_RC5_ZONE) && !(defined SIGFOX_EP_RC6_ZONE) && !(defined SIGFOX_EP_RC7_ZONE)
+#if (!(defined SIGFOX_EP_RC1_ZONE) && !(defined SIGFOX_EP_RC2_ZONE) && !(defined SIGFOX_EP_RC3_LBT_ZONE) && !(defined SIGFOX_EP_RC3_LDC_ZONE) && !(defined SIGFOX_EP_RC4_ZONE) && !(defined SIGFOX_EP_RC5_ZONE) && !(defined SIGFOX_EP_RC6_ZONE) && !(defined SIGFOX_EP_RC7_ZONE))
 #error "SIGFOX EP LIB flags error: None RC defined"
 #endif
-#if !(defined SIGFOX_EP_APPLICATION_MESSAGES) && !(defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE)
+#if (!(defined SIGFOX_EP_APPLICATION_MESSAGES) && !(defined SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE))
 #error "SIGFOX EP LIB flags error: None message type defined"
 #endif
-#if !(defined SIGFOX_EP_APPLICATION_MESSAGES) && (defined SIGFOX_EP_BIDIRECTIONAL)
+#if (!(defined SIGFOX_EP_APPLICATION_MESSAGES) && (defined SIGFOX_EP_BIDIRECTIONAL))
 #error "SIGFOX EP LIB flags error: Bidirectional communication only applies when SIGFOX_EP_APPLICATION_MESSAGES is enabled"
 #endif
-#if (defined SIGFOX_EP_UL_BIT_RATE_BPS) && (SIGFOX_EP_UL_BIT_RATE_BPS != 100) && (SIGFOX_EP_UL_BIT_RATE_BPS != 600)
+#if ((defined SIGFOX_EP_UL_BIT_RATE_BPS) && (SIGFOX_EP_UL_BIT_RATE_BPS != 100) && (SIGFOX_EP_UL_BIT_RATE_BPS != 600))
 #error "SIGFOX EP LIB flags error: Invalid SIGFOX_EP_UL_BIT_RATE_BPS value"
 #endif
-#if (defined SIGFOX_EP_T_IFU_MS) && (defined SIGFOX_EP_SINGLE_FRAME)
+#if ((defined SIGFOX_EP_T_IFU_MS) && (defined SIGFOX_EP_SINGLE_FRAME))
 #error "SIGFOX EP LIB flags error: SIGFOX_EP_T_IFU_MS only applies when SIGFOX_EP_SINGLE_FRAME is disabled"
 #endif
 #ifndef SIGFOX_EP_SINGLE_FRAME
-#if (defined SIGFOX_EP_T_IFU_MS) && (SIGFOX_EP_T_IFU_MS > SIGFOX_T_IFU_MAX_MS)
+#if ((defined SIGFOX_EP_T_IFU_MS) && (SIGFOX_EP_T_IFU_MS > SIGFOX_T_IFU_MAX_MS))
 #error "SIGFOX EP LIB flags error: Invalid SIGFOX_EP_T_IFU_MS value"
 #endif
 #endif
-#if (defined SIGFOX_EP_T_CONF_MS) && !(defined SIGFOX_EP_BIDIRECTIONAL)
+#if ((defined SIGFOX_EP_T_CONF_MS) && !(defined SIGFOX_EP_BIDIRECTIONAL))
 #error "SIGFOX EP LIB flags error: SIGFOX_EP_T_CONF_MS only applies when SIGFOX_EP_BIDIRECTIONAL is enabled"
 #endif
 #ifdef SIGFOX_EP_BIDIRECTIONAL
-#if (defined SIGFOX_EP_T_CONF_MS) && ((SIGFOX_EP_T_CONF_MS < SIGFOX_T_CONF_MIN_MS) || (SIGFOX_EP_T_CONF_MS > SIGFOX_T_CONF_MAX_MS))
+#if ((defined SIGFOX_EP_T_CONF_MS) && ((SIGFOX_EP_T_CONF_MS < SIGFOX_T_CONF_MIN_MS) || (SIGFOX_EP_T_CONF_MS > SIGFOX_T_CONF_MAX_MS)))
 #error "SIGFOX EP LIB flags error: Invalid SIGFOX_EP_T_CONF_MS value"
 #endif
 #endif
-#if (defined SIGFOX_EP_UL_PAYLOAD_SIZE) && (SIGFOX_EP_UL_PAYLOAD_SIZE > SIGFOX_UL_PAYLOAD_MAX_SIZE_BYTES)
+#if ((defined SIGFOX_EP_UL_PAYLOAD_SIZE) && (SIGFOX_EP_UL_PAYLOAD_SIZE > SIGFOX_UL_PAYLOAD_MAX_SIZE_BYTES))
 #error "SIGFOX EP LIB flags error: Unsupported SIGFOX_EP_UL_PAYLOAD_SIZE value"
 #endif
-#if (defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 128) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 256) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 512) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 1024) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 2048) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 4096)
+#if ((defined SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 128) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 256) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 512) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 1024) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 2048) && (SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER != 4096))
 #error "SIGFOX EP LIB flags error: Invalid SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER value"
 #endif
-#if (defined SIGFOX_EP_ERROR_STACK) && !(defined SIGFOX_EP_ERROR_CODES)
+#if ((defined SIGFOX_EP_ERROR_STACK) && !(defined SIGFOX_EP_ERROR_CODES))
 #error "SIGFOX EP LIB flags error: SIGFOX_EP_ERROR_CODES are required to use SIGFOX_EP_ERROR_STACK"
 #endif
 
