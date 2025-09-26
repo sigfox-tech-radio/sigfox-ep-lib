@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v4.3](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.3) - 26 Sep 2025
+
+### Fixed
+
+* Fix **N parameter overwriting in blocking mode** after successful downlink sequence (`number_of_frames` field of the message common parameters structure). In blocking mode, as the library keeps running during the whole message transmission, it does not copy the application message data into its internal context but uses it directly (memory footprint optimization). After a successful downlink reception, the library was sending the DL confirmation message, which is always in N=1 mode, by writing 1 directly in the client application message structure. In case this structure was global and the number of frame(s) was written only once, all subsequent messages were erroneously switched to N=1 mode.
+
+### Known limitations
+
+* **Payload encryption** not supported.
+* **Secure element** not supported.
+
 ## [v4.2](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.2) - 25 Jun 2025
 
 ### Added
@@ -15,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-* Fix **frame transmission sequence** when the **uplink interframe** is **set to 0** (`t_ifu_ms` field of the message parameters structure ).
+* Fix **frame transmission sequence** when the **uplink interframe** is **set to 0** (`t_ifu_ms` field of the message parameters structure).
 * Fix **compilation issue** when the `SIGFOX_EP_T_IFU_MS` flag is **set to 0** in uplink only mode.
 * Remove **extra warnings**.
 
