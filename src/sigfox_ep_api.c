@@ -707,7 +707,7 @@ static SIGFOX_EP_API_status_t _compute_next_ul_frequency(void) {
     // Prepare frequency parameters.
 #ifndef SIGFOX_EP_SINGLE_FRAME
     frequency_parameters.ul_frame_rank = sigfox_ep_api_ctx.ul_frame_rank;
-    frequency_parameters.number_of_frames = (sigfox_ep_api_ctx.common_parameters_ptr)->number_of_frames;
+    frequency_parameters.number_of_frames = (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message == 0) ? ((sigfox_ep_api_ctx.common_parameters_ptr)->number_of_frames) : 1;
 #ifdef SIGFOX_EP_BIDIRECTIONAL
 #ifdef SIGFOX_EP_APPLICATION_MESSAGES
     if (sigfox_ep_api_ctx.application_message_ptr == SIGFOX_NULL) {
@@ -793,7 +793,7 @@ static sfx_bool _is_last_frame_of_uplink_sequence(void) {
 #ifdef SIGFOX_EP_SINGLE_FRAME
     last_uplink_frame = SIGFOX_TRUE;
 #else
-    if (sigfox_ep_api_ctx.ul_frame_rank >= ((sfx_u8) (((sigfox_ep_api_ctx.common_parameters_ptr)->number_of_frames) - 1))) {
+    if ((sigfox_ep_api_ctx.ul_frame_rank >= ((sfx_u8) (((sigfox_ep_api_ctx.common_parameters_ptr)->number_of_frames) - 1))) || (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0)) {
         last_uplink_frame = SIGFOX_TRUE;
     }
 #endif
@@ -810,13 +810,11 @@ static sfx_bool _is_last_frame_of_message_sequence(void) {
 #ifdef SIGFOX_EP_APPLICATION_MESSAGES
     if ((sigfox_ep_api_ctx.application_message_ptr) == SIGFOX_NULL) {
         // Do not check bidirectional flag.
-        if ((sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0) || (_is_last_frame_of_uplink_sequence() == SIGFOX_TRUE)) {
-            last_message_frame = SIGFOX_TRUE;
-        }
+        last_message_frame = _is_last_frame_of_uplink_sequence();
     }
     else {
         // Check bidirectional flag.
-        if ((sigfox_ep_api_ctx.internal_flags.field.dl_conf_message != 0) || ((_is_last_frame_of_uplink_sequence() == SIGFOX_TRUE) && (_is_downlink_required() == SIGFOX_FALSE))) {
+        if (((_is_last_frame_of_uplink_sequence() == SIGFOX_TRUE) && (_is_downlink_required() == SIGFOX_FALSE))) {
             last_message_frame = SIGFOX_TRUE;
         }
     }
@@ -2362,9 +2360,6 @@ static SIGFOX_EP_API_status_t _internal_process(void) {
                 sigfox_ep_api_ctx.internal_flags.field.control_message = 1;
                 sigfox_ep_api_ctx.internal_flags.field.dl_conf_message = 1;
                 _message_prepare();
-#ifndef SIGFOX_EP_SINGLE_FRAME
-                (sigfox_ep_api_ctx.common_parameters_ptr)->number_of_frames = 1;
-#endif
                 // Start DL confirmation timer.
 #ifdef SIGFOX_EP_ERROR_CODES
                 status = _start_timer(sigfox_ep_api_ctx.interframe_ms, MCU_API_TIMER_INSTANCE_T_CONF, MCU_API_TIMER_REASON_T_CONF);
