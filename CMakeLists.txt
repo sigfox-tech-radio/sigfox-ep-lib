@@ -33,7 +33,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(sigfox_ep_lib)
 
-# Define macro to manage the options 
+# Macro to manage the options.
 macro(opt TYPE FLAG DEFAULT DESC)
   if(${TYPE} STREQUAL TYPE_BOOL) 
      #option(${FLAG} ${DESC} ${DEFAULT})
@@ -97,23 +97,27 @@ set(MANUF_SOURCES
     src/manuf/rf_api.c
 )
 
-# Set the path for the static library
+# Set the path for the static library.
 set(LIB_LOCATION ${CMAKE_BINARY_DIR}/lib/ CACHE STRING "")
 
-# Set the path for the public header of the library
+# Set the path for the public header of the library.
 set(API_LOCATION ${CMAKE_BINARY_DIR}/lib/api CACHE STRING "")
 
-#Option addon RFP contents
+# Option to generate RFP addon.
 if(NOT sigfox_ep_addon_rfp_IS_TOP_LEVEL)
-    opt(TYPE_BOOL ADDON_RFP OFF "Add RFP addon contents to build it with library")
+    opt(TYPE_BOOL ADDON_RFP OFF "Add RFP addon to the build process")
 endif()
-#Option addon TA contents
+# Option to generate TA addon.
 if(NOT sigfox_ep_addon_ta_IS_TOP_LEVEL)
-    opt(TYPE_BOOL ADDON_TA OFF "Add TA addon contents to build it with library")
+    opt(TYPE_BOOL ADDON_TA OFF "Add TA addon to the build process")
 endif()
-#Option RF API contents
+# Option to generate AW addon.
+if(NOT sigfox_ep_addon_aw_IS_TOP_LEVEL)
+    opt(TYPE_BOOL ADDON_AW OFF "Add AW addon to the build process")
+endif()
+# Option to generate RF API drivers.
 if(NOT s2lp_rf_api_IS_TOP_LEVEL)
-    opt(TYPE_BOOL S2LP_RF_API OFF "Add S2LP RF API contents to build it with library")
+    opt(TYPE_BOOL S2LP_RF_API OFF "Add S2LP RF API to the build process")
     if(S2LP_RF_API)
         list(REMOVE_ITEM MANUF_SOURCES "src/manuf/rf_api.c")
     endif()
@@ -121,7 +125,7 @@ else()
     list(REMOVE_ITEM MANUF_SOURCES "src/manuf/rf_api.c")
 endif()
 if(NOT lr11xx_rf_api_IS_TOP_LEVEL)
-    opt(TYPE_BOOL LR11XX_RF_API OFF "Add LR11XX RF API contents to build it with library")
+    opt(TYPE_BOOL LR11XX_RF_API OFF "Add LR11XX RF API to the build process")
     if(LR11XX_RF_API)
         list(REMOVE_ITEM MANUF_SOURCES "src/manuf/rf_api.c")
     endif()
@@ -129,7 +133,7 @@ else()
     list(REMOVE_ITEM MANUF_SOURCES "src/manuf/rf_api.c")
 endif()
 if(NOT sx126x_rf_api_IS_TOP_LEVEL)
-    opt(TYPE_BOOL SX126X_RF_API OFF "Add SX126X RF API contents to build it with library")
+    opt(TYPE_BOOL SX126X_RF_API OFF "Add SX126X RF API to the build process")
     if(SX126X_RF_API)
         list(REMOVE_ITEM MANUF_SOURCES "src/manuf/rf_api.c")
     endif()
@@ -137,6 +141,7 @@ else()
     list(REMOVE_ITEM MANUF_SOURCES "src/manuf/rf_api.c")
 endif()
 
+opt(TYPE_VALUE  SIGFOX_EP_OSCILLATOR_ACCURACY_PPM       20  "Crystal oscillator accuracy in ppm")
 opt(TYPE_BOOL   SIGFOX_EP_RC1_ZONE                      ON  "Support RC1 (Europe, Middle-East and Africa)")
 opt(TYPE_BOOL   SIGFOX_EP_RC2_ZONE                      ON  "Support RC2 (Brazil, Canada, Mexico, Puerto Rico and USA)")
 opt(TYPE_BOOL   SIGFOX_EP_RC3_LBT_ZONE                  ON  "Support RC3 with LBT (Japan)")
@@ -171,7 +176,7 @@ opt(TYPE_VALUE  SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER      OFF "Fixed message count
 set_property(CACHE SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER PROPERTY STRINGS OFF 128 256 512 1024 2048 4096)
 opt(TYPE_VALUE  SIGFOX_EP_ERROR_STACK                   32  "Enable error stack and defined the depth")
 
-#workaround to force a define to be set to 0 when value is 0 and not define when value is OFF
+# Workaround to force a define to be set to 0 when value is 0 and not define when value is OFF.
 foreach( COMPILE_FLAG ${COMPILE_FLAG_LIST} )
     if((NOT ${COMPILE_FLAG} STREQUAL OFF) AND (NOT ${COMPILE_FLAG} STREQUAL ON))
         set(${COMPILE_FLAG} "(${${COMPILE_FLAG}})")
@@ -198,28 +203,32 @@ if(${SIGFOX_EP_CERTIFICATION} STREQUAL OFF)
     list(REMOVE_ITEM LIB_PUBLIC_HEADERS "inc/sigfox_ep_api_test.h")
 endif()
 
-#Add Cmake module path
+# Add CMake module path.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-#Configure and create sigfox_ep_flags.h
+# Configure and create sigfox_ep_flags.h file.
 configure_file(sigfox_ep_flags.h.in sigfox_ep_flags.h @ONLY)
 
-#Precompile module
+# Precompile module.
 find_program(UNIFDEF unifdef)
 if(NOT UNIFDEF)
-    message(STATUS "unifdef - not found (precompilation target will not be available)")
+    message(STATUS "unifdef tool not found: precompilation target will not be available")
 else()
     include(precompile)
 endif()
-#Addon RFP module
+# Addon RFP module.
 if(ADDON_RFP)
     include(addon_rfp)
 endif()
-#Addon TA module
+# Addon TA module.
 if(ADDON_TA)
     include(addon_ta)
 endif()
-#RF_API modules
+# Addon AW module.
+if(ADDON_AW)
+    include(addon_aw)
+endif()
+# RF_API modules.
 if(S2LP_RF_API)
     include(s2lp_rf_api)
 endif()
@@ -231,14 +240,14 @@ if(SX126X_RF_API)
 endif()
 mark_as_advanced(CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX LIB_LOCATION API_LOCATION)
 
-#Target to create object
+# Target to create object.
 add_library(${PROJECT_NAME}_obj OBJECT EXCLUDE_FROM_ALL ${LIB_SOURCES})
 target_include_directories( ${PROJECT_NAME}_obj PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
     ${CMAKE_CURRENT_BINARY_DIR}  
 )
 
-#Target to create library
+# Target to create library.
 add_library(${PROJECT_NAME} STATIC $<TARGET_OBJECTS:${PROJECT_NAME}_obj>)
 target_include_directories(${PROJECT_NAME} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/inc

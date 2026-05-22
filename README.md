@@ -39,6 +39,7 @@ Below is the list of available flags.
 
 | **Flag name** | **Value** | **Description** |
 |:---:|:---:|:---:|
+| `SIGFOX_EP_OSCILLATOR_ACCURACY_PPM` | `<accuracy_ppm>` |  Defines the crystal oscillator accuracy in ppm. See warning below. |
 | `SIGFOX_EP_RCx_ZONE` | `undefined` / `defined` | Support the RCx radio configuration if defined. |
 | `SIGFOX_EP_APPLICATION_MESSAGES` | `undefined` / `defined` | Support uplink application messages if defined. |
 | `SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE` | `undefined` / `defined` | Support uplink control keep alive message if defined. |
@@ -62,6 +63,9 @@ Below is the list of available flags.
 | `SIGFOX_EP_VERBOSE` | `undefined` / `defined` | Enable credentials (ID / PAC) API access and version control functions if defined. |
 | `SIGFOX_EP_ERROR_CODES` | `undefined` / `defined` | Use return codes if defined, otherwise all functions return void. |
 | `SIGFOX_EP_ERROR_STACK` | `undefined` / `<error_stack_depth>` | If defined, store low level errors in a stack (the macro gives the depth). Errors can be read with the `SIGFOX_EP_API_unstack_error()` function. |
+
+> [!WARNING]
+> Except for frequency hopping RCs where the guard band is fixed to 1 micro-channel, the `SIGFOX_EP_OSCILLATOR_ACCURACY_PPM` flag allows the device maker to adjust the uplink frequency distribution according to the selected oscillator (in all library versions under [v4.4](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.4), a fixed 20ppm value was assumed). This makes the library compatible with very low cost crystal oscillators, which could have a global tolerance of more than 20ppm. At the same time, if an accurate oscillator is used, entering a small ppm value will result in a wider operating range and thus a better frequency diversity. But in any case, **setting a correct value is crucial to ensure that the device will be received by the Sigfox network during its whole lifetime**. Please carefully check the datasheet of your quartz or TCXO in order to take all cumulative errors into account (static tolerance, change over temperature, aging, etc.).
 
 > [!NOTE]
 > It is recommended to keep the `SIGFOX_EP_REGULATORY` flag enabled. However, the possibility of disabling this flag has been kept for optimization purposes: indeed, some devices could comply with their local regulation by design, thanks to a low TX power, a specific transmission periodicity, etc. In these specific cases, which depends on the application, the regulatory checks performed by the library become useless and can be removed to reduce the memory footprint.
@@ -136,7 +140,8 @@ cd sigfox-ep-lib/
 mkdir build
 cd build/
 
-cmake -DSIGFOX_EP_RC1_ZONE=ON \
+cmake -DSIGFOX_EP_OSCILLATOR_ACCURACY_PPM=20 \
+      -DSIGFOX_EP_RC1_ZONE=ON \
       -DSIGFOX_EP_RC2_ZONE=ON \
       -DSIGFOX_EP_RC3_LBT_ZONE=ON \
       -DSIGFOX_EP_RC3_LDC_ZONE=ON \
@@ -187,7 +192,8 @@ cd sigfox-ep-lib/
 mkdir build
 cd build/
 
-cmake -DSIGFOX_EP_RC1_ZONE=ON \
+cmake -DSIGFOX_EP_OSCILLATOR_ACCURACY_PPM=20 \
+      -DSIGFOX_EP_RC1_ZONE=ON \
       -DSIGFOX_EP_RC2_ZONE=ON \
       -DSIGFOX_EP_RC3_LBT_ZONE=ON \
       -DSIGFOX_EP_RC3_LDC_ZONE=ON \
@@ -247,6 +253,18 @@ The addon can be directly generated from the Sigfox End-Point library **cmake** 
 cmake <all previous flags> -DADDON_TA=ON ..
 make precompil_sigfox_ep_addon_ta
 make sigfox_ep_addon_ta
+```
+
+### Atlas WiFi
+
+If your device has a WiFi scanning capability, you can use the [Sigfox End-Point Atlas WiFi addon](https://github.com/sigfox-tech-radio/sigfox-ep-addon-aw) to compute the specific **Atlas WiFi geolocation frames**.
+
+The addon can be directly generated from the Sigfox End-Point library **cmake** by using the `ADDON_AW` option:
+
+```bash
+cmake <all previous flags> -DADDON_AW=ON ..
+make precompil_sigfox_ep_addon_aw
+make sigfox_ep_addon_aw
 ```
 
 ## RF API implementation examples

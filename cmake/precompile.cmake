@@ -31,10 +31,11 @@
 ################################################################################
 
 mark_as_advanced(UNIFDEF PRECOMPIL_DIR)
-# specify the precompil files location
+
+# Specify the pre-compilation files location.
 set(PRECOMPIL_DIR ${CMAKE_BINARY_DIR}/precompil CACHE STRING "")
 
-#List of precompileInc and precompileSrc files
+# List of precompile header and source files.
 foreach(X IN LISTS LIB_SOURCES)
     LIST(APPEND PRECOMPIL_LIB_SOURCES "${PRECOMPIL_DIR}/${X}")
 endforeach()
@@ -45,22 +46,22 @@ foreach(X IN LISTS LIB_HEADERS)
     LIST(APPEND PRECOMPIL_LIB_HEADERS "${PRECOMPIL_DIR}/${X}")
 endforeach()
 
-#Custom command Loop for all Sources
+# Custom command loop for all sources.
 foreach(X IN LISTS LIB_SOURCES MANUF_SOURCES)
-add_custom_command(
-    OUTPUT "${PRECOMPIL_DIR}/${X}"
-    DEPENDS ${CMAKE_BINARY_DIR}/undefs_file
-    DEPENDS ${CMAKE_BINARY_DIR}/defs_file
-    DEPENDS ${LIB_HEADERS}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sigfox_ep_flags.h
-    DEPENDS ${X}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${PRECOMPIL_DIR}/src/core ${PRECOMPIL_DIR}/src/manuf
-    COMMAND unifdef -B -k -x 2 -f ${CMAKE_BINARY_DIR}/undefs_file -f ${CMAKE_BINARY_DIR}/defs_file ${PROJECT_SOURCE_DIR}/${X} > "${PRECOMPIL_DIR}/${X}" 
-    VERBATIM
+    add_custom_command(
+        OUTPUT "${PRECOMPIL_DIR}/${X}"
+        DEPENDS ${CMAKE_BINARY_DIR}/undefs_file
+        DEPENDS ${CMAKE_BINARY_DIR}/defs_file
+        DEPENDS ${LIB_HEADERS}
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sigfox_ep_flags.h
+        DEPENDS ${X}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${PRECOMPIL_DIR}/src/core ${PRECOMPIL_DIR}/src/manuf
+        COMMAND unifdef -B -k -x 2 -f ${CMAKE_BINARY_DIR}/undefs_file -f ${CMAKE_BINARY_DIR}/defs_file ${PROJECT_SOURCE_DIR}/${X} > "${PRECOMPIL_DIR}/${X}"
+        VERBATIM
 )
 endforeach()
 
-#Custom command Loop for all Headers
+# Custom command loop for all headers.
 foreach(X IN LISTS LIB_HEADERS MANUF_HEADERS)
     add_custom_command(
         OUTPUT ${PRECOMPIL_DIR}/${X}

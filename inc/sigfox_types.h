@@ -225,7 +225,7 @@ typedef enum {
  * \brief Sigfox signals bit rates list.
  *******************************************************************/
 typedef enum {
-    SIGFOX_UL_BIT_RATE_100BPS,
+    SIGFOX_UL_BIT_RATE_100BPS = 0,
     SIGFOX_UL_BIT_RATE_600BPS,
     SIGFOX_UL_BIT_RATE_LAST
 } SIGFOX_ul_bit_rate_t;
@@ -239,14 +239,14 @@ typedef enum {
 typedef enum {
 #ifdef SIGFOX_EP_UL_PAYLOAD_SIZE
 #if (SIGFOX_EP_UL_PAYLOAD_SIZE == 0)
-    SIGFOX_APPLICATION_MESSAGE_TYPE_EMPTY,
+    SIGFOX_APPLICATION_MESSAGE_TYPE_EMPTY = 0,
     SIGFOX_APPLICATION_MESSAGE_TYPE_BIT0,
     SIGFOX_APPLICATION_MESSAGE_TYPE_BIT1,
 #else
-    SIGFOX_APPLICATION_MESSAGE_TYPE_BYTE_ARRAY,
+    SIGFOX_APPLICATION_MESSAGE_TYPE_BYTE_ARRAY = 0,
 #endif
 #else
-    SIGFOX_APPLICATION_MESSAGE_TYPE_EMPTY,
+    SIGFOX_APPLICATION_MESSAGE_TYPE_EMPTY = 0,
     SIGFOX_APPLICATION_MESSAGE_TYPE_BIT0,
     SIGFOX_APPLICATION_MESSAGE_TYPE_BIT1,
     SIGFOX_APPLICATION_MESSAGE_TYPE_BYTE_ARRAY,
@@ -352,12 +352,11 @@ typedef struct {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     sfx_u32 f_dl_hz;
 #endif
-    sfx_u16 epsilon_hz;
+    const SIGFOX_spectrum_access_t *spectrum_access;
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     sfx_u8 uplink_bit_rate_capability;
     sfx_s8 tx_power_dbm_eirp_max;
 #endif
-    const SIGFOX_spectrum_access_t *spectrum_access;
 } SIGFOX_rc_t;
 
 /*!******************************************************************
@@ -378,7 +377,7 @@ typedef enum {
  * \brief Sigfox end-point key type.
  *******************************************************************/
 typedef enum {
-    SIGFOX_EP_KEY_PRIVATE,
+    SIGFOX_EP_KEY_PRIVATE = 0,
     SIGFOX_EP_KEY_PUBLIC,
     SIGFOX_EP_KEY_LAST
 } SIGFOX_ep_key_t;
@@ -435,6 +434,9 @@ extern const sfx_u8 SIGFOX_EP_PUBLIC_KEY[SIGFOX_EP_KEY_SIZE_BYTES];
 
 /*** SIGFOX TYPES unwanted flag combinations and values ***/
 
+#if ((defined SIGFOX_EP_OSCILLATOR_ACCURACY_PPM) && ((SIGFOX_EP_OSCILLATOR_ACCURACY_PPM < 5) || (SIGFOX_EP_OSCILLATOR_ACCURACY_PPM > 20)))
+#error "SIGFOX EP LIB flags error: Oscillator accuracy out of range"
+#endif
 #if (!(defined SIGFOX_EP_RC1_ZONE) && !(defined SIGFOX_EP_RC2_ZONE) && !(defined SIGFOX_EP_RC3_LBT_ZONE) && !(defined SIGFOX_EP_RC3_LDC_ZONE) && !(defined SIGFOX_EP_RC4_ZONE) && !(defined SIGFOX_EP_RC5_ZONE) && !(defined SIGFOX_EP_RC6_ZONE) && !(defined SIGFOX_EP_RC7_ZONE))
 #error "SIGFOX EP LIB flags error: None RC defined"
 #endif

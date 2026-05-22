@@ -41,6 +41,14 @@
 /*** Library compilation flags ***/
 
 /*!******************************************************************
+ * \def SIGFOX_EP_OSCILLATOR_ACCURACY_PPM
+ * \brief Define the crystal oscillator accuracy in ppm (allowed range: 5ppm to 20ppm, defaults to 20ppm if not specified).
+ * \brief Warning: please carefully check the datasheet of your quartz or TCXO,
+ * \brief in order to take all cumulative errors into account over the whole device lifetime (static tolerance, change over temperature, aging, etc.).
+ *******************************************************************/
+#cmakedefine SIGFOX_EP_OSCILLATOR_ACCURACY_PPM      @SIGFOX_EP_OSCILLATOR_ACCURACY_PPM@
+
+/*!******************************************************************
 * \def SIGFOX_EP_RC1_ZONE
 * \brief Support radio configuration zone 1 (Europe, Middle-East and Africa).
 *******************************************************************/
@@ -140,33 +148,33 @@
  * \def SIGFOX_EP_UL_BIT_RATE_BPS
  * \brief If defined, give the only uplink bit rate supported (100 or 600 depending on the RC). Otherwise, value is dynamically given when sending a message.
  *******************************************************************/
-#cmakedefine SIGFOX_EP_UL_BIT_RATE_BPS             @SIGFOX_EP_UL_BIT_RATE_BPS@
+#cmakedefine SIGFOX_EP_UL_BIT_RATE_BPS              @SIGFOX_EP_UL_BIT_RATE_BPS@
 
 /*!******************************************************************
  * \def SIGFOX_EP_TX_POWER_DBM_EIRP
  * \brief If defined, give the only TX power supported by the radio. Otherwise the value is dynamically given when sending a message.
  *******************************************************************/
-#cmakedefine SIGFOX_EP_TX_POWER_DBM_EIRP           @SIGFOX_EP_TX_POWER_DBM_EIRP@
+#cmakedefine SIGFOX_EP_TX_POWER_DBM_EIRP            @SIGFOX_EP_TX_POWER_DBM_EIRP@
 
 /*!******************************************************************
  * \def SIGFOX_EP_T_IFU_MS
  * \brief If defined, give the fixed inter-frame delay used between uplink frames of a same message (0 to 2000ms). Otherwise value is dynamically given when sending a message.
  * \brief Value 0 disables the delay and associated timers to optimize memory space.
  *******************************************************************/
-#cmakedefine SIGFOX_EP_T_IFU_MS                    @SIGFOX_EP_T_IFU_MS@
+#cmakedefine SIGFOX_EP_T_IFU_MS                     @SIGFOX_EP_T_IFU_MS@
 
 /*!******************************************************************
  * \def SIGFOX_EP_T_CONF_MS
  * \brief If defined, give the fixed delay between downlink frame reception and uplink confirmation message (1400 to 4000ms). Otherwise value is dynamically given when sending a message.
 *******************************************************************/
-#cmakedefine SIGFOX_EP_T_CONF_MS                   @SIGFOX_EP_T_CONF_MS@
+#cmakedefine SIGFOX_EP_T_CONF_MS                    @SIGFOX_EP_T_CONF_MS@
 
 /*!******************************************************************
  * \def SIGFOX_EP_UL_PAYLOAD_SIZE
  * \brief If defined, give the only uplink payload length supported (0 to 12). Otherwise, all uplink payload lengths are dynamically supported.
  * \brief Value 0 enables the bit 0, bit 1 and empty messages.
  *******************************************************************/
-#cmakedefine SIGFOX_EP_UL_PAYLOAD_SIZE             @SIGFOX_EP_UL_PAYLOAD_SIZE@
+#cmakedefine SIGFOX_EP_UL_PAYLOAD_SIZE              @SIGFOX_EP_UL_PAYLOAD_SIZE@
 
 /*!******************************************************************
  * \def SIGFOX_EP_AES_HW
@@ -184,7 +192,7 @@
  * \def SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER
  * \brief If defined, give the only message counter rollover value supported. Otherwise, value is dynamically given when opening the library.
  *******************************************************************/
-#cmakedefine SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER    @SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER@
+#cmakedefine SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER     @SIGFOX_EP_MESSAGE_COUNTER_ROLLOVER@
 
 /*!******************************************************************
  * \def SIGFOX_EP_PARAMETERS_CHECK
@@ -220,6 +228,6 @@
  * \def SIGFOX_EP_ERROR_STACK
  * \brief If defined, store low level errors in a stack (the macro gives the depth). Errors can be read with the SIGFOX_EP_API_unstack_error() function.
  *******************************************************************/
-#cmakedefine SIGFOX_EP_ERROR_STACK                   @SIGFOX_EP_ERROR_STACK@
+#cmakedefine SIGFOX_EP_ERROR_STACK                  @SIGFOX_EP_ERROR_STACK@
 
 #endif /* __SIGFOX_EP_FLAGS_H__ */

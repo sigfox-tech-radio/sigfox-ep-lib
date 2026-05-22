@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* The **keep-alive control message will be decommissionned in the Sigfox system by April 2027**. The `SIGFOX_CONTROL_MESSAGE_TYPE_KEEP_ALIVE` item used in the `SIGFOX_EP_API_send_control_message` function and the related `SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE` compilation flag will be removed accordingly from the Sigfox End-Point library.
+
+## [v4.4](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.4) - 22 May 2026
+
+### Added
+
+* Add new `SIGFOX_EP_OSCILLATOR_ACCURACY_PPM` compilation flag to **adjust the device-specific oscillator accuracy** in ppm units. Except for frequency hopping RCs where the guard band is fixed to 1 micro-channel, this flag allows the device maker to adjust the **uplink frequency distribution according to the selected oscillator** (in all previous library versions, a fixed 20ppm value was assumed). This makes the library compatible with very low cost crystal oscillators (the upper limit remains 20ppm but it may be increased in future versions of the Sigfox specification). At the same time, if an accurate oscillator is used, entering a smaller ppm value will result in a wider operating range and thus a better frequency diversity. But in any case, **setting a correct value is crucial to ensure that the device will be received by the Sigfox network during its whole lifetime.** Please carefully check the datasheet of your quartz or TCXO in order to take all cumulative errors into account (static tolerance, change over temperature, aging, etc.).
+* Add **Atlas WiFi addon** support in cmake.
+
+### Fixed
+
+* Fix **missing message counter incrementation** in the specific case where the library was opened before each message transmission and none frame was sent due to any execution error. In this scenario, the message counter pre-incrementation in RAM was overwritten by the NVM reading in the open function. As the `nvm_write_pending` flag was previously set, the next RAM pre-incrementation was not performed, leading to the re-use of the same message counter value.
+
+### Known limitations
+
+* **Payload encryption** not supported.
+* **Secure element** not supported.
+
 ## [v4.3](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.3) - 26 Sep 2025
 
 ### Fixed

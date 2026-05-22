@@ -54,12 +54,19 @@
 #if ((defined SIGFOX_EP_REGULATORY) && (defined SIGFOX_EP_SPECTRUM_ACCESS_FH))
 #define SIGFOX_EP_FREQUENCY_FH_MICRO_CHANNEL_ERROR      0xFF
 #endif
+#define SIGFOX_EP_FREQUENCY_EPSILON_SNW_PPM             2
+#ifdef SIGFOX_EP_OSCILLATOR_ACCURACY_PPM
+#define SIGFOX_EP_FREQUENCY_EPSILON_EP_PPM              SIGFOX_EP_OSCILLATOR_ACCURACY_PPM
+#else
+#define SIGFOX_EP_FREQUENCY_EPSILON_EP_PPM              20
+#endif
 
 /*** SIGFOX EP FREQUENCY local structures ***/
 
 /*******************************************************************/
 typedef struct {
     const SIGFOX_rc_t *rc;
+    sfx_u16 epsilon_hz;
     sfx_u16 random_value;
     sfx_u16 random_offset;
 #ifndef SIGFOX_EP_SINGLE_FRAME
@@ -99,13 +106,13 @@ static SIGFOX_EP_FREQUENCY_context_t sigfox_ep_frequency_ctx;
 
 /*******************************************************************/
 static sfx_u32 _get_baseband_frequency_range_hz(void) {
-    return (sfx_u32) (SIGFOX_MACRO_CHANNEL_WIDTH_HZ - (2 * ((sigfox_ep_frequency_ctx.rc)->epsilon_hz)));
+    return (sfx_u32) (SIGFOX_MACRO_CHANNEL_WIDTH_HZ - (2 * sigfox_ep_frequency_ctx.epsilon_hz));
 }
 
 /*******************************************************************/
 static sfx_u32 _get_baseband_frequency_min_allowed_hz(void) {
     // Local variables.
-    sfx_u32 baseband_frequency_min_hz = ((sigfox_ep_frequency_ctx.rc)->epsilon_hz);
+    sfx_u32 baseband_frequency_min_hz = sigfox_ep_frequency_ctx.epsilon_hz;
 #if ((defined SIGFOX_EP_BIDIRECTIONAL) && !(defined SIGFOX_EP_SINGLE_FRAME))
     // Add downlink guard band depending on bidirectional flag and number of frames.
     if (((sigfox_ep_frequency_ctx.input)->bidirectional_flag) == SIGFOX_TRUE) {
@@ -122,7 +129,7 @@ static sfx_u32 _get_baseband_frequency_min_allowed_hz(void) {
 /*******************************************************************/
 static sfx_u32 _get_baseband_frequency_max_allowed_hz(void) {
     // Local variables.
-    sfx_u32 baseband_frequency_max_hz = SIGFOX_MACRO_CHANNEL_WIDTH_HZ - ((sfx_u32) ((sigfox_ep_frequency_ctx.rc)->epsilon_hz));
+    sfx_u32 baseband_frequency_max_hz = SIGFOX_MACRO_CHANNEL_WIDTH_HZ - ((sfx_u32) sigfox_ep_frequency_ctx.epsilon_hz);
 #if ((defined SIGFOX_EP_BIDIRECTIONAL) && !(defined SIGFOX_EP_SINGLE_FRAME))
     // Add downlink guard band depending on bidirectional flag and number of frames.
     if (((sigfox_ep_frequency_ctx.input)->bidirectional_flag) == SIGFOX_TRUE) {
@@ -198,7 +205,7 @@ static SIGFOX_EP_FREQUENCY_status_t _compute_new_random_frequency(sfx_u32 *frequ
         sigfox_ep_frequency_ctx.random_value = (sfx_u16) (random_value_temp & SIGFOX_EP_FREQUENCY_RANDOM_VALUE_MASK);
         random_generation_count++;
         // Convert to baseband frequency.
-        baseband_frequency_hz = ((sigfox_ep_frequency_ctx.rc)->epsilon_hz);
+        baseband_frequency_hz = sigfox_ep_frequency_ctx.epsilon_hz;
         baseband_frequency_hz += (_get_baseband_frequency_range_hz() * ((sfx_u32) sigfox_ep_frequency_ctx.random_value)) / (SIGFOX_EP_FREQUENCY_RANDOM_VALUE_MAX);
         // Check limits.
         baseband_frequency_allowed = _is_baseband_frequency_allowed(baseband_frequency_hz);
@@ -280,6 +287,18 @@ SIGFOX_EP_FREQUENCY_status_t SIGFOX_EP_FREQUENCY_init(const SIGFOX_rc_t *rc, sfx
     // Store RC and last random value.
     sigfox_ep_frequency_ctx.rc = rc;
     sigfox_ep_frequency_ctx.random_value = last_random_value;
+    // Compute cumulative frequency inaccuracy.
+#ifdef SIGFOX_EP_SPECTRUM_ACCESS_FH
+    if (sigfox_ep_frequency_ctx.rc->spectrum_access->type == SIGFOX_SPECTRUM_ACCESS_TYPE_FH) {
+        // Fixed to 1 micro-channel bandwidth.
+        sigfox_ep_frequency_ctx.epsilon_hz = (sfx_u16) SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ;
+    }
+    else {
+#endif
+        sigfox_ep_frequency_ctx.epsilon_hz = (sfx_u16) (SIGFOX_EP_FREQUENCY_EPSILON_SNW_PPM + SIGFOX_EP_FREQUENCY_EPSILON_EP_PPM) * (sfx_u16) ((sigfox_ep_frequency_ctx.rc->f_ul_hz / 1000000) + 1);
+#ifdef SIGFOX_EP_SPECTRUM_ACCESS_FH
+    }
+#endif
     // Compute random offset with EP-ID.
     ep_id_16bits = (sfx_u16) (((((sfx_u16) ep_id[2]) << 8) & 0xFF00) | (((sfx_u16) ep_id[3]) & 0x00FF));
     // Note: the term (ep_id_16bits + 1) could overflow to 0 if ep_id_16bits = 0xFFFF.
