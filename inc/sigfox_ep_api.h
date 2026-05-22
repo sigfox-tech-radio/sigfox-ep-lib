@@ -97,7 +97,7 @@ typedef void SIGFOX_EP_API_status_t;
  * \brief Sigfox EP library state.
  *******************************************************************/
 typedef enum {
-    SIGFOX_EP_API_STATE_CLOSED,
+    SIGFOX_EP_API_STATE_CLOSED = 0,
     SIGFOX_EP_API_STATE_READY,
 #ifdef SIGFOX_EP_REGULATORY
     SIGFOX_EP_API_STATE_REGULATORY,
@@ -369,7 +369,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_get_flags(sfx_u8 **ep_flags, sfx_u8 *ep_fla
 /*!******************************************************************
  * \fn  SIGFOX_EP_API_status_t SIGFOX_EP_API_unstack_error(SIGFOX_ERROR_t *error_ptr)
  * \brief Read and clear the last (newest) error stored in the internal error stack.
- * \brief This function can be called multiple times to unstack all errors which previously occurred during library execution, until it returns SIGFOX_EP_API_SUCCESS.
+ * \brief This function can be called multiple times to unstack all errors which previously occurred during library execution,
+ * \brief until the source of the returned error is SIGFOX_ERROR_SOURCE_NONE.
  * \param[in]   none
  * \param[out]  error_ptr: Pointer that will contain the last error in the stack.
  * \retval      Function execution status.

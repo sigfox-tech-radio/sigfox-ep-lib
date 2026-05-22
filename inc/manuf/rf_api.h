@@ -90,7 +90,7 @@ typedef void (*RF_API_channel_free_cb_t)(void);
  * \brief RF modes list.
  *******************************************************************/
 typedef enum {
-    RF_API_MODE_TX,
+    RF_API_MODE_TX = 0,
 #if ((defined SIGFOX_EP_BIDIRECTIONAL) || ((defined SIGFOX_EP_REGULATORY && (defined SIGFOX_EP_SPECTRUM_ACCESS_LBT))))
     RF_API_MODE_RX,
 #endif

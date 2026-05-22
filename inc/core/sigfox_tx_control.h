@@ -81,7 +81,7 @@ typedef void (*SIGFOX_TX_CONTROL_check_cplt_cb_t)(void);
  * \brief Sigfox TX control results list.
  *******************************************************************/
 typedef enum {
-    SIGFOX_TX_CONTROL_RESULT_ALLOWED,
+    SIGFOX_TX_CONTROL_RESULT_ALLOWED = 0,
     SIGFOX_TX_CONTROL_RESULT_FORBIDDEN,
     SIGFOX_TX_CONTROL_RESULT_PENDING,
     SIGFOX_TX_CONTROL_RESULT_LAST
@@ -92,7 +92,7 @@ typedef enum {
  * \brief TX control check type.
  *******************************************************************/
 typedef enum {
-    SIGFOX_TX_CONTROL_TYPE_PRE_CHECK,
+    SIGFOX_TX_CONTROL_TYPE_PRE_CHECK = 0,
     SIGFOX_TX_CONTROL_TYPE_POST_CHECK,
     SIGFOX_TX_CONTROL_TYPE_LAST
 } SIGFOX_TX_CONTROL_check_type;

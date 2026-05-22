@@ -40,6 +40,14 @@
 /*** Library compilation flags ***/
 
 /*!******************************************************************
+ * \def SIGFOX_EP_OSCILLATOR_ACCURACY_PPM
+ * \brief Define the crystal oscillator accuracy in ppm (allowed range: 5ppm to 20ppm, defaults to 20ppm if not specified).
+ * \brief Warning: please carefully check the datasheet of your quartz or TCXO,
+ * \brief in order to take all cumulative errors into account over the whole device lifetime (static tolerance, change over temperature, aging, etc.).
+ *******************************************************************/
+#define SIGFOX_EP_OSCILLATOR_ACCURACY_PPM       20
+
+/*!******************************************************************
  * \def SIGFOX_EP_RC1_ZONE
  * \brief Support radio configuration zone 1 (Europe, Middle-East and Africa).
  *******************************************************************/

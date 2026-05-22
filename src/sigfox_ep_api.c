@@ -70,7 +70,7 @@
 #ifndef SIGFOX_EP_ASYNCHRONOUS
 /*******************************************************************/
 typedef enum {
-    SIGFOX_EP_API_STATE_CLOSED,
+    SIGFOX_EP_API_STATE_CLOSED = 0,
     SIGFOX_EP_API_STATE_READY,
 #ifdef SIGFOX_EP_REGULATORY
     SIGFOX_EP_API_STATE_REGULATORY,
@@ -2718,6 +2718,8 @@ SIGFOX_EP_API_status_t SIGFOX_EP_API_open(SIGFOX_EP_API_config_t *config) {
     sigfox_ep_api_ctx.random_value = 0;
     sigfox_ep_api_ctx.random_value = (sfx_u16) (sigfox_ep_api_ctx.random_value | ((((sfx_u16) nvm_data[SIGFOX_NVM_DATA_INDEX_RANDOM_VALUE_MSB]) << 8) & 0xFF00));
     sigfox_ep_api_ctx.random_value = (sfx_u16) (sigfox_ep_api_ctx.random_value | ((((sfx_u16) nvm_data[SIGFOX_NVM_DATA_INDEX_RANDOM_VALUE_LSB]) << 0) & 0x00FF));
+    // Reset pending flag to ensure that the RAM pre-incrementation will be performed after NVM reading.
+    sigfox_ep_api_ctx.internal_flags.field.nvm_write_pending = 0;
     // Read device ID.
 #ifdef SIGFOX_EP_ERROR_CODES
     mcu_api_status = MCU_API_get_ep_id(ep_id, SIGFOX_EP_ID_SIZE_BYTES);

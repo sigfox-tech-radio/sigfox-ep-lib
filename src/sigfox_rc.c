@@ -41,31 +41,6 @@
 #endif
 #include "sigfox_types.h"
 
-/*** SIGFOX RC local macros ***/
-
-// Note: epsilon_snw is the Sigfox network reference frequency inaccuracy in Hz (1.62ppm).
-// Note: epsilon_ep is the end-point reference frequency inaccuracy in Hz (20ppm by default, could be changed according to effective device oscillator accuracy).
-#ifdef SIGFOX_EP_RC1_ZONE
-#define SIGFOX_RC1_EPSILON_SNW_HZ       1410
-#define SIGFOX_RC1_EPSILON_EP_HZ        17370
-#endif
-#if ((defined SIGFOX_EP_RC3_LBT_ZONE) || (defined SIGFOX_EP_RC3_LDC_ZONE))
-#define SIGFOX_RC3_EPSILON_SNW_HZ       1500
-#define SIGFOX_RC3_EPSILON_EP_HZ        18470
-#endif
-#ifdef SIGFOX_EP_RC5_ZONE
-#define SIGFOX_RC5_EPSILON_SNW_HZ       1500
-#define SIGFOX_RC5_EPSILON_EP_HZ        18470
-#endif
-#ifdef SIGFOX_EP_RC6_ZONE
-#define SIGFOX_RC6_EPSILON_SNW_HZ       1410
-#define SIGFOX_RC6_EPSILON_EP_HZ        17310
-#endif
-#ifdef SIGFOX_EP_RC7_ZONE
-#define SIGFOX_RC7_EPSILON_SNW_HZ       1410
-#define SIGFOX_RC7_EPSILON_EP_HZ        17380
-#endif
-
 /*** SIGFOX RC global variables ***/
 
 #ifdef SIGFOX_EP_SPECTRUM_ACCESS_DC
@@ -175,7 +150,6 @@ const SIGFOX_rc_t SIGFOX_RC1 = {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     .f_dl_hz = 869525000,
 #endif
-    .epsilon_hz = (SIGFOX_RC1_EPSILON_SNW_HZ + SIGFOX_RC1_EPSILON_EP_HZ),
     .spectrum_access = &SIGFOX_SPECTRUM_ACCESS_DC,
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     .uplink_bit_rate_capability = (1 << SIGFOX_UL_BIT_RATE_100BPS) | (1 << SIGFOX_UL_BIT_RATE_600BPS),
@@ -194,7 +168,6 @@ const SIGFOX_rc_t SIGFOX_RC2 = {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     .f_dl_hz = 905200000,
 #endif
-    .epsilon_hz = SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ, // Fixed to 1 micro-channel bandwidth. Should not be changed.
     .spectrum_access = &SIGFOX_SPECTRUM_ACCESS_FH,
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     .uplink_bit_rate_capability = (1 << SIGFOX_UL_BIT_RATE_600BPS),
@@ -213,7 +186,6 @@ const SIGFOX_rc_t SIGFOX_RC3_LBT = {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     .f_dl_hz = 922200000,
 #endif
-    .epsilon_hz = (SIGFOX_RC3_EPSILON_SNW_HZ + SIGFOX_RC3_EPSILON_EP_HZ),
     .spectrum_access = &SIGFOX_SPECTRUM_ACCESS_LBT_M80,
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     .uplink_bit_rate_capability = (1 << SIGFOX_UL_BIT_RATE_100BPS) | (1 << SIGFOX_UL_BIT_RATE_600BPS),
@@ -232,7 +204,6 @@ const SIGFOX_rc_t SIGFOX_RC3_LDC = {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     .f_dl_hz = 922200000,
 #endif
-    .epsilon_hz = (SIGFOX_RC3_EPSILON_SNW_HZ + SIGFOX_RC3_EPSILON_EP_HZ),
     .spectrum_access = &SIGFOX_SPECTRUM_ACCESS_LDC,
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     .uplink_bit_rate_capability = (1 << SIGFOX_UL_BIT_RATE_100BPS) | (1 << SIGFOX_UL_BIT_RATE_600BPS),
@@ -251,7 +222,6 @@ const SIGFOX_rc_t SIGFOX_RC4 = {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     .f_dl_hz = 922300000,
 #endif
-    .epsilon_hz = SIGFOX_FH_MACRO_CHANNEL_GUARD_BAND_HZ, // Fixed to 1 micro-channel bandwidth. Should not be changed.
     .spectrum_access = &SIGFOX_SPECTRUM_ACCESS_FH,
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     .uplink_bit_rate_capability = (1 << SIGFOX_UL_BIT_RATE_600BPS),
@@ -270,7 +240,6 @@ const SIGFOX_rc_t SIGFOX_RC5 = {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     .f_dl_hz = 922300000,
 #endif
-    .epsilon_hz = (SIGFOX_RC5_EPSILON_SNW_HZ + SIGFOX_RC5_EPSILON_EP_HZ),
     .spectrum_access = &SIGFOX_SPECTRUM_ACCESS_LBT_M65,
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     .uplink_bit_rate_capability = (1 << SIGFOX_UL_BIT_RATE_100BPS) | (1 << SIGFOX_UL_BIT_RATE_600BPS),
@@ -289,7 +258,6 @@ const SIGFOX_rc_t SIGFOX_RC6 = {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     .f_dl_hz = 866300000,
 #endif
-    .epsilon_hz = (SIGFOX_RC6_EPSILON_SNW_HZ + SIGFOX_RC6_EPSILON_EP_HZ),
     .spectrum_access = &SIGFOX_SPECTRUM_ACCESS_DC,
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     .uplink_bit_rate_capability = (1 << SIGFOX_UL_BIT_RATE_100BPS) | (1 << SIGFOX_UL_BIT_RATE_600BPS),
@@ -308,7 +276,6 @@ const SIGFOX_rc_t SIGFOX_RC7 = {
 #ifdef SIGFOX_EP_BIDIRECTIONAL
     .f_dl_hz = 869100000,
 #endif
-    .epsilon_hz = (SIGFOX_RC7_EPSILON_SNW_HZ + SIGFOX_RC7_EPSILON_EP_HZ),
     .spectrum_access = &SIGFOX_SPECTRUM_ACCESS_DC,
 #ifdef SIGFOX_EP_PARAMETERS_CHECK
     .uplink_bit_rate_capability = (1 << SIGFOX_UL_BIT_RATE_100BPS) | (1 << SIGFOX_UL_BIT_RATE_600BPS),
