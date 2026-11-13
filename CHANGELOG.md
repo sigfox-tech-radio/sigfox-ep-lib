@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * The **keep-alive control message will be decommissionned in the Sigfox system by April 2027**. The `SIGFOX_CONTROL_MESSAGE_TYPE_KEEP_ALIVE` item used in the `SIGFOX_EP_API_send_control_message` function and the related `SIGFOX_EP_CONTROL_KEEP_ALIVE_MESSAGE` compilation flag will be removed accordingly from the Sigfox End-Point library.
 
+## [v4.5](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.5) - 13 Nov 2026
+
+### Changed
+
+* Changed from the Clear BSD License to the standard **BSD 3-Clause License**. See the `LICENSE` file for details.
+
+### Fixed
+
+* Remove **external process callback call** during message triggering in asynchronous mode.
+* Do not invoke the **uplink completion callback** if none frame has been sent due to error or TX control.
+
+### Known limitations
+
+* **Payload encryption** not supported.
+
 ## [v4.4](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.4) - 22 May 2026
 
 ### Added
@@ -23,7 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v4.3](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.3) - 26 Sep 2025
 
@@ -34,7 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v4.2](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.2) - 25 Jun 2025
 
@@ -56,7 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v4.1](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.1) - 29 Jan 2025
 
@@ -71,7 +83,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v4.0](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v4.0) - 22 Nov 2024
 
@@ -107,7 +118,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v3.6](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.6) - 30 May 2024
 
@@ -119,7 +129,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v3.5](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.5) - 22 Mar 2024
 
@@ -146,7 +155,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v3.4](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.4) - 09 Nov 2023
 
@@ -177,7 +185,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v3.3](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.3) - 10 Aug 2023
 
@@ -205,7 +212,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v3.2](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.2) - 16 Jun 2023
 
@@ -232,7 +238,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v3.1](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.1) - 01 Mar 2023
 
@@ -274,7 +279,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
 
 ## [v3.0](https://github.com/sigfox-tech-radio/sigfox-ep-lib/releases/tag/v3.0) - 12 Dec 2022
 
@@ -296,4 +300,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Known limitations
 
 * **Payload encryption** not supported.
-* **Secure element** not supported.
