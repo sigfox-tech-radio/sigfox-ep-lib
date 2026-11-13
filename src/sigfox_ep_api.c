@@ -4,33 +4,31 @@
  *******************************************************************
  * \copyright
  *
- * Copyright (c) 2022, UnaBiz SAS
+ * Copyright 2022 UnaBiz SAS
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
  *
- *  1 Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *  2 Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  3 Neither the name of UnaBiz SAS nor the names of its contributors may be
- *    used to endorse or promote products derived from this software without
- *    specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright notice, this
+ *     list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright notice,
+ *     this list of conditions and the following disclaimer in the documentation and/or
+ *     other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software without
+ *     specific prior written permission.
  *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
- * THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
- * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *******************************************************************/
 
@@ -242,6 +240,34 @@ static const sfx_u8 SIGFOX_EP_API_FLAGS[] = SIGFOX_EP_FLAGS;
 
 /*******************************************************************/
 #define _CHECK_LIBRARY_STATE(state_condition) { if (sigfox_ep_api_ctx.state state_condition) { SIGFOX_EXIT_ERROR(SIGFOX_EP_API_ERROR_STATE); } }
+
+
+/*******************************************************************/
+#ifdef SIGFOX_EP_ASYNCHRONOUS
+#ifdef SIGFOX_EP_ERROR_CODES
+#define _INTERNAL_PROCESS(void) { \
+    sigfox_ep_api_ctx.irq_flags.field.internal_request = 1; \
+    status = SIGFOX_EP_API_process(); \
+    SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS); \
+}
+#else
+#define _INTERNAL_PROCESS(void) { \
+    sigfox_ep_api_ctx.irq_flags.field.internal_request = 1; \
+    SIGFOX_EP_API_process(); \
+}
+#endif
+#else
+#ifdef SIGFOX_EP_ERROR_CODES
+#define _INTERNAL_PROCESS(void) { \
+    status = _internal_process(); \
+    SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS); \
+}
+#else
+#define _INTERNAL_PROCESS(void) { \
+    _internal_process(); \
+}
+#endif
+#endif
 
 #ifdef SIGFOX_EP_ASYNCHRONOUS
 /*******************************************************************/
@@ -1706,7 +1732,11 @@ static SIGFOX_EP_API_status_t _compute_state_after_transmission(void) {
 #endif /* SIGFOX_EP_SINGLE_FRAME */
 #ifdef SIGFOX_EP_ASYNCHRONOUS
     // Manage API callbacks.
-    if ((_is_last_frame_of_uplink_sequence() == SIGFOX_TRUE) && (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message == 0)) {
+#ifdef SIGFOX_EP_SINGLE_FRAME
+    if ((_is_last_frame_of_uplink_sequence() == SIGFOX_TRUE) && (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message == 0) && (sigfox_ep_api_ctx.internal_flags.field.frame_success != 0)) {
+#else
+    if ((_is_last_frame_of_uplink_sequence() == SIGFOX_TRUE) && (sigfox_ep_api_ctx.internal_flags.field.dl_conf_message == 0) && (sigfox_ep_api_ctx.frame_success_count > 0)) {
+#endif
         // Call uplink completion callback (except for ACK message).
         _UPLINK_CPLT_CALLBACK();
     }
@@ -2499,23 +2529,13 @@ static SIGFOX_EP_API_status_t _send_application_message(SIGFOX_EP_API_applicatio
     sigfox_ep_api_ctx.internal_flags.field.dl_conf_message = 0;
     _message_prepare();
     // Trigger TX.
-#ifdef SIGFOX_EP_ERROR_CODES
-    status = _internal_process();
-    SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-    _internal_process();
-#endif
+    _INTERNAL_PROCESS();
 #ifdef SIGFOX_EP_ASYNCHRONOUS
     if (sigfox_ep_api_ctx.internal_flags.field.synchronous != 0) {
 #endif
     // Block until library goes back to READY state.
     while (sigfox_ep_api_ctx.state != SIGFOX_EP_API_STATE_READY) {
-#ifdef SIGFOX_EP_ERROR_CODES
-            status = _internal_process();
-            SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-        _internal_process();
-#endif
+        _INTERNAL_PROCESS();
     }
 #ifdef SIGFOX_EP_ASYNCHRONOUS
     }
@@ -2558,23 +2578,13 @@ static SIGFOX_EP_API_status_t _send_control_message(SIGFOX_EP_API_control_messag
     sigfox_ep_api_ctx.internal_flags.field.dl_conf_message = 0;
     _message_prepare();
     // Trigger TX.
-#ifdef SIGFOX_EP_ERROR_CODES
-    status = _internal_process();
-    SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-    _internal_process();
-#endif
+    _INTERNAL_PROCESS();
 #ifdef SIGFOX_EP_ASYNCHRONOUS
     if (sigfox_ep_api_ctx.internal_flags.field.synchronous != 0) {
 #endif
     // Block until library goes back to READY state.
     while (sigfox_ep_api_ctx.state != SIGFOX_EP_API_STATE_READY) {
-#ifdef SIGFOX_EP_ERROR_CODES
-            status = _internal_process();
-            SIGFOX_CHECK_STATUS(SIGFOX_EP_API_SUCCESS);
-#else
-        _internal_process();
-#endif
+        _INTERNAL_PROCESS();
     }
 #ifdef SIGFOX_EP_ASYNCHRONOUS
     }
